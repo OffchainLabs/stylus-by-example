@@ -11,12 +11,19 @@ interface SidebarProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
 
 export function Sidebar({ basicExamples }: SidebarProps) {
   return (
-    <div className={stack({ background: "green.300" })}>
+    <div
+      className={stack({
+        pt: "4",
+        px: "2",
+        pb: "24",
+        gap: "0",
+      })}
+    >
       <h2
         className={css({
           fontSize: "lg",
           fontWeight: "bold",
-          mb: "2",
+          mb: "1",
           px: "4",
         })}
       >
@@ -27,11 +34,14 @@ export function Sidebar({ basicExamples }: SidebarProps) {
           <Button
             asChild
             key={`${title}-${i}`}
-            variant="ghost"
+            variant="link"
+            size="lg"
             className={css({
               w: "full",
               justifyContent: "flex-start",
               fontWeight: "normal",
+              h: "32px",
+              paddingInline: "16px",
             })}
           >
             <Link href={route}>{title}</Link>

@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { basicExamples } from "@/data/sidebar";
 import { HStack, Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
-import { flex, hstack } from "@/styled-system/patterns";
+import { box, flex, hstack } from "@/styled-system/patterns";
 import Navigation from "@/components/ui/navigation";
 import { ModeToggle } from "@/components/app/mode_toggle";
 
@@ -30,13 +30,24 @@ export default function RootLayout({
     <html className={`${font_mono.variable} ${font_sans.variable}`}>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Stack gap="0">
+          <Stack
+            gap="0"
+            h="100vh"
+            overflow="hidden"
+            bg="stone.100"
+            _dark={{ bg: "stone.800" }}
+          >
             <div
               className={hstack({
                 borderBottomStyle: "solid",
                 borderBottomWidth: "1px",
-                borderColor: "gray.600",
                 py: "8px",
+                shadow: "lg",
+                position: "sticky",
+                top: "0",
+                bg: "stone.100",
+                borderColor: "stone.300",
+                _dark: { bg: "stone.950", borderColor: "stone.900" },
               })}
             >
               <div
@@ -71,15 +82,19 @@ export default function RootLayout({
                 <ModeToggle />
               </div>
             </div>
-            <HStack className={css({ minH: "100vh", bg: "pink.100" })}>
+            <HStack className={css({ h: "full" })}>
               <Stack
                 className={css({
-                  bg: "red.300",
-                  minH: "100vh",
-                  py: "2",
-                  px: "3",
-                  pb: "12",
                   w: "256px",
+                  h: "full",
+                  overflowY: "auto",
+                  borderRightWidth: "1px",
+                  borderColor: "stone.300",
+                  background: "stone.200",
+                  _dark: {
+                    borderColor: "stone.800",
+                    background: "stone.900",
+                  },
                 })}
               >
                 <Sidebar basicExamples={basicExamples} />
@@ -87,11 +102,10 @@ export default function RootLayout({
               <div
                 className={flex({
                   grow: "1",
-                  bg: "blue.100",
-                  minH: "100vh",
                   pt: "6",
                   pb: "12",
                   px: "4",
+                  h: "full",
                 })}
               >
                 {children}

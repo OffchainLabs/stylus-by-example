@@ -44,19 +44,18 @@ export function ModeToggle() {
             className={css({
               h: "24px",
               w: "24px",
-              display: "none",
-              _dark: { display: "inline" },
+              display: "inline",
+              _dark: { display: "none" },
             })}
           />
           <MoonIcon
             className={css({
               h: "24px",
               w: "24px",
-              display: "inline",
-              _dark: { display: "none" },
+              display: "none",
+              _dark: { display: "inline" },
             })}
           />
-          {/* <span className="sr-only">Toggle theme</span> */}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
