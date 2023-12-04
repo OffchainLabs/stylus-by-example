@@ -4,7 +4,6 @@ import { stack } from "@/styled-system/patterns";
 import Link from "next/link";
 import { Stack } from "@/styled-system/jsx";
 import { Button } from "@/components/ui/button";
-
 interface SidebarProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   basicExamples: BasicExamples[];
 }
