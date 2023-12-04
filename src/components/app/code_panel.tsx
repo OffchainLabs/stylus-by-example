@@ -10,9 +10,10 @@ import { css } from "@/styled-system/css";
 
 interface CodePanelProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   code: string;
+  language?: string;
 }
 
-export function CodePanel({ code }: CodePanelProps) {
+export function CodePanel({ code, language = "rust" }: CodePanelProps) {
   return (
     <>
       <div
@@ -25,8 +26,8 @@ export function CodePanel({ code }: CodePanelProps) {
         })}
       >
         <SyntaxHighlighter
-          language="rust"
-          style={oneDark}
+          language={language}
+          style={dracula}
           customStyle={{ margin: 0 }}
           codeTagProps={{
             style: { fontFamily: "var(--font-mono)", fontSize: "16px" },
@@ -38,7 +39,7 @@ export function CodePanel({ code }: CodePanelProps) {
       </div>
       <div
         className={css({
-          borderColor: { _light: "stone.300", _dark: "stone.700" },
+          borderColor: { _light: "stone.200", _dark: "stone.700" },
           borderWidth: "1px",
           borderRadius: "lg",
           overflow: "hidden",
@@ -46,7 +47,7 @@ export function CodePanel({ code }: CodePanelProps) {
         })}
       >
         <SyntaxHighlighter
-          language="rust"
+          language={language}
           style={prism}
           customStyle={{ margin: 0 }}
           codeTagProps={{

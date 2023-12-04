@@ -20,7 +20,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
     >
       <h2
         className={css({
-          fontSize: { base: "20px", "2xl": "32px" },
+          fontSize: { base: "20px", "2xl": "20px" },
           fontWeight: "bold",
           mb: "1",
           px: "4",
@@ -38,7 +38,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
               w: "full",
               justifyContent: "flex-start",
               fontWeight: "normal",
-              fontSize: { base: "16px", "2xl": "20px" },
+              fontSize: { base: "16px", "2xl": "18px" },
               paddingInline: "16px",
               h: { base: "32px", "2xl": "36px" },
             })}

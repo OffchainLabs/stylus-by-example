@@ -36,7 +36,7 @@ export default function RootLayout({
             h="full"
             w="full"
             overflow="hidden"
-            bg="stone.100"
+            bg="stone.50"
             flexDir={{ base: "column-reverse", md: "column" }}
             _dark={{ bg: "stone.800" }}
           >
@@ -44,17 +44,22 @@ export default function RootLayout({
             <HStack className={css({ flexGrow: "1", overflow: "hidden" })}>
               <SideNav />
               <div
-                className={container({
+                className={css({
                   flexGrow: "1",
                   h: "full",
                   overflowY: "auto",
                   pt: "6",
                   pb: "12",
                   px: "4",
-                  maxW: { base: "4xl", "2xl": "8xl" },
                 })}
               >
-                {children}
+                <div
+                  className={container({
+                    maxW: { base: "4xl", "2xl": "8xl" },
+                  })}
+                >
+                  {children}
+                </div>
               </div>
             </HStack>
           </Stack>

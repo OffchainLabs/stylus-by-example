@@ -13,8 +13,8 @@ export default function SideNav() {
         h: { base: "0", md: "full" },
         overflowY: "auto",
         borderRightWidth: "1px",
-        borderColor: "stone.300",
-        background: "stone.200",
+        borderColor: "stone.200",
+        background: "stone.100",
         display: { base: "none !important", md: "flex !important" },
         _dark: {
           borderColor: "stone.950",
