@@ -17,7 +17,7 @@ export default function SideNav() {
         background: "stone.200",
         display: { base: "none !important", md: "flex !important" },
         _dark: {
-          borderColor: "stone.800",
+          borderColor: "stone.950",
           background: "stone.900",
         },
       })}

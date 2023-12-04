@@ -38,7 +38,7 @@ export function CodePanel({ code }: CodePanelProps) {
       </div>
       <div
         className={css({
-          borderColor: "stone.900",
+          borderColor: { _light: "stone.300", _dark: "stone.700" },
           borderWidth: "1px",
           borderRadius: "lg",
           overflow: "hidden",

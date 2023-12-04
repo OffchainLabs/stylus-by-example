@@ -38,14 +38,18 @@ export default function Navigation() {
   return (
     <div
       className={hstack({
-        borderBottomWidth: { base: "0", md: "1px" },
+        borderBottomWidth: { base: "0", md: "0" },
         borderTopWidth: { base: "1px", md: "0" },
         py: "8px",
-        shadow: "lg",
+        shadow: { _light: "lg", _dark: "none" },
         zIndex: "10",
-        bg: "stone.100",
-        borderColor: "stone.300",
-        _dark: { bg: "stone.950", borderColor: "stone.900" },
+        bg: "pink.100",
+        borderColor: { _light: "stone.200", _dark: "stone.300" },
+        _dark: {
+          bg: "stone.950",
+          borderColor: "black",
+          borderBottomWidth: "0",
+        },
       })}
     >
       <div
@@ -135,6 +139,11 @@ export default function Navigation() {
               textDecoration: "none",
               outline: "none",
               cursor: "pointer",
+              bgColor: { _light: "pink.300" },
+              borderStyle: "revert-layer",
+              color: { _light: "pink.400" },
+              borderColor: { _light: "pink.300", _dark: "stone.800" },
+              borderWidth: "1px",
               display: { base: "flex", md: "none" },
               _focus: {
                 shadow: "md",
