@@ -20,7 +20,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
     >
       <h2
         className={css({
-          fontSize: "lg",
+          fontSize: { base: "20px", "2xl": "32px" },
           fontWeight: "bold",
           mb: "1",
           px: "4",
@@ -34,13 +34,13 @@ export function Sidebar({ basicExamples }: SidebarProps) {
             asChild
             key={`${title}-${i}`}
             variant="link"
-            size="lg"
             className={css({
               w: "full",
               justifyContent: "flex-start",
               fontWeight: "normal",
-              h: "32px",
+              fontSize: { base: "16px", "2xl": "20px" },
               paddingInline: "16px",
+              h: { base: "32px", "2xl": "36px" },
             })}
           >
             <Link href={route}>{title}</Link>

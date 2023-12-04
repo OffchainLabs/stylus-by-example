@@ -42,6 +42,7 @@ export default function Navigation() {
         borderTopWidth: { base: "1px", md: "0" },
         py: "8px",
         shadow: "lg",
+        zIndex: "10",
         bg: "stone.100",
         borderColor: "stone.300",
         _dark: { bg: "stone.950", borderColor: "stone.900" },
@@ -77,7 +78,7 @@ export default function Navigation() {
       >
         <NavigationMenu>
           <NavigationMenuList>
-            <NavigationMenuItem>
+            {/* <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link
                   href="/"
@@ -103,7 +104,7 @@ export default function Navigation() {
                   Linnnk
                 </Link>
               </NavigationMenuLink>
-            </NavigationMenuItem>
+            </NavigationMenuItem> */}
           </NavigationMenuList>
         </NavigationMenu>
       </div>
@@ -112,7 +113,6 @@ export default function Navigation() {
         className={hstack({
           pr: "8px",
           justify: "flex-end",
-          bg: "pink.100",
           flex: { base: "1", md: "0" },
         })}
       >

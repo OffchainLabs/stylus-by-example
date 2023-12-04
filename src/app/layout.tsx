@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { font_sans, font_mono } from "@/styles/font";
 import { HStack, Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
-import { flex, stack } from "@/styled-system/patterns";
+import { container, flex, stack } from "@/styled-system/patterns";
 import Navigation from "@/components/app/navigation";
 
 import "./globals.css";
@@ -44,19 +44,16 @@ export default function RootLayout({
             <HStack className={css({ flexGrow: "1", overflow: "hidden" })}>
               <SideNav />
               <div
-                className={stack({
+                className={container({
                   flexGrow: "1",
                   h: "full",
                   overflowY: "auto",
                   pt: "6",
                   pb: "12",
                   px: "4",
+                  maxW: { base: "4xl", "2xl": "8xl" },
                 })}
               >
-                <h1>
-                  Some really long title like the quick brown fox jumps over the
-                  lazy dog
-                </h1>
                 {children}
               </div>
             </HStack>
