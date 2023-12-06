@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prep": "panda codegen",
+    "prepare": "panda codegen",
     "dev": "next dev",
-    "build": "next build",
+    "build": "panda codegen && next build",
     "start": "next start",
     "lint": "next lint"
   },
