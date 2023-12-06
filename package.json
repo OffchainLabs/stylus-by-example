@@ -5,7 +5,7 @@
   "scripts": {
     "prepare": "panda codegen",
     "dev": "next dev",
-    "build": "panda codegen && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
