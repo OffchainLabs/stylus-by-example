@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Inter as createInter } from "next/font/google";
-import localFont from "next/font/local";
 
 import { HStack, Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
 import { container, flex, stack } from "@/styled-system/patterns";
 import Navigation from "@/components/app/navigation";
+import { font_mono, font_sans } from "@/styles/font";
 
 import "./globals.css";
 import { ThemeProvider } from "./theme_provider";
@@ -16,18 +15,6 @@ export const metadata: Metadata = {
   description:
     "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
 };
-
-export const font_sans = createInter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-});
-
-export const font_mono = localFont({
-  display: "swap",
-  src: "./fonts/MonaSpaceXenon.ttf",
-  variable: "--font-mono",
-});
 
 export default function RootLayout({
   children,

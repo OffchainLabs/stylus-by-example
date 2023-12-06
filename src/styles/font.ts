@@ -9,6 +9,6 @@ export const font_sans = createInter({
 
 export const font_mono = localFont({
   display: "swap",
-  src: "./fonts/MonaSpaceXenon.ttf",
+  src: "../fonts/monaspace_xenon.ttf",
   variable: "--font-mono",
 });
