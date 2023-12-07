@@ -1,0 +1,31 @@
+import { CodePanel } from "@/components/app/code_panel";
+import { main, cargo } from "@/data/examples/basic_examples/bytes_in_bytes_out";
+
+# Bytes In, Bytes Out
+
+### src/mdxxx.rs
+
+<CodePanel language="rust">{main}</CodePanel>
+
+### Cargo.toml
+
+<CodePanel language="toml">{cargo}</CodePanel>
+
+### test.rs
+
+```rust
+#![no_main]
+#![no_std]
+extern crate alloc;
+
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+use alloc::vec::Vec;
+
+use stylus_sdk::stylus_proc::entrypoint;
+
+#[entrypoint]
+fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+    Ok(input)
+}
+```
