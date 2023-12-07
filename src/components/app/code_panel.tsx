@@ -7,10 +7,44 @@ import {
   prism,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { css } from "@/styled-system/css";
-
+import { HamburgerMenuIcon, CopyIcon } from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
 interface CodePanelProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   children: string;
   language?: string;
+}
+
+function CopyButton() {
+  return (
+    <Button
+      variant="ghost"
+      className={css({
+        background: "blue.400",
+        opacity: "0.7",
+        h: "42px",
+        w: "42px",
+        px: "0",
+        position: "absolute",
+        top: "8px",
+        right: "8px",
+        rounded: "sm",
+        _hover: {
+          opacity: "1",
+          cursor: "pointer",
+        },
+        _active: {
+          background: "orange.200",
+        },
+      })}
+    >
+      <CopyIcon
+        className={css({
+          h: "32px",
+          w: "32px",
+        })}
+      />
+    </Button>
+  );
 }
 
 export function CodePanel({ children, language = "rust" }: CodePanelProps) {
@@ -24,8 +58,10 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
           overflow: "hidden",
           maxW: "4xl",
           display: { _light: "none" },
+          position: "relative",
         })}
       >
+        <CopyButton />
         <SyntaxHighlighter
           language={language}
           style={dracula}
@@ -45,8 +81,10 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
           borderRadius: "lg",
           overflow: "hidden",
           display: { _dark: "none" },
+          position: "relative",
         })}
       >
+        <CopyButton />
         <SyntaxHighlighter
           language={language}
           style={prism}
