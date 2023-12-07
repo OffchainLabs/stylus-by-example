@@ -23,7 +23,7 @@ export default function Page() {
       >
         Hello World
       </h2>
-      <CodePanel code={hello_world} />
+      <CodePanel>{hello_world}</CodePanel>
     </>
   );
 }

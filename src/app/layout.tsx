@@ -55,7 +55,7 @@ export default function RootLayout({
               >
                 <div
                   className={container({
-                    maxW: { base: "4xl", "2xl": "8xl" },
+                    maxW: { base: "4xl" },
                   })}
                 >
                   {children}

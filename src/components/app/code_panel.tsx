@@ -9,11 +9,11 @@ import {
 import { css } from "@/styled-system/css";
 
 interface CodePanelProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
-  code: string;
+  children: string;
   language?: string;
 }
 
-export function CodePanel({ code, language = "rust" }: CodePanelProps) {
+export function CodePanel({ children, language = "rust" }: CodePanelProps) {
   return (
     <>
       <div
@@ -22,6 +22,7 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
           borderWidth: "1px",
           borderRadius: "lg",
           overflow: "hidden",
+          maxW: "4xl",
           display: { _light: "none" },
         })}
       >
@@ -34,7 +35,7 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
           }}
           wrapLines={true}
         >
-          {code}
+          {children}
         </SyntaxHighlighter>
       </div>
       <div
@@ -55,7 +56,7 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
           }}
           wrapLines={true}
         >
-          {code}
+          {children}
         </SyntaxHighlighter>
       </div>
     </>

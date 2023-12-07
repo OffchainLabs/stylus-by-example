@@ -27,7 +27,7 @@ export default function Page() {
       >
         src/main.rs
       </h3>
-      <CodePanel code={main} language="rust" />
+      <CodePanel language="rust">{main}</CodePanel>
       <h3
         className={css({
           fontFamily: "mono",
@@ -38,7 +38,7 @@ export default function Page() {
       >
         Cargo.toml
       </h3>
-      <CodePanel code={cargo} language="toml" />
+      <CodePanel language="toml">{cargo}</CodePanel>
     </>
   );
 }
