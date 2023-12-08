@@ -1,4 +1,9 @@
 export type BasicExamples = (typeof basicExamples)[number];
+export type RouteInfo = {
+  route: string;
+  title: string;
+  description: string;
+};
 
 export const basicExamples = [
   {
