@@ -1,4 +1,4 @@
-import { BasicExamples } from "@/data/sidebar";
+import { BasicExamples } from "@/data/routes";
 import { css } from "@/styled-system/css";
 import { stack } from "@/styled-system/patterns";
 import Link from "next/link";

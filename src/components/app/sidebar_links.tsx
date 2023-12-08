@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { RouteInfo } from "@/data/sidebar";
+import { RouteInfo } from "@/data/routes";
 import { css } from "@/styled-system/css";
 
 interface SidebarLinksProps {

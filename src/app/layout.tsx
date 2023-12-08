@@ -56,7 +56,7 @@ export default function RootLayout({
               <PageScroll>
                 <div
                   className={container({
-                    maxW: "4xl",
+                    maxW: "5xl",
                   })}
                 >
                   <Breadcrumbs />

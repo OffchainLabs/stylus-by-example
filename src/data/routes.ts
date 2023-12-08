@@ -17,22 +17,22 @@ export const basicExamples = [
     description: "Learn about the basic entrypoint model",
   },
   {
-    route: "/",
+    route: "/basic_examples/first_app",
     title: "First App",
     description: "Learn how to use the console output",
   },
   {
-    route: "/",
+    route: "/basic_examples/primitive_data_types",
     title: "Primitive Data Types",
     description: "Learn how to use the console output",
   },
   {
-    route: "/",
+    route: "/basic_examples/variables",
     title: "Variables",
     description: "Learn how to use the console output",
   },
   {
-    route: "/",
+    route: "/basic_examples/immutable",
     title: "Immutable",
     description: "Learn how to use the console output",
   },

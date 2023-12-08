@@ -2,7 +2,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/app/sidebar";
-import { basicExamples } from "@/data/sidebar";
+import { basicExamples } from "@/data/routes";
 import { Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
 
