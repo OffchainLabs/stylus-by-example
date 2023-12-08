@@ -57,6 +57,7 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
             style: { fontFamily: "var(--font-mono)", fontSize: "16px" },
           }}
           wrapLines={true}
+          showLineNumbers={true}
         >
           {content}
         </SyntaxHighlighter>

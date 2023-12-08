@@ -1,6 +1,23 @@
 # Hello World
 
-Using the <code>console</code> macro from the <code>stylus_sdk</code> allows you to print output to the terminal for debugging. To view the output, you'll need to run a local dev node as described in the [arbitrum docs](https://docs.arbitrum.io/stylus/how-tos/local-stylus-dev-node) and set the <code>debug</code> feature flag as shown in line 7 of the <code>Cargo.toml</code> file below.
+Using the `console!` macro from the `stylus_sdk` allows you to print output to the terminal for debugging purposes. To view the output, you'll need to run a local Stylus dev node as described in the [Arbitrum docs](https://docs.arbitrum.io/stylus/how-tos/local-stylus-dev-node) and **set the debug feature flag** as shown in line 7 of the `Cargo.toml` file below.
+
+The `console!` macro works similar to the built-in `println!` macro that comes with Rust.
+
+### Examples
+
+```rust
+// Out: Stylus says: 'hello there!'
+console!("hello there!");
+// Out: Stylus says: 'format some arguments'
+console!("format {} arguments", "some");
+
+let local_variable = "Stylus";
+// Out: Stylus says: 'Stylus is awesome!'
+console!("{local_variable} is awesome!");
+// Out: Stylus says: 'When will you try out Stylus?'
+console!("When will you try out {}?", local_variable);
+```
 
 ### src/main.rs
 
@@ -17,6 +34,9 @@ use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
 
 #[entrypoint]
 fn user_main(_input: Vec<u8>) -> ArbResult {
+    // Will print 'Stylus says: Hello Stylus!' on your local dev node
+    // Be sure to add "debug" feature flag to your Cargo.toml file as
+    // shown below.
     console!("Hello Stylus!");
 
     Ok(Vec::new())

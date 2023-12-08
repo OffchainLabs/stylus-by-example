@@ -15,11 +15,20 @@ interface CodeProps extends React.HtmlHTMLAttributes<HTMLDivElement> {}
 function Code({ children, className }: CodeProps) {
   if (className?.startsWith("language-")) {
     className = className.split("-").pop();
+    return <CodePanel language={className}>{`${children}`}</CodePanel>;
   } else {
-    className = "txt";
+    return (
+      <code
+        className={css({
+          bg: { _light: "stone.200", _dark: `stone.700` },
+          p: "2px",
+          borderRadius: "sm",
+        })}
+      >
+        {children}
+      </code>
+    );
   }
-
-  return <CodePanel language={className}>{`${children}`}</CodePanel>;
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
@@ -68,7 +77,15 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <em className={css({ fontStyle: "italic" })}>{children}</em>
     ),
     p: ({ children }) => (
-      <p className={css({ fontSize: "16px", mt: "1", mb: "1" })}>{children}</p>
+      <p
+        className={css({
+          fontSize: "18px",
+          mb: "1",
+          lineHeight: "1.8",
+        })}
+      >
+        {children}
+      </p>
     ),
     ul: ({ children }) => (
       <styled.ul
