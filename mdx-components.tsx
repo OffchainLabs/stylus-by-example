@@ -91,10 +91,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <styled.ul
         listStyle="inside"
         fontFamily="sans"
-        fontSize="16px"
+        fontSize="18px"
         ml="0"
         pl="1em"
         pr="-1em"
+        lineHeight="2"
       >
         {children}
       </styled.ul>
