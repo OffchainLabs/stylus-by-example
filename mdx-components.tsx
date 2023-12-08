@@ -82,6 +82,21 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {children}
       </styled.ul>
     ),
+    a: ({ children, href }) => {
+      return (
+        <styled.a
+          textDecoration="underline"
+          target="_blank"
+          cursor="pointer"
+          href={href}
+          _hover={{
+            color: "pink.400",
+          }}
+        >
+          {children}
+        </styled.a>
+      );
+    },
     pre: Pre,
     code: Code,
   };

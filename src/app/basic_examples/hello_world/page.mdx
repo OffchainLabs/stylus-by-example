@@ -1,10 +1,6 @@
 # Hello World
 
-```markdown
-TODO:
-
-- Add println
-```
+Using the <code>console</code> macro from the <code>stylus_sdk</code> allows you to print output to the terminal for debugging. To view the output, you'll need to run a local dev node as described in the [arbitrum docs](https://docs.arbitrum.io/stylus/how-tos/local-stylus-dev-node) and set the <code>debug</code> feature flag as shown in line 7 of the <code>Cargo.toml</code> file below.
 
 ### src/main.rs
 
@@ -17,10 +13,38 @@ extern crate alloc;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 use alloc::vec::Vec;
 
-use stylus_sdk::stylus_proc::entrypoint;
+use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
 
 #[entrypoint]
-fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
-    Ok(input)
+fn user_main(_input: Vec<u8>) -> ArbResult {
+    console!("Hello Stylus!");
+
+    Ok(Vec::new())
 }
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "bytes_in_bytes_out"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = { version = "0.4.2", features = ["debug"] }
+wee_alloc = "0.4.5"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+[workspace]
+
 ```

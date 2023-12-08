@@ -9,6 +9,8 @@ interface CodePanelProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
 }
 
 export function CodePanel({ children, language = "rust" }: CodePanelProps) {
+  let content = children.trim();
+
   return (
     <>
       <div
@@ -22,7 +24,7 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
           position: "relative",
         })}
       >
-        <CopyButton content={children} />
+        <CopyButton content={content} />
         <SyntaxHighlighter
           language={language}
           style={dracula}
@@ -31,8 +33,9 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
             style: { fontFamily: "var(--font-mono)", fontSize: "16px" },
           }}
           wrapLines={true}
+          showLineNumbers={true}
         >
-          {children}
+          {content}
         </SyntaxHighlighter>
       </div>
       <div
@@ -45,7 +48,7 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
           position: "relative",
         })}
       >
-        <CopyButton content={children} />
+        <CopyButton content={content} />
         <SyntaxHighlighter
           language={language}
           style={prism}
@@ -55,7 +58,7 @@ export function CodePanel({ children, language = "rust" }: CodePanelProps) {
           }}
           wrapLines={true}
         >
-          {children}
+          {content}
         </SyntaxHighlighter>
       </div>
     </>
