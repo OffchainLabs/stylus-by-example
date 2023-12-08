@@ -40,11 +40,11 @@ export function CopyButton({ content }: CopyButtonProps) {
             },
             _active: {
               opacity: "0.7",
-              background: "green.400",
+              background: "lime.400",
             },
             _focus: {
               opacity: "0.7",
-              background: "green.400",
+              background: "lime.400",
             },
           })
         )}
