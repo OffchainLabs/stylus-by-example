@@ -15,6 +15,7 @@ export default function SideNav() {
     return (
       <Stack
         className={css({
+          flexShrink: "0",
           w: SIDEBAR_WIDTH,
           h: { base: "0", md: "full" },
           overflowY: "auto",
@@ -55,6 +56,7 @@ export default function SideNav() {
   return (
     <Stack
       className={css({
+        flexShrink: "0",
         w: SIDEBAR_WIDTH,
         h: { base: "0", md: "full" },
         overflowY: "auto",

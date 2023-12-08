@@ -1,4 +1,3 @@
-import { css } from "@/styled-system/css";
 import { grid } from "@/styled-system/patterns";
 import { PageCard } from "@/components/app/page_card";
 import { basicExamples } from "@/data/sidebar";
