@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { HStack, Stack } from "@/styled-system/jsx";
-import { css } from "@/styled-system/css";
+import { css, cx } from "@/styled-system/css";
 import { container, flex, stack } from "@/styled-system/patterns";
 import Navigation from "@/components/app/navigation";
 import { font_mono, font_sans } from "@/styles/font";
@@ -9,6 +9,8 @@ import { font_mono, font_sans } from "@/styles/font";
 import "./globals.css";
 import { ThemeProvider } from "./theme_provider";
 import SideNav from "./side_nav";
+import { Breadcrumbs } from "@/components/app/breadcrumbs";
+import { PageScroll } from "@/components/app/page_scroll";
 
 export const metadata: Metadata = {
   title: "Stylus by Example",
@@ -22,7 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html className={`${font_mono.variable} ${font_sans.variable}`}>
+    <html
+      suppressHydrationWarning
+      className={`${font_mono.variable} ${font_sans.variable}`}
+    >
       <body
         className={css({
           overflow: "hidden",
@@ -41,26 +46,23 @@ export default function RootLayout({
             _dark={{ bg: "stone.800" }}
           >
             <Navigation />
-            <HStack className={css({ flexGrow: "1", overflow: "hidden" })}>
+            <HStack
+              className={css({
+                flexGrow: "1",
+                overflow: "hidden",
+              })}
+            >
               <SideNav />
-              <div
-                className={css({
-                  flexGrow: "1",
-                  h: "full",
-                  overflowY: "auto",
-                  pt: "6",
-                  pb: "12",
-                  px: "4",
-                })}
-              >
+              <PageScroll>
                 <div
                   className={container({
-                    maxW: { base: "4xl", "2xl": "8xl" },
+                    maxW: "5xl",
                   })}
                 >
+                  <Breadcrumbs />
                   {children}
                 </div>
-              </div>
+              </PageScroll>
             </HStack>
           </Stack>
         </ThemeProvider>

@@ -1,4 +1,4 @@
-import { BasicExamples } from "@/data/sidebar";
+import { BasicExamples } from "@/data/routes";
 import { css } from "@/styled-system/css";
 import { stack } from "@/styled-system/patterns";
 import Link from "next/link";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 interface SidebarProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   basicExamples: BasicExamples[];
 }
+
+import { SidebarLinks } from "@/components/app/sidebar_links";
 
 export function Sidebar({ basicExamples }: SidebarProps) {
   return (
@@ -29,23 +31,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
         Basic
       </h2>
       <Stack gap={1}>
-        {basicExamples?.map(({ route, title }, i) => (
-          <Button
-            asChild
-            key={`${title}-${i}`}
-            variant="link"
-            className={css({
-              w: "full",
-              justifyContent: "flex-start",
-              fontWeight: "normal",
-              fontSize: { base: "16px", "2xl": "18px" },
-              paddingInline: "16px",
-              h: { base: "32px", "2xl": "36px" },
-            })}
-          >
-            <Link href={route}>{title}</Link>
-          </Button>
-        ))}
+        <SidebarLinks routes={basicExamples} />
       </Stack>
     </div>
   );

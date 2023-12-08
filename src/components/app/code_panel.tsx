@@ -1,19 +1,16 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  coldarkCold,
-  dracula,
-  oneDark,
-  oneLight,
-  prism,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+import { dracula, prism } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { css } from "@/styled-system/css";
+import { CopyButton } from "@/components/app/copy_button";
 
 interface CodePanelProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
-  code: string;
+  children: string;
   language?: string;
 }
 
-export function CodePanel({ code, language = "rust" }: CodePanelProps) {
+export function CodePanel({ children, language = "rust" }: CodePanelProps) {
+  let content = children.trim();
+
   return (
     <>
       <div
@@ -22,9 +19,12 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
           borderWidth: "1px",
           borderRadius: "lg",
           overflow: "hidden",
+          maxW: "4xl",
           display: { _light: "none" },
+          position: "relative",
         })}
       >
+        <CopyButton content={content} />
         <SyntaxHighlighter
           language={language}
           style={dracula}
@@ -33,8 +33,9 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
             style: { fontFamily: "var(--font-mono)", fontSize: "16px" },
           }}
           wrapLines={true}
+          showLineNumbers={true}
         >
-          {code}
+          {content}
         </SyntaxHighlighter>
       </div>
       <div
@@ -44,8 +45,10 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
           borderRadius: "lg",
           overflow: "hidden",
           display: { _dark: "none" },
+          position: "relative",
         })}
       >
+        <CopyButton content={content} />
         <SyntaxHighlighter
           language={language}
           style={prism}
@@ -54,8 +57,9 @@ export function CodePanel({ code, language = "rust" }: CodePanelProps) {
             style: { fontFamily: "var(--font-mono)", fontSize: "16px" },
           }}
           wrapLines={true}
+          showLineNumbers={true}
         >
-          {code}
+          {content}
         </SyntaxHighlighter>
       </div>
     </>

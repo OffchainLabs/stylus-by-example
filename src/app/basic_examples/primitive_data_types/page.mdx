@@ -1,4 +1,9 @@
-export const main = `#![no_main]
+# Primitive Data Types
+
+### src/main.rs
+
+```rust
+#![no_main]
 #![no_std]
 extern crate alloc;
 
@@ -12,9 +17,12 @@ use stylus_sdk::stylus_proc::entrypoint;
 fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
     Ok(input)
 }
-`;
+```
 
-export const cargo = `[package]
+### Cargo.toml
+
+```rust
+[package]
 name = "bytes_in_bytes_out"
 version = "0.1.0"
 edition = "2021"
@@ -34,4 +42,4 @@ panic = "abort"
 opt-level = "s"
 
 [workspace]
-`;
+```

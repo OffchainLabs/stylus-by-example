@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/app/theme_provider";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { font_sans, font_mono } from "@/styles/font";
 import { Sidebar } from "@/components/app/sidebar";
-import { basicExamples } from "@/data/sidebar";
+import { basicExamples } from "@/data/routes";
 import { HStack, Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
 import { flex, hstack, stack } from "@/styled-system/patterns";

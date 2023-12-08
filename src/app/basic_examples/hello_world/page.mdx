@@ -1,0 +1,70 @@
+# Hello World
+
+Using the `console!` macro from the `stylus_sdk` allows you to print output to the terminal for debugging purposes. To view the output, you'll need to run a local Stylus dev node as described in the [Arbitrum docs](https://docs.arbitrum.io/stylus/how-tos/local-stylus-dev-node) and **set the debug feature flag** as shown in line 7 of the `Cargo.toml` file below.
+
+The `console!` macro works similar to the built-in `println!` macro that comes with Rust.
+
+### Examples
+
+```rust
+// Out: Stylus says: 'hello there!'
+console!("hello there!");
+// Out: Stylus says: 'format some arguments'
+console!("format {} arguments", "some");
+
+let local_variable = "Stylus";
+// Out: Stylus says: 'Stylus is awesome!'
+console!("{local_variable} is awesome!");
+// Out: Stylus says: 'When will you try out Stylus?'
+console!("When will you try out {}?", local_variable);
+```
+
+### src/main.rs
+
+```rust
+#![no_main]
+#![no_std]
+extern crate alloc;
+
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+use alloc::vec::Vec;
+
+use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
+
+#[entrypoint]
+fn user_main(_input: Vec<u8>) -> ArbResult {
+    // Will print 'Stylus says: Hello Stylus!' on your local dev node
+    // Be sure to add "debug" feature flag to your Cargo.toml file as
+    // shown below.
+    console!("Hello Stylus!");
+
+    Ok(Vec::new())
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "bytes_in_bytes_out"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = { version = "0.4.2", features = ["debug"] }
+wee_alloc = "0.4.5"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+[workspace]
+
+```
