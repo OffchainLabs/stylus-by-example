@@ -36,8 +36,10 @@ export function CopyButton({ content }: CopyButtonProps) {
             rounded: "sm",
             _hover: {
               cursor: "pointer",
+              opacity: "0.7",
             },
             _active: {
+              opacity: "0.7",
               background: "green.400",
             },
             _focus: {
