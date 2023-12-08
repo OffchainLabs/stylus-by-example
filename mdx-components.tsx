@@ -13,13 +13,11 @@ function Pre({
 interface CodeProps extends React.HtmlHTMLAttributes<HTMLDivElement> {}
 
 function Code({ children, className }: CodeProps) {
-  console.log({ className });
   if (className?.startsWith("language-")) {
     className = className.split("-").pop();
   } else {
     className = "txt";
   }
-  console.log({ className });
 
   return <CodePanel language={className}>{`${children}`}</CodePanel>;
 }
