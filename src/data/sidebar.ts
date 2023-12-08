@@ -1,10 +1,34 @@
 export type BasicExamples = (typeof basicExamples)[number];
 
 export const basicExamples = [
-  { title: "Hello World", route: "/basic_examples/hello_world" },
-  { title: "Bytes In, Bytes Out", route: "/basic_examples/bytes_in_bytes_out" },
-  { title: "First App", route: "/" },
-  { title: "Primitive Data Types", route: "/" },
-  { title: "Variables", route: "/" },
-  { title: "Immutable", route: "/" },
+  {
+    route: "/basic_examples/hello_world",
+    title: "Hello World",
+    description: "Learn how to use the console output",
+  },
+  {
+    route: "/basic_examples/bytes_in_bytes_out",
+    title: "Bytes In, Bytes Out",
+    description: "Learn about the basic entrypoint model",
+  },
+  {
+    route: "/",
+    title: "First App",
+    description: "Learn how to use the console output",
+  },
+  {
+    route: "/",
+    title: "Primitive Data Types",
+    description: "Learn how to use the console output",
+  },
+  {
+    route: "/",
+    title: "Variables",
+    description: "Learn how to use the console output",
+  },
+  {
+    route: "/",
+    title: "Immutable",
+    description: "Learn how to use the console output",
+  },
 ];
