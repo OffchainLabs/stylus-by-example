@@ -75,7 +75,7 @@ export function Breadcrumbs() {
               p: "0",
               m: "0",
               fontSize: FONT_SIZE,
-              h: { base: "32px", "2xl": "36px" },
+              h: { base: "20px", "2xl": "24px" },
               color: segment === LAST_SEGMENT ? ACTIVE_ROUTE_COLOR : TEXT_COLOR,
               textDecoration: segment === LAST_SEGMENT ? "underline" : "",
             })}
