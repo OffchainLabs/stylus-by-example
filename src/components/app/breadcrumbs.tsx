@@ -4,6 +4,7 @@ import { HStack } from "@/styled-system/jsx";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { css } from "@/styled-system/css";
+import { styled } from "@/styled-system/jsx";
 import Link from "next/link";
 import { HomeIcon } from "@radix-ui/react-icons";
 
@@ -48,16 +49,31 @@ export function Breadcrumbs() {
   const LAST_SEGMENT = segments[segments.length - 1];
 
   return (
-    <HStack fontFamily="mono" fontSize={FONT_SIZE} mb={6}>
+    <HStack
+      fontFamily="mono"
+      fontSize={FONT_SIZE}
+      mb={6}
+      flexWrap="wrap"
+      gap="2"
+      rowGap="0"
+    >
       <HomeButton />
       {segments.map((segment, index) => (
-        <div key={`${segment}-${index}`}>
-          <span>{` => `}</span>
+        <HStack
+          className={css({
+            whiteSpace: "nowrap",
+            gap: "2",
+            justifyContent: "flex-start",
+          })}
+          key={`${segment}-${index}`}
+        >
+          <styled.span>{`=>`}</styled.span>
           <Button
             asChild
             variant="link"
             className={css({
               p: "0",
+              m: "0",
               fontSize: FONT_SIZE,
               h: { base: "32px", "2xl": "36px" },
               color: segment === LAST_SEGMENT ? ACTIVE_ROUTE_COLOR : TEXT_COLOR,
@@ -68,7 +84,7 @@ export function Breadcrumbs() {
               {segment}
             </Link>
           </Button>
-        </div>
+        </HStack>
       ))}
     </HStack>
   );
