@@ -156,15 +156,14 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
 
 ### Cargo.toml
 
-_NOTE: Do not deploy a contract to prod with `debug` feature flag set!_
-
-```rust
+```toml
 [package]
 name = "primitive_data_types"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# NOTE: Do not deploy a contract to prod with `debug` feature flag set!
 stylus-sdk = { version = "0.4.2", features = ["debug"] }
 wee_alloc = "0.4.5"
 
