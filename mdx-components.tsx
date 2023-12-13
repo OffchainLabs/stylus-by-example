@@ -41,7 +41,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           fontFamily: "sans",
           fontSize: "2xl",
           fontWeight: "bold",
-          mt: "2",
+          mt: "4",
           mb: "4",
         })}
       >
@@ -54,7 +54,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           fontFamily: "sans",
           fontSize: "xl",
           fontWeight: "bold",
-          mt: "2",
+          mt: "4",
           mb: "3",
         })}
       >
@@ -80,6 +80,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <p
         className={css({
           fontSize: "18px",
+          mt: "2",
           mb: "1",
           lineHeight: "1.8",
         })}

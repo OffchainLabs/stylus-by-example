@@ -1,12 +1,131 @@
 export const metadata = {
   title: "Primitive Data Types • Stylus by Example",
   description:
-    "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
+    "Defines some of the basic primitives used in Arbitrum Stylus Rust smart contracts and how they map to compatible Solidity constructs.",
 };
 
 {/* Begin Content */}
 
 # Primitive Data Types
+
+The **Stylus SDK** makes use of the popular **Alloy** library (from the developers of **ethers-rs** and **Foundry**) to represent various native Solidity types as Rust types and to seamlessly convert between them when needed. These are needed since there are a number of custom types (like address) and large integers that are not natively supported in Rust.
+
+In this section, we'll focus on the following types:
+
+- `U256`
+- `I256`
+- `Address`
+- `bool`
+
+More in-depth documentation about the available methods and types in the Alloy library can be found in their docs. It also helps to cross-reference with Solidity docs if you don't already have a solid understanding of those types.
+
+## Resources:
+
+- [Alloy docs (v0.3.2)](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/index.html)
+  - [`Address`](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/struct.Address.html)
+  - [`Signed`](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/struct.Signed.html)
+  - [`Uint`](https://docs.rs/ruint/1.10.1/ruint/struct.Uint.html)
+- [Solidity docs (v0.8.19)](https://docs.soliditylang.org/en/v0.8.19/types.html)
+
+## Integers
+
+Alloy defines a set of convenient Rust types to represent the typically sized integers used in Solidity. The type `U256` represents a 256-bit _unsigned_ integer, meaning it cannot be negative. The range for a `U256` number is 0 to 2^256 - 1.
+
+Negative numbers are allowed for I types, such as `I256`. These represent signed integers.
+
+- `U256` maps to `uint256` ... `I256` maps to `int256`
+- `U128` maps to `uint128` ... `I128` maps to `int128`
+- ...
+- `U8` maps to `uint8` ... `I8` maps to `int8`
+
+### Integer Usage
+
+```rust
+// Unsigned
+let eight_bit: U8 = U8::from(1);
+let two_fifty_six_bit: U256 = U256::from(0xff_u64);
+
+// Out: Stylus says: '8-bit: 1 | 256-bit: 255'
+console!("8-bit: {} | 256-bit: {}", eight_bit, two_fifty_six_bit);
+
+// Signed
+let eight_bit: I8 = I8::unchecked_from(-1);
+let two_fifty_six_bit: I256 = I256::unchecked_from(0xff_u64);
+
+// Out: Stylus says: '8-bit: -1 | 256-bit: 255'
+console!("8-bit: {} | 256-bit: {}", eight_bit, two_fifty_six_bit);
+```
+
+### Expanded Integer Usage
+
+```rust
+// Use `try_from` if you're not sure it'll fit
+let a = I256::try_from(20003000).unwrap();
+// Or parse from a string
+let b = "100".parse::<I256>().unwrap();
+// With hex characters
+let c = "-0x138f".parse::<I256>().unwrap();
+// Underscores are ignored
+let d = "1_000_000".parse::<I256>().unwrap();
+
+// Math works great
+let e = a * b + c - d;
+// Out: Stylus says: '20003000 * 100 + -5007 - 1000000 = 1999294993'
+console!("{} * {} + {} - {} = {}", a, b, c, d, e);
+
+// Useful constants
+let f = I256::MAX;
+let g = I256::MIN;
+let h = I256::ZERO;
+let i = I256::MINUS_ONE;
+
+// Stylus says: '5789...9967, -5789...9968, 0, -1'
+console!("{f}, {g}, {h}, {i}");
+// As hex: Stylus says: '0x7fff...ffff, 0x8000...0000, 0x0, 0xffff...ffff'
+console!("{:#x}, {:#x}, {:#x}, {:#x}", f, g, h, i);
+```
+
+## Address
+
+Ethereum addresses are 20 bytes in length, or 160 bits. Alloy provides a number of helper utilities for converting to addresses from strings, bytes, numbers, and addresses.
+
+### Address Usage
+
+```rust
+// From a 20 byte slice, all 1s
+let addr1 = Address::from([0x11; 20]);
+// Out: Stylus says: '0x1111111111111111111111111111111111111111'
+console!("{addr1}");
+
+// Use the address! macro to parse a string as a checksummed address
+let addr2 = address!("d8da6bf26964af9d7eed9e03e53415d37aa96045");
+// Out: Stylus says: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+console!("{addr2}");
+
+// Format compressed addresses for output
+// Out: Stylus says: '0xd8dA…6045'
+console!("{addr2:#}");
+```
+
+## Boolean
+
+Use native Rust primitives where it makes sense and where no equivalent Alloy primitive exists.
+
+### Boolean Usage
+
+```rust
+let frightened: bool = true;
+// Out: Stylus says: 'Boo! Did I scare you?'
+console!("Boo! Did I scare you?");
+
+let response = match frightened {
+    true => "Yes!".to_string(),
+    false => "No!".to_string(),
+};
+
+// Out: Stylus says: 'Yes!'
+console!("{response}");
+```
 
 ### src/main.rs
 
@@ -19,24 +138,34 @@ extern crate alloc;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 use alloc::vec::Vec;
 
-use stylus_sdk::stylus_proc::entrypoint;
+// Dependencies for these examples
+use stylus_sdk::{
+    alloy_primitives::{address, Address, I256, I8, U256, U8},
+    console,
+    stylus_proc::entrypoint,
+    ArbResult,
+};
 
 #[entrypoint]
-fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
-    Ok(input)
+fn user_main(_input: Vec<u8>) -> ArbResult {
+    // Test out the above examples here
+
+    Ok(Vec::new())
 }
 ```
 
 ### Cargo.toml
 
+_NOTE: Do not deploy a contract to prod with `debug` feature flag set!_
+
 ```rust
 [package]
-name = "bytes_in_bytes_out"
+name = "primitive_data_types"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-stylus-sdk = "0.4.2"
+stylus-sdk = { version = "0.4.2", features = ["debug"] }
 wee_alloc = "0.4.5"
 
 [features]
