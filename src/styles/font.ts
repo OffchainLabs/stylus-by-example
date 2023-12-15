@@ -1,12 +1,6 @@
 import { Inter as createInter } from "next/font/google";
 import localFont from "next/font/local";
 
-export const font_sans = createInter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-});
-
 export const font_body = localFont({
   display: "swap",
   src: "../fonts/montserrat.ttf",

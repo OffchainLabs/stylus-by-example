@@ -21,7 +21,7 @@ export default defineConfig({
     extend: {
       tokens: {
         fonts: {
-          sans: { value: "var(--font-sans), sans-serif" },
+          sans: { value: "var(--font-body), sans-serif" },
           mono: { value: "var(--font-mono), monospace" },
           body: { value: "var(--font-body), sans-serif" },
           heading: { value: "var(--font-heading), sans-serif" },

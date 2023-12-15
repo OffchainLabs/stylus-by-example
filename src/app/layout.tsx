@@ -4,7 +4,7 @@ import { HStack, Stack } from "@/styled-system/jsx";
 import { css, cx } from "@/styled-system/css";
 import { container, flex, stack } from "@/styled-system/patterns";
 import Navigation from "@/components/app/navigation";
-import { font_mono, font_sans, font_body, font_heading } from "@/styles/font";
+import { font_mono, font_body, font_heading } from "@/styles/font";
 
 import "./globals.css";
 import { ThemeProvider } from "./theme_provider";
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning
-      className={`${font_mono.variable} ${font_sans.variable} ${font_body.variable} ${font_heading.variable}`}
+      className={`${font_mono.variable} ${font_body.variable} ${font_heading.variable}`}
     >
       <body
         className={css({
