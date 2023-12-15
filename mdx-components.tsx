@@ -80,7 +80,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <p
         className={css({
           fontSize: "18px",
-          mt: "1",
+          mt: "2",
           mb: "1",
           lineHeight: "1.75",
           fontFamily: "body",

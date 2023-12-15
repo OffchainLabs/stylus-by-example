@@ -26,6 +26,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
           fontWeight: "bold",
           mb: "1",
           px: "4",
+          fontFamily: "heading",
         })}
       >
         Basic

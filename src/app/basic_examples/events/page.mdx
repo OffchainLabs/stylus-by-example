@@ -50,7 +50,7 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
 
 The `evm::raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
 
-Note: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
+**NOTE**: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
 
 ### Raw Log Usage
 
