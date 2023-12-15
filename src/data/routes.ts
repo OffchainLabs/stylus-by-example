@@ -27,18 +27,15 @@ export const basicExamples = [
     title: "Primitive Data Types",
     description: "Learn about booleans, integers, and addresses",
   },
-  // TODO: Should add another page covering 'global' values like
-  // msg, block, etc.
   {
     route: "/basic_examples/variables",
     title: "Variables",
-    description: "Learn about local and storage variables",
+    description: "Learn about local, state, and global variables",
   },
-  // TODO: SolBE has a 'Constants' page that covers what would be known as static variables in Rust
   {
-    route: "/basic_examples/immutable",
-    title: "Immutable",
-    description: "How to define static or immutable values in your contract",
+    route: "/basic_examples/constants",
+    title: "Constants",
+    description: "How to define constant values in your contract",
   },
   {
     route: "/basic_examples/events",
