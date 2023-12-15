@@ -22,7 +22,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
     >
       <h2
         className={css({
-          fontSize: { base: "20px", "2xl": "20px" },
+          fontSize: { base: "20px", md: "22px", "2xl": "22px" },
           fontWeight: "bold",
           mb: "1",
           px: "4",

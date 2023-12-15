@@ -24,8 +24,9 @@ export function PageCard({ title, description, route }: PageCardProps) {
     >
       <h2
         className={css({
-          fontSize: "lg",
+          fontSize: "xl",
           fontWeight: "bold",
+          fontFamily: "heading",
           mb: "2",
           _groupHover: {
             color: "pink.400",
