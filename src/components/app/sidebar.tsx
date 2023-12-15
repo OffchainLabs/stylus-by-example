@@ -15,7 +15,7 @@ export function Sidebar({ basicExamples }: SidebarProps) {
     <div
       className={stack({
         pt: "4",
-        px: "2",
+        px: "1",
         pb: "24",
         gap: "0",
       })}

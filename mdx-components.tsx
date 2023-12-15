@@ -39,10 +39,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <h1
         className={css({
           fontFamily: "heading",
-          fontSize: "2xl",
+          fontSize: "3xl",
           fontWeight: "bold",
           mt: "4",
-          mb: "4",
+          mb: "2",
         })}
       >
         {children}
@@ -52,10 +52,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <h2
         className={css({
           fontFamily: "heading",
-          fontSize: "xl",
+          fontSize: "2xl",
           fontWeight: "bold",
-          mt: "4",
-          mb: "3",
+          mt: "5",
+          mb: "2",
         })}
       >
         {children}
@@ -65,9 +65,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <h3
         className={css({
           fontFamily: "mono",
-          mt: "4",
+          mt: "5",
           mb: "2",
-          fontSize: "16px",
+          fontSize: "18px",
         })}
       >
         {children}
@@ -80,9 +80,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <p
         className={css({
           fontSize: "18px",
-          mt: "2",
+          mt: "1",
           mb: "1",
-          lineHeight: "1.8",
+          lineHeight: "1.75",
           fontFamily: "body",
         })}
       >

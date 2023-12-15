@@ -40,4 +40,9 @@ export const basicExamples = [
     title: "Immutable",
     description: "How to define static or immutable values in your contract",
   },
+  {
+    route: "/basic_examples/events",
+    title: "Events",
+    description: "Log public events to the blockchain",
+  },
 ];

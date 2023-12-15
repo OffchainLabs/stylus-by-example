@@ -50,7 +50,6 @@ export default function Navigation() {
     >
       <div
         className={hstack({
-          w: SIDEBAR_WIDTH,
           px: "8px",
         })}
       >

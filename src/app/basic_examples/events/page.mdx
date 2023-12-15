@@ -8,33 +8,122 @@ export const metadata = {
 
 # Events
 
-Events allow for data to be logged publicly to the blockchain. Log entries provide the contract's address, a series of up to four topics, and some arbitrary length binary data. The Stylus Rust SDK provides a few ways to publish event logs.
+Events allow for data to be logged publicly to the blockchain. Log entries provide the contract's address, a series of up to four topics, and some arbitrary length binary data. The Stylus Rust SDK provides a few ways to publish event logs described below.
 
 ## Learn More
 
-- [Solidity Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
+- [Solidity docs: Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
+- [`stylus_sdk::evm::log`](https://docs.rs/stylus-sdk/latest/stylus_sdk/evm/fn.log.html)
+- [`alloy_sol_types::SolEvent`](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
 
 ## Log
 
-Using the `evm::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes an Alloy `SolEvent`
+Using the `evm::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes any type that implements Alloy `SolEvent` trait. It's not recommended to attempt to implement this trait on your own. Instead, make use of the provided `sol!` macro to declare your Events and their schema using Solidity-style syntax to declare the parameter types. Alloy will create ABI-compatible Rust types which you can instantiate and pass to the `evm::log` function.
 
-- [`stylus_sdk::evm::log](https://docs.rs/stylus-sdk/latest/stylus_sdk/evm/fn.log.html)
-- [`alloy_sol_types::SolEvent](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
-
-### Examples
+### Log Usage
 
 ```rust
-// Out: Stylus says: 'hello there!'
-console!("hello there!");
-// Out: Stylus says: 'format some arguments'
-console!("format {} arguments", "some");
+// sol! macro event declaration
+// Up to 3 parameters can be indexed.
+// Indexed parameters helps you filter the logs efficiently
+sol! {
+    event Log(address indexed sender, string message);
+    event AnotherLog();
+}
 
-let local_variable = "Stylus";
-// Out: Stylus says: 'Stylus is awesome!'
-console!("{local_variable} is awesome!");
-// Out: Stylus says: 'When will you try out Stylus?'
-console!("When will you try out {}?", local_variable);
+#[entrypoint]
+fn user_main(_input: Vec<u8>) -> ArbResult {
+    // emits a 'Log' event, defined above in the sol! macro
+    evm::log(Log {
+        sender: Address::from([0x11; 20]),
+        message: "Hello world!".to_string(),
+    });
+
+    // no data, but 'AnotherLog' event will still emit to the chain
+    evm::log(AnotherLog {});
+
+    Ok(vec![])
+}
 ```
+
+## Raw Log
+
+The `evm::raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
+
+Note: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
+
+### Raw Log Usage
+
+```rust
+// set up local variables
+let user = Address::from([0x22; 20]);
+let balance = U256::from(10_000_000);
+
+// declare up to 4 topics
+// topics must be of type FixedBytes<32>
+let topics = &[user.into_word()];
+
+// store non-indexed data in a byte Vec
+let mut data: Vec<u8> = vec![];
+// to_be_bytes means 'to big endian bytes'
+data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
+
+// unwrap() here 'consumes' the Result
+evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
+```
+
+## Result
+
+Combining the above examples into the boiler plate provided below this section, deploying to a Stylus chain and then invoking the deployed contract will result in the following three events logged to the chain:
+
+### logs
+
+```json
+[
+  {
+    "address": "0x6cf4a18ac8efd6b0b99d3200c4fb9609dd60d4b3",
+    "topics": [
+      "0x0738f4da267a110d810e6e89fc59e46be6de0c37b1d5cd559b267dc3688e74e0",
+      "0x0000000000000000000000001111111111111111111111111111111111111111"
+    ],
+    "data": "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c48656c6c6f20776f726c64210000000000000000000000000000000000000000",
+    "blockHash": "0xfef880025dc87b5ab4695a0e1a6955dd7603166ecba79ce0f503a568b2ec8940",
+    "blockNumber": "0x94",
+    "transactionHash": "0xc7318dae2164eb441fb80f5b869f844e3e97ae83c24a4639d46ec4d915a30818",
+    "transactionIndex": "0x1",
+    "logIndex": "0x0",
+    "removed": false
+  },
+  {
+    "address": "0x6cf4a18ac8efd6b0b99d3200c4fb9609dd60d4b3",
+    "topics": [
+      "0xfe1a3ad11e425db4b8e6af35d11c50118826a496df73006fc724cb27f2b99946"
+    ],
+    "data": "0x",
+    "blockHash": "0xfef880025dc87b5ab4695a0e1a6955dd7603166ecba79ce0f503a568b2ec8940",
+    "blockNumber": "0x94",
+    "transactionHash": "0xc7318dae2164eb441fb80f5b869f844e3e97ae83c24a4639d46ec4d915a30818",
+    "transactionIndex": "0x1",
+    "logIndex": "0x1",
+    "removed": false
+  },
+  {
+    "address": "0x6cf4a18ac8efd6b0b99d3200c4fb9609dd60d4b3",
+    "topics": [
+      "0x0000000000000000000000002222222222222222222222222222222222222222"
+    ],
+    "data": "0x0000000000000000000000000000000000000000000000000000000000989680",
+    "blockHash": "0xfef880025dc87b5ab4695a0e1a6955dd7603166ecba79ce0f503a568b2ec8940",
+    "blockNumber": "0x94",
+    "transactionHash": "0xc7318dae2164eb441fb80f5b869f844e3e97ae83c24a4639d46ec4d915a30818",
+    "transactionIndex": "0x1",
+    "logIndex": "0x2",
+    "removed": false
+  }
+]
+```
+
+## Boilerplate
 
 ### src/main.rs
 
@@ -46,15 +135,16 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 use alloc::vec::Vec;
+use alloc::{string::ToString, vec};
 
-use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
+use stylus_sdk::alloy_primitives::{U256, Address};
+use stylus_sdk::alloy_sol_types::sol;
+use stylus_sdk::{evm, prelude::*, ArbResult};
+
 
 #[entrypoint]
 fn user_main(_input: Vec<u8>) -> ArbResult {
-    // Will print 'Stylus says: Hello Stylus!' on your local dev node
-    // Be sure to add "debug" feature flag to your Cargo.toml file as
-    // shown below.
-    console!("Hello Stylus!");
+    // Insert logic from above usages here
 
     Ok(Vec::new())
 }
@@ -64,13 +154,15 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
 
 ```toml
 [package]
-name = "bytes_in_bytes_out"
+name = "events"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Note: Do not ship to prod with 'debug' flag set
 stylus-sdk = { version = "0.4.2", features = ["debug"] }
 wee_alloc = "0.4.5"
+alloy-sol-types = "0.3.1"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
