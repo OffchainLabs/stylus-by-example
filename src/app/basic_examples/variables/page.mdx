@@ -1,12 +1,28 @@
 export const metadata = {
   title: "Variables • Stylus by Example",
   description:
-    "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
+    "An explanation of the types of variables available as part of the  Arbitrum Stylus Rust SDK and how it differs from Solidity.",
 };
 
 {/* Begin Content */}
 
 # Variables
+
+In Solidity, there are 3 types of variables: local, state, and global. Local variables are not stored on the blockchain, while state variables are (and incur a much higher cost as a result). This is true of Arbitrum Stylus Rust smart contracts as well, although how they're defined is quite different.
+
+In Rust, **local variables** are just ordinary variables you assign with `let` or `let mut` statements. Local variables are far cheaper than state variables, even on the EVM, however, Stylus local variables are more than 100x cheaper to allocate in memory than their Solidity equivalents.
+
+Unlike Solidity, Rust was not built inherently with the blockchain in mind. It is a general purpose programming language. We therefore define specific _storage_ types to explicitly denote values intended to be stored permanently as part of the contract's state. **State variables** cost the same to store as their Solidity equivalents.
+
+**Global variables** in Solidity, such as `msg.sender` and `block.timestamp`, are available as function calls pulled in from the `stylus_sdk` with their Rust equivalents being `msg::sender()` and `block::timestamp()`, respectively. These variables provide information about the blockchain or the active transaction.
+
+## Learn more
+
+- [Rust Docs - Variables and Mutability](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)
+- [Stylus SDK Rust Docs - Storage](https://docs.rs/stylus-sdk/latest/stylus_sdk/storage/index.html)
+- [Stylus SDK Guide - Storage](https://docs.arbitrum.io/stylus/reference/rust-sdk-guide#storage)
+- [Solidity docs - state variables](https://docs.soliditylang.org/en/v0.8.19/structure-of-a-contract.html#state-variables)
+- [Solidity docs - global variables](https://docs.soliditylang.org/en/v0.8.19/cheatsheet.html#global-variables)
 
 ### src/main.rs
 
@@ -17,13 +33,58 @@ extern crate alloc;
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+use alloc::vec;
 use alloc::vec::Vec;
 
-use stylus_sdk::stylus_proc::entrypoint;
+use stylus_sdk::alloy_primitives::{U16, U256};
+use stylus_sdk::prelude::*;
+use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256};
+use stylus_sdk::{block, console, msg};
 
+#[solidity_storage]
 #[entrypoint]
-fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
-    Ok(input)
+pub struct Contract {
+    initialized: StorageBool,
+    owner: StorageAddress,
+    max_supply: StorageU256,
+}
+
+#[external]
+impl Contract {
+    // State variables are initialized in an `init` function.
+    pub fn init(&mut self) -> Result<(), Vec<u8>> {
+        // We check if contract has been initialized before.
+        // We return if so, we initialize if not.
+        let initialized = self.initialized.get();
+        if initialized {
+            return Ok(());
+        }
+        self.initialized.set(true);
+
+        // We set the contract owner to the caller,
+        // which we get from the global msg module
+        self.owner.set(msg::sender());
+        self.max_supply.set(U256::from(10_000));
+
+        Ok(())
+    }
+
+    pub fn do_something() -> Result<(), Vec<u8>> {
+        // Local variables are not saved to the blockchain
+        // 16-bit Rust integer
+        let i = 456_u16;
+        // 16-bit int inferred from U16 Alloy primitive
+        let j = U16::from(123);
+
+        // Here are some global variables
+        let timestamp = block::timestamp();
+        let amount = msg::value();
+
+        console!("Local variables: {i}, {j}");
+        console!("Global variables: {timestamp}, {amount}");
+
+        Ok(())
+    }
 }
 ```
 
@@ -31,7 +92,7 @@ fn user_main(input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
 
 ```toml
 [package]
-name = "bytes_in_bytes_out"
+name = "variables"
 version = "0.1.0"
 edition = "2021"
 
