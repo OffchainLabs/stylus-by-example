@@ -37,3 +37,7 @@ next-env.d.ts
 
 # panda css
 /src/styled-system
+
+# example code artifacts
+/example_code/**/target/**
+/example_code/**/Cargo.lock

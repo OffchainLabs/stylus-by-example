@@ -1,0 +1,21 @@
+[package]
+name = "events"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = { version = "0.4.2", features = ["debug", "hostio"] }
+wee_alloc = "0.4.5"
+alloy-sol-types = "0.3.1"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+[workspace]
