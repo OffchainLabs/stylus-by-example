@@ -1,0 +1,87 @@
+export const metadata = {
+  title: "Events • Stylus by Example",
+  description:
+    "How to log events to the chain using the Arbitrum Stylus Rust SDK.",
+};
+
+{/* Begin Content */}
+
+# Events
+
+Events allow for data to be logged publicly to the blockchain. Log entries provide the contract's address, a series of up to four topics, and some arbitrary length binary data. The Stylus Rust SDK provides a few ways to publish event logs.
+
+## Learn More
+
+- [Solidity Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
+
+## Log
+
+Using the `evm::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes an Alloy `SolEvent`
+
+- [`stylus_sdk::evm::log](https://docs.rs/stylus-sdk/latest/stylus_sdk/evm/fn.log.html)
+- [`alloy_sol_types::SolEvent](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
+
+### Examples
+
+```rust
+// Out: Stylus says: 'hello there!'
+console!("hello there!");
+// Out: Stylus says: 'format some arguments'
+console!("format {} arguments", "some");
+
+let local_variable = "Stylus";
+// Out: Stylus says: 'Stylus is awesome!'
+console!("{local_variable} is awesome!");
+// Out: Stylus says: 'When will you try out Stylus?'
+console!("When will you try out {}?", local_variable);
+```
+
+### src/main.rs
+
+```rust
+#![no_main]
+#![no_std]
+extern crate alloc;
+
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+use alloc::vec::Vec;
+
+use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
+
+#[entrypoint]
+fn user_main(_input: Vec<u8>) -> ArbResult {
+    // Will print 'Stylus says: Hello Stylus!' on your local dev node
+    // Be sure to add "debug" feature flag to your Cargo.toml file as
+    // shown below.
+    console!("Hello Stylus!");
+
+    Ok(Vec::new())
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "bytes_in_bytes_out"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = { version = "0.4.2", features = ["debug"] }
+wee_alloc = "0.4.5"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+[workspace]
+
+```

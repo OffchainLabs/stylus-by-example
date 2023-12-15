@@ -66,10 +66,10 @@ export default function Navigation() {
         />
         <h2
           className={css({
-            fontSize: { base: "md", md: "xl" },
-            fontFamily: "sans",
+            fontSize: { base: "xl", md: "2xl" },
+            fontFamily: "heading",
             fontWeight: "bold",
-            letterSpacing: "tighter",
+            fontVariantCaps: "titling-caps",
             ml: "-1",
             mr: "6",
           })}

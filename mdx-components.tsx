@@ -38,7 +38,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h1: ({ children }) => (
       <h1
         className={css({
-          fontFamily: "sans",
+          fontFamily: "heading",
           fontSize: "2xl",
           fontWeight: "bold",
           mt: "4",
@@ -51,7 +51,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h2: ({ children }) => (
       <h2
         className={css({
-          fontFamily: "sans",
+          fontFamily: "heading",
           fontSize: "xl",
           fontWeight: "bold",
           mt: "4",
@@ -83,6 +83,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           mt: "2",
           mb: "1",
           lineHeight: "1.8",
+          fontFamily: "body",
         })}
       >
         {children}
@@ -91,7 +92,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ul: ({ children }) => (
       <styled.ul
         listStyle="inside"
-        fontFamily="sans"
+        fontFamily="body"
         fontSize="18px"
         ml="0"
         pl="1em"

@@ -23,6 +23,8 @@ export default defineConfig({
         fonts: {
           sans: { value: "var(--font-sans), sans-serif" },
           mono: { value: "var(--font-mono), monospace" },
+          body: { value: "var(--font-body), sans-serif" },
+          heading: { value: "var(--font-heading), sans-serif" },
         },
       },
     },
