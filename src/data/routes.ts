@@ -5,6 +5,15 @@ export type RouteInfo = {
   description: string;
 };
 
+export const gettingStarted = [
+  {
+    route: "/getting_started/using_the_cli",
+    title: "Using the CLI",
+    description:
+      "How to use cargo stylus and Foundry's cast to effectively test smart contracts",
+  },
+];
+
 export const basicExamples = [
   {
     route: "/basic_examples/hello_world",
