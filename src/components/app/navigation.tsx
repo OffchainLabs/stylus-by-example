@@ -2,33 +2,22 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
-import { basicExamples } from "@/data/routes";
-import { HStack, Stack } from "@/styled-system/jsx";
+import { basicExamples, gettingStarted } from "@/data/routes";
+import { Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
 import { flex, hstack, stack } from "@/styled-system/patterns";
 import { ModeToggle } from "@/components/app/mode_toggle";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
-  NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
 } from "@/components/ui/navigation_menu";
 import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
-const SIDEBAR_WIDTH = "256px";
 
 export default function Navigation() {
   return (
@@ -161,6 +150,37 @@ export default function Navigation() {
                 gap: "0",
               })}
             >
+              <h2
+                className={css({
+                  fontSize: "lg",
+                  fontWeight: "bold",
+                  mb: "1",
+                  px: "4",
+                })}
+              >
+                Getting Started
+              </h2>
+              <Stack gap={1}>
+                {gettingStarted?.map(({ route, title }, i) => (
+                  <Button
+                    asChild
+                    key={`${title}-${i}`}
+                    variant="link"
+                    size="lg"
+                    className={css({
+                      w: "full",
+                      justifyContent: "flex-start",
+                      fontWeight: "normal",
+                      h: "32px",
+                      paddingInline: "16px",
+                    })}
+                  >
+                    <SheetClose asChild>
+                      <Link href={route}>{title}</Link>
+                    </SheetClose>
+                  </Button>
+                ))}
+              </Stack>
               <h2
                 className={css({
                   fontSize: "lg",

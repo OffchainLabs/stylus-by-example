@@ -1,11 +1,7 @@
-import { BasicExamples, gettingStarted } from "@/data/routes";
+import { gettingStarted, basicExamples } from "@/data/routes";
 import { css } from "@/styled-system/css";
 import { stack } from "@/styled-system/patterns";
 import { Stack } from "@/styled-system/jsx";
-
-interface SidebarProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
-  basicExamples: BasicExamples[];
-}
 
 import { SidebarLinks } from "@/components/app/sidebar_links";
 import { ReactNode } from "react";
@@ -26,7 +22,7 @@ function SidebarHeading({ children }: { children: ReactNode }) {
   );
 }
 
-export function Sidebar({ basicExamples }: SidebarProps) {
+export function Sidebar() {
   return (
     <div
       className={stack({
