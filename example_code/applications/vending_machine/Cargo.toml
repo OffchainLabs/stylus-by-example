@@ -20,10 +20,6 @@ eyre = "0.6.8"
 [features]
 export-abi = ["stylus-sdk/export-abi"]
 
-[[bin]]
-name = "cupcake-example"
-path = "src/main.rs"
-
 [lib]
 crate-type = ["lib", "cdylib"]
 
