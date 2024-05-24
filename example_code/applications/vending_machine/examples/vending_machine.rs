@@ -33,11 +33,11 @@ async fn main() -> eyre::Result<()> {
     // Load environment variables from .env file
     dotenv().ok();
 
-     // Debugging: Print environment variables
-     println!("PRIV_KEY_PATH: {:?}", env::var(PRIV_KEY_PATH));
-     println!("RPC_URL: {:?}", env::var(RPC_URL));
-     println!("STYLUS_PROGRAM_ADDRESS: {:?}", env::var(STYLUS_PROGRAM_ADDRESS));
-     println!("USER_ADDRESS: {:?}", env::var(USER_ADDRESS));
+    // Debugging: Print environment variables
+    //println!("PRIV_KEY_PATH: {:?}", env::var(PRIV_KEY_PATH));
+    //println!("RPC_URL: {:?}", env::var(RPC_URL));
+    //println!("STYLUS_PROGRAM_ADDRESS: {:?}", env::var(STYLUS_PROGRAM_ADDRESS));
+    //println!("USER_ADDRESS: {:?}", env::var(USER_ADDRESS));
     
     let priv_key_path = env::var(PRIV_KEY_PATH).map_err(|_| eyre!("No {} env var set", PRIV_KEY_PATH))?;
     let rpc_url = env::var(RPC_URL).map_err(|_| eyre!("No {} env var set", RPC_URL))?;
