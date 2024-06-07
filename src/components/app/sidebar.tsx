@@ -1,4 +1,4 @@
-import { gettingStarted, basicExamples } from "@/data/routes";
+import { gettingStarted, basicExamples, applications } from "@/data/routes";
 import { css } from "@/styled-system/css";
 import { stack } from "@/styled-system/patterns";
 import { Stack } from "@/styled-system/jsx";
@@ -39,6 +39,10 @@ export function Sidebar() {
       <SidebarHeading>Basic</SidebarHeading>
       <Stack gap={1} mb={4}>
         <SidebarLinks routes={basicExamples} />
+      </Stack>
+      <SidebarHeading>Applications</SidebarHeading>
+      <Stack gap={1} mb={4}>
+        <SidebarLinks routes={applications} />
       </Stack>
     </div>
   );
