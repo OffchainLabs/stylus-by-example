@@ -17,10 +17,10 @@ use crate::erc20::{Erc20, Erc20Params, Erc20Error};
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 /// Immutable definitions
-struct MyTokenParams;
-impl Erc20Params for MyTokenParams {
-    const NAME: &'static str = "MyToken";
-    const SYMBOL: &'static str = "MTK";
+struct StylusTokenParams;
+impl Erc20Params for StylusTokenParams {
+    const NAME: &'static str = "StylusToken";
+    const SYMBOL: &'static str = "STK";
     const DECIMALS: u8 = 18;
 }
 
@@ -29,16 +29,16 @@ impl Erc20Params for MyTokenParams {
 // storage slots and types.
 sol_storage! {
     #[entrypoint]
-    struct MyToken {
-        // Allows erc20 to access MyToken's storage and make calls
+    struct StylusToken {
+        // Allows erc20 to access StylusToken's storage and make calls
         #[borrow]
-        Erc20<MyTokenParams> erc20;
+        Erc20<StylusTokenParams> erc20;
     }
 }
 
 #[external]
-#[inherit(Erc20<MyTokenParams>)]
-impl MyToken {
+#[inherit(Erc20<StylusTokenParams>)]
+impl StylusToken {
     /// Mints tokens
     pub fn mint(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
         self.erc20.mint(to, value)?;
