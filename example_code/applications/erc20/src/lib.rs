@@ -40,7 +40,13 @@ sol_storage! {
 #[inherit(Erc20<StylusTokenParams>)]
 impl StylusToken {
     /// Mints tokens
-    pub fn mint(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
+    pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
+        self.erc20.mint(msg::sender(), value)?;
+        Ok(())
+    }
+
+    /// Mints tokens to another address
+    pub fn mint_to(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
         self.erc20.mint(to, value)?;
         Ok(())
     }
