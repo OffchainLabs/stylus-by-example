@@ -4,6 +4,7 @@
 //! and check the balance again. The deployed program is fully written in Rust and compiled to WASM
 //! but with Stylus, it is accessible just as a normal Solidity smart contract is via an ABI.
 
+use dotenv::dotenv;
 use ethers::{
     middleware::SignerMiddleware,
     prelude::abigen,
@@ -12,11 +13,10 @@ use ethers::{
     types::Address,
 };
 use eyre::eyre;
+use std::env;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 use std::sync::Arc;
-use dotenv::dotenv;
-use std::env;
 
 /// Your private key file path.
 const PRIV_KEY_PATH: &str = "PRIV_KEY_PATH";
@@ -24,7 +24,7 @@ const PRIV_KEY_PATH: &str = "PRIV_KEY_PATH";
 /// Stylus RPC endpoint url.
 const RPC_URL: &str = "RPC_URL";
 
-/// Deployed pragram address.
+/// Deployed program address.
 const STYLUS_PROGRAM_ADDRESS: &str = "STYLUS_PROGRAM_ADDRESS";
 const USER_ADDRESS: &str = "USER_ADDRESS";
 
@@ -38,18 +38,20 @@ async fn main() -> eyre::Result<()> {
     //println!("RPC_URL: {:?}", env::var(RPC_URL));
     //println!("STYLUS_PROGRAM_ADDRESS: {:?}", env::var(STYLUS_PROGRAM_ADDRESS));
     //println!("USER_ADDRESS: {:?}", env::var(USER_ADDRESS));
-    
-    let priv_key_path = env::var(PRIV_KEY_PATH).map_err(|_| eyre!("No {} env var set", PRIV_KEY_PATH))?;
+
+    let priv_key_path =
+        env::var(PRIV_KEY_PATH).map_err(|_| eyre!("No {} env var set", PRIV_KEY_PATH))?;
     let rpc_url = env::var(RPC_URL).map_err(|_| eyre!("No {} env var set", RPC_URL))?;
     let program_address = env::var(STYLUS_PROGRAM_ADDRESS)
         .map_err(|_| eyre!("No {} env var set", STYLUS_PROGRAM_ADDRESS))?;
-    let user_address_str = env::var(USER_ADDRESS).map_err(|_| eyre!("No {} env var set", USER_ADDRESS))?;
-    let user_address: Address = user_address_str.parse().map_err(|e| eyre!("Failed to parse user address: {}", e))?;
+    let user_address_str =
+        env::var(USER_ADDRESS).map_err(|_| eyre!("No {} env var set", USER_ADDRESS))?;
+    let user_address: Address = user_address_str
+        .parse()
+        .map_err(|e| eyre!("Failed to parse user address: {}", e))?;
 
-
-
-
-    abigen!( //abigen! macro is used to generate type-safe bindings to the Counter smart contract based on its ABI
+    abigen!(
+        //abigen! macro is used to generate type-safe bindings to the Counter smart contract based on its ABI
         VendingMachine,
         r#"[
             function giveCupcakeTo(address user_address) external returns (bool)
@@ -63,7 +65,6 @@ async fn main() -> eyre::Result<()> {
     let privkey = read_secret_from_file(&priv_key_path)?;
     println!("Private key read from file: {}", privkey); // Debugging line
 
-
     let wallet = LocalWallet::from_str(&privkey)?;
     let chain_id = provider.get_chainid().await?.as_u64();
     let client = Arc::new(SignerMiddleware::new(
@@ -73,11 +74,17 @@ async fn main() -> eyre::Result<()> {
 
     let vending_machine = VendingMachine::new(address, client);
 
-    let balance = vending_machine.get_cupcake_balance_for(user_address).call().await?;
+    let balance = vending_machine
+        .get_cupcake_balance_for(user_address)
+        .call()
+        .await?;
     println!("User cupcake balance = {:?}", balance);
 
-
-    let tx_receipt = vending_machine.give_cupcake_to(user_address).send().await?.await?;
+    let tx_receipt = vending_machine
+        .give_cupcake_to(user_address)
+        .send()
+        .await?
+        .await?;
     match tx_receipt {
         Some(receipt) => {
             if receipt.status == Some(1.into()) {
@@ -91,7 +98,10 @@ async fn main() -> eyre::Result<()> {
         }
     }
 
-    let balance = vending_machine.get_cupcake_balance_for(user_address).call().await?;
+    let balance = vending_machine
+        .get_cupcake_balance_for(user_address)
+        .call()
+        .await?;
     println!("New user cupcake balance = {:?}", balance);
 
     Ok(())

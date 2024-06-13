@@ -36,10 +36,8 @@ sol_storage! {
 // Declare that `VendingMachine` is a contract with the following external methods.
 #[external]
 impl VendingMachine {
-  
     // Give a cupcake to the specified user if they are eligible (i.e., if at least 5 seconds have passed since their last cupcake).
     pub fn give_cupcake_to(&mut self, user_address: Address) -> bool {
-        
         // Get the last distribution time for the user.
         let last_distribution = self.cupcake_distribution_times.get(user_address);
         // Calculate the earliest next time the user can receive a cupcake.
@@ -48,8 +46,9 @@ impl VendingMachine {
         // Get the current block timestamp.
         let current_time = block::timestamp();
         // Check if the user can receive a cupcake.
-        let user_can_receive_cupcake = five_seconds_from_last_distribution <=  Uint::<256, 4>::from(current_time);
-    
+        let user_can_receive_cupcake =
+            five_seconds_from_last_distribution <= Uint::<256, 4>::from(current_time);
+
         if user_can_receive_cupcake {
             // Increment the user's cupcake balance.
             let mut balance_accessor = self.cupcake_balances.setter(user_address);
@@ -61,17 +60,18 @@ impl VendingMachine {
             let new_distribution_time = block::timestamp();
             time_accessor.set(Uint::<256, 4>::from(new_distribution_time));
             return true;
-        }
-        else{
+        } else {
             // User must wait before receiving another cupcake.
-            console!("HTTP 429: Too Many Cupcakes (you must wait at least 5 seconds between cupcakes)");
+            console!(
+                "HTTP 429: Too Many Cupcakes (you must wait at least 5 seconds between cupcakes)"
+            );
             return false;
         }
     }
 
     // Get the cupcake balance for the specified user.
     #[view]
-    pub fn get_cupcake_balance_for(&self, user_address: Address)  -> Uint<256, 4> {
+    pub fn get_cupcake_balance_for(&self, user_address: Address) -> Uint<256, 4> {
         // Return the user's cupcake balance from storage.
         return self.cupcake_balances.get(user_address);
     }

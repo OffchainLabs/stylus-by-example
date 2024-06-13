@@ -1,40 +1,14 @@
 # Stylus Cupcake Example
 
-An example project for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a vending machine Ethereum smart contract.
+An example project for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a vending machine Ethereum smart contract. Below is the interface for the VendingMachine contract:
 
 ```js
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
-
-// Rule 2: The vending machine's rules can't be changed by anyone.
-contract VendingMachine {
-    // state variables = internal memory of the vending machine
-    mapping(address => uint) private _cupcakeBalances;
-    mapping(address => uint) private _cupcakeDistributionTimes;
-
-    function giveCupcakeTo(address userAddress) public returns (bool) {
-        // this code is unnecessary, but we're keeping it here so you can compare it to the JS implementation
-        if (_cupcakeDistributionTimes[userAddress] == 0) {
-            _cupcakeBalances[userAddress] = 0;
-            _cupcakeDistributionTimes[userAddress] = 0;
-        }
-
-        // Rule 1: The vending machine will distribute a cupcake to anyone who hasn't recently received one.
-        uint fiveSecondsFromLastDistribution = _cupcakeDistributionTimes[userAddress] + 5 seconds;
-        bool userCanReceiveCupcake = fiveSecondsFromLastDistribution <= block.timestamp;
-        if (userCanReceiveCupcake) {
-            _cupcakeBalances[userAddress]++;
-            _cupcakeDistributionTimes[userAddress] = block.timestamp;
-            return true;
-        } else {
-            revert("HTTP 429: Too Many Cupcakes (you must wait at least 5 seconds between cupcakes)");
-        }
-    }
+interface IVendingMachine {
+    // Function to distribute a cupcake to a user
+    function giveCupcakeTo(address userAddress) external returns (bool);
 
     // Getter function for the cupcake balance of a user
-    function getCupcakeBalanceFor(address userAddress) public view returns (uint) {
-        return _cupcakeBalances[userAddress];
-    }
+    function getCupcakeBalanceFor(address userAddress) external view returns (uint);
 }
 ```
 
