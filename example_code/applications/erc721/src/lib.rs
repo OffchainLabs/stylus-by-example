@@ -5,7 +5,7 @@ extern crate alloc;
 // Modules and imports
 mod erc721;
 
-use alloy_primitives::{U256};
+use alloy_primitives::{U256, Address};
 /// Import the Stylus SDK along with alloy primitive types for use in our program.
 use stylus_sdk::{
     msg, prelude::*
@@ -48,10 +48,21 @@ impl StylusNFT {
         Ok(())
     }
 
+    /// Mints an NFT to another address
+    pub fn mint_to(&mut self, to: Address) -> Result<(), Erc721Error> {
+        self.erc721.mint(to)?;
+        Ok(())
+    }
+
     /// Burns an NFT
     pub fn burn(&mut self, token_id: U256) -> Result<(), Erc721Error> {
         // This function checks that msg::sender() owns the specified token_id
         self.erc721.burn(msg::sender(), token_id)?;
         Ok(())
+    }
+
+    /// Total supply
+    pub fn total_supply(&mut self) -> Result<U256, Erc721Error> {
+        Ok(self.erc721.total_supply.get())
     }
 }
