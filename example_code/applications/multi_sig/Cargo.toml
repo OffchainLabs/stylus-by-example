@@ -2,11 +2,8 @@
 name = "stylus-multisig-example"
 version = "0.1.5"
 edition = "2021"
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/Jason-W123/stylus-multisig-example"
-repository = "https://github.com/Jason-W123/stylus-multisig-example"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
-description = "Stylus hello world example"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy", "multisig"]
+description = "Stylus multisig example"
 
 [dependencies]
 alloy-primitives = "0.3.1"
