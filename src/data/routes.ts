@@ -52,3 +52,16 @@ export const basicExamples = [
     description: "Log public events to the blockchain",
   },
 ];
+
+export const applications = [
+  {
+    route: "/applications/erc20",
+    title: "ERC-20",
+    description: "An example implementation of the ERC-20 token standard in Rust",
+  },
+  {
+    route: "/applications/erc721",
+    title: "ERC-721",
+    description: "An example implementation of the ERC-721 token standard in Rust",
+  },
+];
