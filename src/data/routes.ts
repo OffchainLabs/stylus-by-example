@@ -51,6 +51,11 @@ export const basicExamples = [
     title: "Events",
     description: "Log public events to the blockchain",
   },
+  {
+    route: "/basic_examples/function_selector",
+    title: "Function selector",
+    description: "Compute the encoded function selector of a contract's function",
+  },
 ];
 
 export const applications = [
