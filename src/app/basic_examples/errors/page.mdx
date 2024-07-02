@@ -22,10 +22,75 @@ You can throw an error by calling `unwrap()`, `match`, `? Operator` and `custom 
 - [Solidity docs: Expressions and Control Structures](https://docs.soliditylang.org/en/latest/control-structures.html)
 - [`#[derive(SolidityError)]`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/derive.SolidityError.html)
 - [`alloy_sol_types::SolError`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolError.html)
+- [`Error handling: Rust book`](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
 
-## Log
+### Recoverable Errors in Rust Stylus Contracts
 
-Using the `evm::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes any type that implements Alloy `SolEvent` trait. It's not recommended to attempt to implement this trait on your own. Instead, make use of the provided `sol!` macro to declare your Events and their schema using Solidity-style syntax to declare the parameter types. Alloy will create ABI-compatible Rust types which you can instantiate and pass to the `evm::log` function.
+In Rust Stylus contracts, handling recoverable errors is essential for writing reliable and maintainable smart contracts. Recoverable errors are represented using the `Result` type, which can either be `Ok`, indicating success, or `Err`, indicating failure. The Stylus SDK provides tools to define custom error types and manage recoverable errors effectively.
+
+#### Simple Example
+
+Here's a basic Rust Stylus contract to demonstrate defining and handling recoverable errors:
+
+```rust
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+use stylus_sdk::{msg, prelude::*, alloy_primitives::{Address, U256}};
+use alloy_sol_types::sol;
+
+sol! {
+    error InsufficientBalance(address from, uint256 available, uint256 required);
+}
+
+sol_storage! {
+    #[entrypoint]
+    pub struct SimpleWallet {
+        mapping(address => uint256) balances;
+    }
+}
+
+#[derive(SolidityError)]
+pub enum WalletError {
+    InsufficientBalance(InsufficientBalance),
+}
+
+#[external]
+impl SimpleWallet {
+    pub fn deposit(&mut self) {
+        let sender = msg::sender();
+        let amount = msg::value();
+        let mut balance = self.balances.setter(sender);
+        balance.set(balance.get() + amount);
+    }
+
+    pub fn withdraw(&mut self, amount: U256) -> Result<(), WalletError> {
+        let sender = msg::sender();
+        let mut balance = self.balances.setter(sender);
+        if balance.get() < amount {
+            return Err(WalletError::InsufficientBalance(InsufficientBalance {
+                from: sender,
+                available: balance.get(),
+                required: amount,
+            }));
+        }
+        balance.set(balance.get() - amount);
+        Ok(())
+    }
+
+    pub fn get_balance(&self, address: Address) -> U256 {
+        self.balances.get(address)
+    }
+}
+```
+
+### Explanation
+
+1. **Defining Errors**: The custom error `InsufficientBalance` is defined using the `sol!` macro.
+2. **Using `SolidityError` Derive Macro**: The `#[derive(SolidityError)]` attribute is used for the `WalletError` enum, automatically implementing the necessary traits for error handling.
+5. **Withdrawals Error Handling**: The `withdraw` function checks if the user has sufficient funds before allowing withdrawal. If not, it returns an `InsufficientBalance` error with related arguments.
+
+This brief example shows how to define and handle recoverable errors in a Rust Stylus contract using the Stylus SDK, making error management straightforward.
+
 
 ### Log Usage
 
