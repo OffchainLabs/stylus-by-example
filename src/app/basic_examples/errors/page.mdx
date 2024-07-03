@@ -15,7 +15,6 @@ In Stylus contracts, error types are often explicitly defined, providing clear a
 1. **Recoverable Errors**: The Stylus SDK provides features that make using recoverable errors in Rust Stylus contracts convenient. This type of error handling is recommended for Stylus contracts.
 2. **Unrecoverable Errors**: These can be defined similarly to Rust code but are not recommended for smart contracts if recoverable errors can be used instead.
 
-You can throw an error by calling `unwrap()`, `match`, `? Operator` and `custom errors`.
 
 ## Learn More
 
@@ -24,150 +23,148 @@ You can throw an error by calling `unwrap()`, `match`, `? Operator` and `custom 
 - [`alloy_sol_types::SolError`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolError.html)
 - [`Error handling: Rust book`](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
 
-### Recoverable Errors in Rust Stylus Contracts
 
-In Rust Stylus contracts, handling recoverable errors is essential for writing reliable and maintainable smart contracts. Recoverable errors are represented using the `Result` type, which can either be `Ok`, indicating success, or `Err`, indicating failure. The Stylus SDK provides tools to define custom error types and manage recoverable errors effectively.
+#### Recoverable Errors
 
-#### Simple Example
+Recoverable errors are represented using the `Result` type, which can either be `Ok`, indicating success, or `Err`, indicating failure. The Stylus SDK provides tools to define custom error types and manage recoverable errors effectively.
 
-Here's a basic Rust Stylus contract to demonstrate defining and handling recoverable errors:
+##### Example: Recoverable Errors
+
+Here's a simplified Rust Stylus contract demonstrating how to define and handle recoverable errors:
 
 ```rust
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-use stylus_sdk::{msg, prelude::*, alloy_primitives::{Address, U256}};
+
+#[global_allocator]
+static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+
 use alloy_sol_types::sol;
+use stylus_sdk::{abi::Bytes, alloy_primitives::{Address, U256}, call::RawCall, prelude::*};
 
+#[solidity_storage]
+#[entrypoint]
+pub struct MultiCall;
+
+// Declare events and Solidity error types
 sol! {
-    error InsufficientBalance(address from, uint256 available, uint256 required);
-}
-
-sol_storage! {
-    #[entrypoint]
-    pub struct SimpleWallet {
-        mapping(address => uint256) balances;
-    }
+    error ArraySizeNotMatch();
+    error CallFailed(uint256 call_index);
 }
 
 #[derive(SolidityError)]
-pub enum WalletError {
-    InsufficientBalance(InsufficientBalance),
+pub enum MultiCallErrors {
+    ArraySizeNotMatch(ArraySizeNotMatch),
+    CallFailed(CallFailed),
 }
 
 #[external]
-impl SimpleWallet {
-    pub fn deposit(&mut self) {
-        let sender = msg::sender();
-        let amount = msg::value();
-        let mut balance = self.balances.setter(sender);
-        balance.set(balance.get() + amount);
-    }
-
-    pub fn withdraw(&mut self, amount: U256) -> Result<(), WalletError> {
-        let sender = msg::sender();
-        let mut balance = self.balances.setter(sender);
-        if balance.get() < amount {
-            return Err(WalletError::InsufficientBalance(InsufficientBalance {
-                from: sender,
-                available: balance.get(),
-                required: amount,
-            }));
+impl MultiCall {
+    pub fn multicall(
+        &self,
+        addresses: Vec<Address>,
+        data: Vec<Bytes>,
+    ) -> Result<Vec<Bytes>, MultiCallErrors> {
+        let addr_len = addresses.len();
+        let data_len = data.len();
+        let mut results: Vec<Bytes> = Vec::new();
+        if addr_len != data_len {
+            return Err(MultiCallErrors::ArraySizeNotMatch(ArraySizeNotMatch {}));
         }
-        balance.set(balance.get() - amount);
-        Ok(())
-    }
-
-    pub fn get_balance(&self, address: Address) -> U256 {
-        self.balances.get(address)
+        for i in 0..addr_len {
+            let result: Result<Vec<u8>, Vec<u8>> =
+                RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
+            let data = match result {
+                Ok(data) => data,
+                Err(_data) => return Err(MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) })),
+            };
+            results.push(data.into())
+        }
+        Ok(results)
     }
 }
 ```
 
-### Explanation
+1. **Using `SolidityError` Derive Macro**: The `#[derive(SolidityError)]` attribute is used for the `MultiCallErrors` enum, automatically implementing the necessary traits for error handling.
+2. **Defining Errors**: Custom errors `ArraySizeNotMatch` and `CallFailed` is declared in `MultiCallErrors` enum. `CallFailed` error includes a `call_index` parameter to indicate which call failed.
+3. **ArraySizeNotMatch Error Handling**: The `multicall` function returns `ArraySizeNotMatch` if the size of addresses and data vectors are not equal. 
+4. **CallFailed Error Handling**: The `multicall` function returns a `CallFailed` error with the index of the failed call if any call fails. Note that we're using match to check if the result of the call is an error or a return data. We'll describe match pattern in the further sections.
 
-1. **Defining Errors**: The custom error `InsufficientBalance` is defined using the `sol!` macro.
-2. **Using `SolidityError` Derive Macro**: The `#[derive(SolidityError)]` attribute is used for the `WalletError` enum, automatically implementing the necessary traits for error handling.
-5. **Withdrawals Error Handling**: The `withdraw` function checks if the user has sufficient funds before allowing withdrawal. If not, it returns an `InsufficientBalance` error with related arguments.
+### Unrecoverable Errors
 
-This brief example shows how to define and handle recoverable errors in a Rust Stylus contract using the Stylus SDK, making error management straightforward.
-
-### Unrecoverable Errors in Rust Stylus Contracts
-
-Unrecoverable errors in Rust Stylus contracts are handled using the `panic!` macro, which stops execution, unwinds the stack, and returns a dataless error. Here are various ways to handle such errors in the `withdraw` function:
+Here are various ways to handle such errors in the `multicall` function, which calls multiple addresses and panics in different scenarios:
 
 #### Using `panic!`
 
-Directly panics if the balance is insufficient.
+Directly panics if the call fails, including the index of the failed call.
 
 ```rust
-pub fn withdraw(&mut self, amount: U256) {
-    let sender = msg::sender();
-    let mut balance = self.balances.setter(sender);
-    if balance.get() < amount {
-        panic!("Insufficient funds: available {}, required {}", balance.get(), amount);
-    }
-    balance.set(balance.get() - amount);
+#[external]
+
+        for i in 0..addr_len {
+            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
+            let data = match result {
+                Ok(data) => data,
+                Err(_data) => panic!("Call to address {:?} failed at index {}", addresses[i], i),
+            };
+            results.push(data.into());
 }
 ```
+
+Handling Call Failure with `panic!`: The function panics if any call fails and the transaction will be reverted without any data.
 
 #### Using `unwrap`
 
-Uses `unwrap` to get the balance, panicking if the balance is `None`.
+Uses `unwrap` to handle the result, panicking if the call fails.
 
 ```rust
-pub fn withdraw(&mut self, amount: U256) {
-    let sender = msg::sender();
-    let mut balance = self.balances.setter(sender);
-    let current_balance = balance.get();
-    assert!(current_balance >= amount, "Insufficient funds: available {}, required {}", current_balance, amount);
-    balance.set(current_balance - amount);
+#[external]
+
+        for i in 0..addr_len {
+            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice()).unwrap_or_else(|_| {
+                panic!("Call to address {:?} failed at index {}", addresses[i], i);
+            });
+            results.push(result.into());
 }
 ```
 
-#### Using `expect`
-
-Uses `expect` to get the balance, panicking with a custom message if the balance is `None`.
-
-```rust
-pub fn withdraw(&mut self, amount: U256) {
-    let sender = msg::sender();
-    let mut balance = self.balances.setter(sender);
-    let current_balance = balance.get();
-    if current_balance < amount {
-        panic!("Insufficient funds: available {}, required {}", current_balance, amount);
-    }
-    balance.set(current_balance - amount);
-}
-```
+Handling Call Failure with `unwrap`: The function uses `unwrap_or_else` to panic if any call fails, including the index of the failed call.
 
 #### Using `match`
 
-Uses a `match` statement to handle the result of `checked_sub`, panicking if the subtraction would result in an overflow.
+Uses a `match` statement to handle the result of `call`, panicking if the call fails.
 
 ```rust
-pub fn withdraw(&mut self, amount: U256) {
-    let sender = msg::sender();
-    let mut balance = self.balances.setter(sender);
-    match balance.get().checked_sub(amount) {
-        Some(new_balance) => balance.set(new_balance),
-        None => panic!("Insufficient funds: available {}, required {}", balance.get(), amount),
-    }
+#[external]
+
+        for i in 0..addr_len {
+            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
+            let data = match result {
+                Ok(data) => data,
+                Err(_data) => panic!("Call to address {:?} failed at index {}", addresses[i], i),
+            };
+            results.push(data.into());
 }
 ```
 
-#### Using `ok_or_else` and `unwrap`
+Handling Call Failure with `match`: The function uses a `match` statement to handle the result of `call`, panicking if any call fails, including the index of the failed call.
 
-Combines `ok_or_else` to provide a custom panic message if the condition fails and `unwrap` to handle the result.
+#### Using the `?` Operator
+
+Uses the `?` operator to propagate the error if the call fails, including the index of the failed call.
 
 ```rust
-pub fn withdraw(&mut self, amount: U256) {
-    let sender = msg::sender();
-    let mut balance = self.balances.setter(sender);
-    balance.get().checked_sub(amount).ok_or_else(|| {
-        panic!("Insufficient funds: available {}, required {}", balance.get(), amount)
-    }).unwrap();
-    balance.set(balance.get() - amount);
+#[external]
+
+        for i in 0..addr_len {
+            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice())
+                .map_err(|_| MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) }))?;
+            results.push(result.into());
 }
 ```
 
-Each method demonstrates a different way to handle unrecoverable errors in the `withdraw` function of a Rust Stylus contract.
+Handling Call Failure with `?` Operator: The function uses the `?` operator to propagate the error if any call fails, including the index of the failed call.
+
+Each method demonstrates a different way to handle unrecoverable errors in the `multicall` function of a Rust Stylus contract, providing a comprehensive approach to error management.
+
+**Note** that as mentioned above, it is strongly recommended to use custom error handling instead of unrecoverable error handling.
