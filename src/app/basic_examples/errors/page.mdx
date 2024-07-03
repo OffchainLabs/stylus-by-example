@@ -99,8 +99,6 @@ Here are various ways to handle such errors in the `multicall` function, which c
 Directly panics if the call fails, including the index of the failed call.
 
 ```rust
-#[external]
-
         for i in 0..addr_len {
             let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
             let data = match result {
@@ -118,44 +116,36 @@ Handling Call Failure with `panic!`: The function panics if any call fails and t
 Uses `unwrap` to handle the result, panicking if the call fails.
 
 ```rust
-#[external]
-
         for i in 0..addr_len {
-            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice()).unwrap_or_else(|_| {
-                panic!("Call to address {:?} failed at index {}", addresses[i], i);
-            });
+            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice()).unwrap();
             results.push(result.into());
 }
 ```
 
-Handling Call Failure with `unwrap`: The function uses `unwrap_or_else` to panic if any call fails, including the index of the failed call.
+Handling Call Failure with `unwrap`: The function uses `unwrap` to panic if any call fails, including the index of the failed call.
 
 ### Using `match`
 
 Uses a `match` statement to handle the result of `call`, panicking if the call fails.
 
 ```rust
-#[external]
-
         for i in 0..addr_len {
             let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
             let data = match result {
                 Ok(data) => data,
-                Err(_data) => panic!("Call to address {:?} failed at index {}", addresses[i], i),
+                Err(_data) => return Err(MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) })),
             };
             results.push(data.into());
 }
 ```
 
-Handling Call Failure with `match`: The function uses a `match` statement to handle the result of `call`, panicking if any call fails, including the index of the failed call.
+Handling Call Failure with `match`: The function uses a `match` statement to handle the result of `call`, returning error if any call fails.
 
 ### Using the `?` Operator
 
 Uses the `?` operator to propagate the error if the call fails, including the index of the failed call.
 
 ```rust
-#[external]
-
         for i in 0..addr_len {
             let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice())
                 .map_err(|_| MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) }))?;
@@ -168,3 +158,51 @@ Handling Call Failure with `?` Operator: The function uses the `?` operator to p
 Each method demonstrates a different way to handle unrecoverable errors in the `multicall` function of a Rust Stylus contract, providing a comprehensive approach to error management.
 
 **Note** that as mentioned above, it is strongly recommended to use custom error handling instead of unrecoverable error handling.
+
+
+
+
+## Boilerplate
+
+### src/main.rs
+
+The main code can be found at the top of the page in the recoverable error section.
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus-multicall-contract"
+version = "0.1.5"
+edition = "2021"    
+
+[dependencies]
+alloy-primitives = "0.3.1"
+alloy-sol-types = "0.3.1"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.5.0"
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[[bin]]
+name = "stylus-multicall-contract"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+```
