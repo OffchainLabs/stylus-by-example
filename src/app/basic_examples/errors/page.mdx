@@ -12,7 +12,7 @@ In Rust Stylus contracts, error handling is a crucial aspect of writing robust a
 
 In Stylus contracts, error types are often explicitly defined, providing clear and structured ways to handle different failure scenarios. This structured approach promotes better error management, ensuring that contracts are secure, maintainable, and behave predictably under various conditions. Similar to Solidity and EVM, errors in Stylus will undo all changes made to the state during a transaction by reverting the transaction. Thus, there are two main types of errors in Rust Stylus contracts:
 
-- **Recoverable Errors**: The Stylus SDK provides features that make using recoverable errors in Rust Stylus contracts convenient. This type of error handling is recommended for Stylus contracts.
+- **Recoverable Errors**: The Stylus SDK provides features that make using recoverable errors in Rust Stylus contracts convenient. This type of error handling is strongly recommended for Stylus contracts.
 - **Unrecoverable Errors**: These can be defined similarly to Rust code but are not recommended for smart contracts if recoverable errors can be used instead.
 
 
@@ -160,13 +160,11 @@ Each method demonstrates a different way to handle unrecoverable errors in the `
 **Note** that as mentioned above, it is strongly recommended to use custom error handling instead of unrecoverable error handling.
 
 
-
-
 ## Boilerplate
 
 ### src/main.rs
 
-The main code can be found at the top of the page in the recoverable error section.
+The main code can be found at the top of the page in the recoverable error example section.
 
 ### Cargo.toml
 
