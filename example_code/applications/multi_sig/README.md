@@ -1,6 +1,6 @@
 ![Image](./header.png)
 
-# Stylus Hello World
+# Stylus MultiSig Example
 
 Project starter template for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a basic multi sig smart contract:
 
