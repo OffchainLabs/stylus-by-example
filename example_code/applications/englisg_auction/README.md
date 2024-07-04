@@ -1,6 +1,6 @@
 ![Image](./header.png)
 
-# Stylus Hello World
+# Stylus English Auction Example
 
 An example project for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a vending machine Ethereum smart contract. Below is the interface for the EnglishAuction contract:
 
@@ -127,4 +127,3 @@ Next, we deploy:
 cargo stylus deploy \
   --private-key-path=<PRIVKEY_FILE_PATH>
 ```
-
