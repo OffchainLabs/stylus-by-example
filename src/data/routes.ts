@@ -56,4 +56,22 @@ export const basicExamples = [
     title: "Errors",
     description: "Errors on Stylus Rust smart contracts",
   },
+  {
+    route: "/basic_examples/function_selector",
+    title: "Function selector",
+    description: "Compute the encoded function selector of a contract's function",
+  },
+];
+
+export const applications = [
+  {
+    route: "/applications/erc20",
+    title: "ERC-20",
+    description: "An example implementation of the ERC-20 token standard in Rust",
+  },
+  {
+    route: "/applications/erc721",
+    title: "ERC-721",
+    description: "An example implementation of the ERC-721 token standard in Rust",
+  },
 ];

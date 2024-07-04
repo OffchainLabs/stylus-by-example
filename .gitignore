@@ -15,6 +15,7 @@
 
 # production
 /build
+/.cargo/config.toml
 
 # misc
 .DS_Store

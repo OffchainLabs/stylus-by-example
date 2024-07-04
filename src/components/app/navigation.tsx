@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
-import { basicExamples, gettingStarted } from "@/data/routes";
+import { gettingStarted, basicExamples, applications  } from "@/data/routes";
 import { Stack } from "@/styled-system/jsx";
 import { css } from "@/styled-system/css";
 import { flex, hstack, stack } from "@/styled-system/patterns";
@@ -193,6 +193,37 @@ export default function Navigation() {
               </h2>
               <Stack gap={1}>
                 {basicExamples?.map(({ route, title }, i) => (
+                  <Button
+                    asChild
+                    key={`${title}-${i}`}
+                    variant="link"
+                    size="lg"
+                    className={css({
+                      w: "full",
+                      justifyContent: "flex-start",
+                      fontWeight: "normal",
+                      h: "32px",
+                      paddingInline: "16px",
+                    })}
+                  >
+                    <SheetClose asChild>
+                      <Link href={route}>{title}</Link>
+                    </SheetClose>
+                  </Button>
+                ))}
+              </Stack>
+              <h2
+                className={css({
+                  fontSize: "lg",
+                  fontWeight: "bold",
+                  mb: "1",
+                  px: "4",
+                })}
+              >
+                Applications
+              </h2>
+              <Stack gap={1}>
+                {applications?.map(({ route, title }, i) => (
                   <Button
                     asChild
                     key={`${title}-${i}`}
