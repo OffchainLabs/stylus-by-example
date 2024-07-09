@@ -89,4 +89,10 @@ export const applications = [
     description:
       'An example implementation of the MutiSig wallet in Rust using Arbitrum Stylus.',
   },
+  {
+    route: '/applications/vending_machine',
+    title: 'Vending Machine • Stylus by Example',
+    description:
+      'An example implementation of the Vending Machine in Rust using Arbitrum Stylus.',
+  },
 ];
