@@ -79,19 +79,19 @@ export const applications = [
   },
   {
     route: '/applications/english_auction',
-    title: 'English Auction • Stylus by Example',
+    title: 'English Auction',
     description:
       'An example implementation of the English Auction in Rust using Arbitrum Stylus.',
   },
   {
     route: '/applications/multi_sig',
-    title: 'MultiSig • Stylus by Example',
+    title: 'MultiSig',
     description:
       'An example implementation of the MutiSig wallet in Rust using Arbitrum Stylus.',
   },
   {
     route: '/applications/vending_machine',
-    title: 'Vending Machine • Stylus by Example',
+    title: 'Vending Machine',
     description:
       'An example implementation of the Vending Machine in Rust using Arbitrum Stylus.',
   },
