@@ -76,7 +76,7 @@ export const applications = [
   },
   {
     route: "/applications/time_lock",
-    title: "TimeLock",
+    title: "Time Lock",
     description: "An example implementation of the Timelock wallet in Rust using Arbitrum Stylus.",
   },
   {
