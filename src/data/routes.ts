@@ -59,8 +59,7 @@ export const basicExamples = [
   {
     route: "/basic_examples/function_selector",
     title: "Function selector",
-    description:
-      "Compute the encoded function selector of a contract's function",
+    description: "Compute the encoded function selector of a contract's function",
   },
 ];
 
