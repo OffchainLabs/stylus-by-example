@@ -1,5 +1,3 @@
-![Image](./header.png)
-
 # Stylus TimeLock Example
 
 Project starter template for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a basic Time Lock smart contract:
