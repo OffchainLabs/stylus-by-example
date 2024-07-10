@@ -11,74 +11,18 @@ export const metadata = {
 An Arbitrum Stylus version implementation of [Solidity English Auction](https://solidity-by-example.org/app/english-auction/).
 
 ## Auction
-- 1. Seller of NFT deploys this contract.
-- 2. Auction lasts for 7 days.
-- 3. Participants can bid by depositing ETH greater than the current highest bidder.
-- 4. All bidders can withdraw their bid if it is not the current highest bid.
+1. Seller of NFT deploys this contract.
+2. Auction lasts for 7 days.
+3. Participants can bid by depositing ETH greater than the current highest bidder.
+4. All bidders can withdraw their bid if it is not the current highest bid.
 
 ## After the auction
-- 1. Highest bidder becomes the new owner of NFT.
-- 2. The seller receives the highest bid of ETH.
+1. Highest bidder becomes the new owner of NFT.
+2. The seller receives the highest bid of ETH.
 
 Here is the interface for English Auction.
 
 ```solidity
-interface IEnglishAuction {
-    function nft() external view returns (address);
-
-    function nftId() external view returns (uint256);
-
-    function seller() external view returns (address);
-
-    function endAt() external view returns (uint256);
-
-    function started() external view returns (bool);
-
-    function ended() external view returns (bool);
-
-    function highestBidder() external view returns (address);
-
-    function highestBid() external view returns (uint256);
-
-    function bids(address bidder) external view returns (uint256);
-
-    function initialize(address nft, uint256 nft_id, uint256 starting_bid) external;
-
-    function start() external;
-
-    function bid() external payable;
-
-    function withdraw() external;
-
-    function end() external;
-
-    error AlreadyInitialized();
-
-    error AlreadyStarted();
-
-    error NotSeller();
-
-    error AuctionEnded();
-
-    error BidTooLow();
-
-    error NotStarted();
-
-    error NotEnded();
-}
-```
-
-### ABI Export
-
-You can export the Solidity ABI for your program by using the `cargo stylus` tool as follows:
-
-```bash
-cargo stylus export-abi
-```
-
-which outputs:
-
-```js
 interface IEnglishAuction {
     function nft() external view returns (address);
 
@@ -426,11 +370,6 @@ alloy-sol-types = "0.3.1"
 mini-alloc = "0.4.2"
 stylus-sdk = { version = "0.5.0", features = ["docs"] }
 hex = "0.4.3"
-
-[dev-dependencies]
-tokio = { version = "1.12.0", features = ["full"] }
-ethers = "2.0"
-eyre = "0.6.8"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
