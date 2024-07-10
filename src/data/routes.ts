@@ -68,31 +68,26 @@ export const applications = [
   {
     route: "/applications/erc20",
     title: "ERC-20",
-    description:
-      "An example implementation of the ERC-20 token standard in Rust",
+    description: "An example implementation of the ERC-20 token standard in Rust",
   },
   {
     route: "/applications/erc721",
     title: "ERC-721",
-    description:
-      "An example implementation of the ERC-721 token standard in Rust",
+    description: "An example implementation of the ERC-721 token standard in Rust",
   },
   {
     route: "/applications/english_auction",
     title: "English Auction",
-    description:
-      "An example implementation of the English Auction in Rust using Arbitrum Stylus.",
+    description: "An example implementation of the English Auction in Rust using Arbitrum Stylus.",
   },
   {
     route: "/applications/multi_sig",
     title: "MultiSig",
-    description:
-      "An example implementation of the MutiSig wallet in Rust using Arbitrum Stylus.",
+    description: "An example implementation of the MultiSig wallet in Rust using Arbitrum Stylus.",
   },
   {
     route: "/applications/vending_machine",
     title: "Vending Machine",
-    description:
-      "An example implementation of the Vending Machine in Rust using Arbitrum Stylus.",
+    description: "An example implementation of the Vending Machine in Rust using Arbitrum Stylus.",
   },
 ];
