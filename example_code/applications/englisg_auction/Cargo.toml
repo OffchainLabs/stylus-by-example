@@ -12,18 +12,9 @@ mini-alloc = "0.4.2"
 stylus-sdk = { version = "0.5.0", features = ["docs"] }
 hex = "0.4.3"
 
-[dev-dependencies]
-tokio = { version = "1.12.0", features = ["full"] }
-ethers = "2.0"
-eyre = "0.6.8"
-
 [features]
 export-abi = ["stylus-sdk/export-abi"]
 debug = ["stylus-sdk/debug"]
-
-[[bin]]
-name = "stylus-hello-world"
-path = "src/main.rs"
 
 [lib]
 crate-type = ["lib", "cdylib"]
