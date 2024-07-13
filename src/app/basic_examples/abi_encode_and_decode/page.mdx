@@ -15,7 +15,7 @@ The `ABI Encode` has 2 types which are `encode` and `encode_packed`.
 - `encode`  will concatenate all values and add padding to fit into 32 bytes for each values.
 - `encode_packed` will concatenate all values in the exact byte representations without padding. (For example, `encode_packed("a", "bc") == encode_packed("ab", "c")`)
 
-Suppose we have the tuple of values: `(target, value, func, data, timestamp)` to encode, and their `alloy primitives type` are `(Address, U256, String, Bytes, U256)`.
+Suppose we have a tuple of values: `(target, value, func, data, timestamp)` to encode, and their `alloy primitives type` are `(Address, U256, String, Bytes, U256)`.
 
 Firstly we need to import those types we need from `alloy_primitives`, `stylus_sdk::abi` and `alloc::string`:
 
