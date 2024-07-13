@@ -32,8 +32,9 @@ Secondly because we will use the method `abi_encode_sequence` and `abi_encode_pa
 // Becauce the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
 use alloy_sol_types::{sol_data::{Address as SOLAddress, String as SOLString, Bytes as SOLBytes, *}, SolType};
 ```
+### encode
 
-- Then `encode` them:
+Then `encode` them:
 ```rust
 // define sol types tuple
 type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
@@ -43,7 +44,11 @@ let tx_hash_data = (target, value, func, data, timestamp);
 let tx_hash_bytes = TxIdHashType::abi_encode_sequence(&tx_hash_data);
 ```
 
-- Or `encode_packed` them:
+### encode_packed
+
+There are 2 methods to `encode_packed` data:
+
+1. `encode_packed` them:
 ```rust
 // define sol types tuple
 type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
@@ -53,7 +58,7 @@ let tx_hash_data = (target, value, func, data, timestamp);
 let tx_hash_data_encode_packed = TxIdHashType::abi_encode_packed(&tx_hash_data);
 ```
 
-- We can also use the following method to `encode_packed` them:
+2. We can also use the following method to `encode_packed` them:
 ```rust
 let tx_hash_data_encode_packed = [&target.to_vec(), &value.to_be_bytes_vec(), func.as_bytes(), &data.to_vec(), &timestamp.to_be_bytes_vec()].concat();
 ```
