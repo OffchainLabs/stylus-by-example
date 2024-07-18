@@ -66,7 +66,13 @@ export const basicExamples = [
     title: "ABI Encode/Decode and hashing with keccak256",
     description:
       "A simple solidity ABI encode and decode example",
-  }
+  },
+  {
+    route: "/basic_examples/verify_signature",
+    title: "Verifying Signature",
+    description:
+      "An explanation of how to verify a signature signed off chain.",
+  },
 ];
 
 export const applications = [

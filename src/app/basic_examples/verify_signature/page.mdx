@@ -1,3 +1,22 @@
+export const metadata = {
+  title: "Verifying Signature • Stylus by Example",
+  description:
+    "An explanation of how to verify a signature signed off chain.",
+};
+
+{/* Begin Content */}
+
+# Verifying Signature
+
+An Arbitrum Stylus version implementation of [Verifying Signature](https://solidity-by-example.org/signature/).
+
+Messages can be signed off chain and then verified on chain using a smart contract.
+
+[Example interact using ethers.js](https://github.com/t4sk/hello-erc20-permit/blob/main/test/verify-signature.js)
+
+### src/main.rs
+
+```rust
 #![no_main]
 #![no_std]
 extern crate alloc;
@@ -158,3 +177,4 @@ impl VerifySignature {
     }
             
 }
+```
