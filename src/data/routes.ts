@@ -61,6 +61,12 @@ export const basicExamples = [
     title: "Function selector",
     description: "Compute the encoded function selector of a contract's function",
   },
+  {
+    route: "/basic_examples/verify_signature",
+    title: "Verifying Signature",
+    description:
+      "An explanation of how to verify a signature signed off chain.",
+  },
 ];
 
 export const applications = [
