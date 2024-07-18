@@ -131,6 +131,16 @@ impl VerifySignature {
         self.ecrecover(eth_signed_message_hash, v, r, s)
     }
 
+    pub fn split_signature(
+        &self,
+        signature: Bytes
+    ) -> (FixedBytes<32>, FixedBytes<32>, u8) {
+        let r = FixedBytes::from_slice(&signature[0..32]);
+        let s = FixedBytes::from_slice(&signature[32..64]);
+        let v = signature[64];
+        (r, s, v)
+    }
+
     /// Invoke the ECRECOVER precompile.
     pub fn ecrecover(
         &self,
@@ -145,17 +155,6 @@ impl VerifySignature {
             Ok(result) => Ok(SOLAddress::abi_decode(&result, false).unwrap()),
             Err(_) => Err(VerifySignatureError::EcrecoverCallError(EcrecoverCallError{})),
         }
-    }
-
-
-    pub fn split_signature(
-        &self,
-        signature: Bytes
-    ) -> (FixedBytes<32>, FixedBytes<32>, u8) {
-        let r = FixedBytes::from_slice(&signature[0..32]);
-        let s = FixedBytes::from_slice(&signature[32..64]);
-        let v = signature[64];
-        (r, s, v)
     }
             
 }
