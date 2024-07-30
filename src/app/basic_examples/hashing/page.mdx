@@ -181,11 +181,11 @@ impl Hasher {
         type TransferType = (SOLAddress, Uint<256>);
         let tx_data = (address, amount);
         let data = TransferType::abi_encode_sequence(&tx_data);
-         // Get function selector
-         let hashed_function_selector = self.keccak256(func.as_bytes().to_vec().into());
-         // Combine function selector and input data (use abi_packed way)
-         let calldata = [&hashed_function_selector[..4], &data].concat();
-         self.keccak256(calldata.into())
+        // Get function selector
+        let hashed_function_selector = self.keccak256(func.as_bytes().to_vec().into());
+        // Combine function selector and input data (use abi_packed way)
+        let calldata = [&hashed_function_selector[..4], &data].concat();
+        self.keccak256(calldata.into())
     }
 
 }
