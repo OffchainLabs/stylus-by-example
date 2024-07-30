@@ -1,0 +1,102 @@
+export const metadata = {
+  title: "Sending Ether • Stylus by Example",
+  description:
+    "How to send Ether in your Rust smart contracts using Arbitrum's Stylus SDK",
+};
+
+{/* Begin Content */}
+
+# Sending Ether
+
+We have two main ways to send Ether in Rust Stylus. Using `transfer_eth` method or using `call`. Note that `transfer_eth` method invokes the other contract, which may in turn call others. All gas is supplied, which the recipient may burn. If this is not desired, the call function may be used instead.
+
+so these two are exactly equivalent:
+
+```rust
+transfer_eth(recipient, value)?;                 
+
+call(Call::new().value(value), recipient, &[])?;
+```
+
+where to send:
+1. EOA Addresses
+2. Solidity smart contracts with receive (no calldata)
+3. Solidity smart contracts with fallback (with calldata)
+4. Stylus contracts with the payable methods
+
+
+### src/main.rs
+
+```rust
+#![no_main]
+#![no_std]
+extern crate alloc;
+
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+use alloc::vec;
+use alloc::vec::Vec;
+
+use stylus_sdk::alloy_primitives::Address;
+use stylus_sdk::prelude::*;
+use stylus_sdk::storage::StorageAddress;
+
+// Consts must be 'static, so Rust primitives work well
+// Addresses are 20 bytes long, this one is 'checksummed'
+const OWNER: &str = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+
+#[solidity_storage]
+#[entrypoint]
+pub struct Contract {
+    owner: StorageAddress,
+}
+
+#[external]
+impl Contract {
+    // Sets the owner to the OWNER const set above
+    pub fn init(&mut self) -> Result<(), Vec<u8>> {
+        // Parse the const hex &str as a local Address variable
+        let owner_address = Address::parse_checksummed(OWNER, None).expect("Invalid address");
+
+        // Save the result as the owner
+        self.owner.set(owner_address);
+
+        Ok(())
+    }
+
+    // Returns the current owner
+    pub fn owner(&self) -> Result<Address, Vec<u8>> {
+        let owner_address = self.owner.get();
+
+        Ok(owner_address)
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "constants"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Note: Do not deploy to prod with debug flag set
+stylus-sdk = { version = "0.4.2", features = ["debug"] }
+wee_alloc = "0.4.5"
+alloy-sol-types = "0.3.1"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+[workspace]
+```
