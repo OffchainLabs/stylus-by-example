@@ -8,8 +8,6 @@ export const metadata = {
 
 # ABI Encode
 
-## Encode
-
 The `ABI Encode` has 2 types which are `encode` and `encode_packed`. 
 
 - `encode`  will concatenate all values and add padding to fit into 32 bytes for each values.
@@ -32,7 +30,7 @@ Secondly because we will use the method `abi_encode_sequence` and `abi_encode_pa
 // Becauce the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
 use alloy_sol_types::{sol_data::{Address as SOLAddress, String as SOLString, Bytes as SOLBytes, *}, SolType};
 ```
-### encode
+## encode
 
 Then `encode` them:
 ```rust
@@ -44,7 +42,7 @@ let tx_hash_data = (target, value, func, data, timestamp);
 let tx_hash_bytes = TxIdHashType::abi_encode_sequence(&tx_hash_data);
 ```
 
-### encode_packed
+## encode_packed
 
 There are 2 methods to `encode_packed` data:
 
