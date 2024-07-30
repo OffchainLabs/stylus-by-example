@@ -74,7 +74,7 @@ export const basicExamples = [
       "A simple solidity ABI encode and decode example",
   },
   {
-    route: "/basic_examples/hasing",
+    route: "/basic_examples/hashing",
     title: "Hashing with keccak256",
     description:
       "A simple solidity ABI encode and decode example",
