@@ -62,8 +62,20 @@ export const basicExamples = [
     description: "Compute the encoded function selector of a contract's function",
   },
   {
-    route: "/basic_examples/abi_encode_and_decode",
-    title: "ABI Encode/Decode and hashing with keccak256",
+    route: "/basic_examples/abi_encode",
+    title: "ABI Encode",
+    description:
+      "A simple solidity ABI encode and decode example",
+  },
+  {
+    route: "/basic_examples/abi_decode",
+    title: "ABI Decode",
+    description:
+      "A simple solidity ABI encode and decode example",
+  },
+  {
+    route: "/basic_examples/hasing",
+    title: "Hashing with keccak256",
     description:
       "A simple solidity ABI encode and decode example",
   }

@@ -1,106 +1,20 @@
 export const metadata = {
-  title: "ABI Encode/Decode and hashing with keccak256 • Stylus by Example",
+  title: "ABI Encode • Stylus by Example",
   description:
     "A simple solidity ABI encode and decode example",
 };
 
 {/* Begin Content */}
 
-# ABI Encode/Decode and hashing with keccak256
-
-## Encode
-
-The `ABI Encode` has 2 types which are `encode` and `encode_packed`. 
-
-- `encode`  will concatenate all values and add padding to fit into 32 bytes for each values.
-- `encode_packed` will concatenate all values in the exact byte representations without padding. (For example, `encode_packed("a", "bc") == encode_packed("ab", "c")`)
-
-Suppose we have a tuple of values: `(target, value, func, data, timestamp)` to encode, and their `alloy primitives type` are `(Address, U256, String, Bytes, U256)`.
-
-Firstly we need to import those types we need from `alloy_primitives`, `stylus_sdk::abi` and `alloc::string`:
-
-```rust
-// Import items from the SDK. The prelude contains common traits and macros.
-use stylus_sdk::{alloy_primitives::{U256, Address, FixedBytes}, abi::Bytes, prelude::*};
-// Import String from alloc
-use alloc::string::String;
-```
-
-Secondly because we will use the method `abi_encode_sequence` and `abi_encode_packed` under `alloy_sol_types` to encode data, we also need to import the types from `alloy_sol_types`:
-
-```rust
-// Becauce the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
-use alloy_sol_types::{sol_data::{Address as SOLAddress, String as SOLString, Bytes as SOLBytes, *}, SolType};
-```
-### encode
-
-Then `encode` them:
-```rust
-// define sol types tuple
-type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
-// set the tuple
-let tx_hash_data = (target, value, func, data, timestamp);
-// encode the tuple
-let tx_hash_bytes = TxIdHashType::abi_encode_sequence(&tx_hash_data);
-```
-
-### encode_packed
-
-There are 2 methods to `encode_packed` data:
-
-1. `encode_packed` them:
-```rust
-// define sol types tuple
-type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
-// set the tuple
-let tx_hash_data = (target, value, func, data, timestamp);
-// encode the tuple
-let tx_hash_data_encode_packed = TxIdHashType::abi_encode_packed(&tx_hash_data);
-```
-
-2. We can also use the following method to `encode_packed` them:
-```rust
-let tx_hash_data_encode_packed = [&target.to_vec(), &value.to_be_bytes_vec(), func.as_bytes(), &data.to_vec(), &timestamp.to_be_bytes_vec()].concat();
-```
-
-## Decode
-
-The `decode` can not be used for `encode_packed` data because it ignores padding when encode.
-
-So here the example is only for `decode` the `abi_encode_sequence` data:
-
-```rust
-// This should always return true
-pub fn encode_and_decode(
-    &self, 
-    target: Address,
-    value: U256,
-    func: String,
-    data: Bytes,
-    timestamp: U256
-) -> Result<bool, HasherError> {
-    // define sol types tuple
-    type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
-    // because the abi_encode_sequence will return alloy_primitives::Bytes rather than stylus_sdk::bytes, so we need to make sure the input and return types are the same
-    let primative_data = alloy_primitives::Bytes::copy_from_slice(&data);
-    // set the tuple
-    let tx_hash_data = (target, value, func, primative_data, timestamp);
-    // encode the tuple
-    let tx_hash_data_encode = TxIdHashType::abi_encode_sequence(&tx_hash_data);
-
-    let validate = true;
-    
-    // Check the result
-    match TxIdHashType::abi_decode_sequence(&tx_hash_data_encode, validate) {
-        Ok(res) => Ok(res == tx_hash_data),
-        Err(_) => {
-            return Err(HasherError::DecodedFailed(DecodedFailed{}));
-        },
-    }   
-}
-```
 
 ## Hashing with keccak256
+
+keccak256 computes the Keccak-256 hash of the input.
+
+Some use cases are:
+ - Creating a deterministic unique ID from a input
+ - Commit-Reveal scheme
+ - Compact cryptographic signature (by signing the hash instead of a larger input)
 
 Example:
 ```rust
@@ -255,24 +169,6 @@ impl Hasher {
         let tx_hash_data_encode_packed = [&target.to_vec(), &value.to_be_bytes_vec(), func.as_bytes(), &data.to_vec(), &timestamp.to_be_bytes_vec()].concat();
         // hash the encoded data
         self.keccak256(tx_hash_data_encode_packed.into())
-    }
-
-
-    // The func example: "transfer(address,uint256)"
-    pub fn encode_with_signature(
-        &self, 
-        func: String, 
-        address: Address, 
-        amount: U256
-    ) -> Vec<u8> {
-        type TransferType = (SOLAddress, Uint<256>);
-        let tx_data = (address, amount);
-        let data = TransferType::abi_encode_sequence(&tx_data);
-         // Get function selector
-         let hashed_function_selector = self.keccak256(func.as_bytes().to_vec().into());
-         // Combine function selector and input data (use abi_packed way)
-         let calldata = [&hashed_function_selector[..4], &data].concat();
-        calldata
     }
 
     // The func example: "transfer(address,uint256)"
