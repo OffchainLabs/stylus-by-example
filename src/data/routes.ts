@@ -75,6 +75,11 @@ export const applications = [
     description: "An example implementation of the ERC-721 token standard in Rust",
   },
   {
+    route: "/applications/multi_call",
+    title: "Multi Call",
+    description: "An example implementation of the Multi Call contract in Rust using Arbitrum Stylus",
+  },
+  {
     route: "/applications/english_auction",
     title: "English Auction",
     description: "An example implementation of the English Auction in Rust using Arbitrum Stylus.",
