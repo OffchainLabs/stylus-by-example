@@ -8,88 +8,148 @@ export const metadata = {
 
 # Sending Ether
 
-We have two main ways to send Ether in Rust Stylus. Using `transfer_eth` method or using `call`. Note that `transfer_eth` method invokes the other contract, which may in turn call others. All gas is supplied, which the recipient may burn. If this is not desired, the call function may be used instead.
+We have three main ways to send Ether in Rust Stylus: using the `transfer_eth` method, using low level `call` method, and sending value while calling an external contract.
 
-so these two are exactly equivalent:
+It's important to note that the `transfer_eth` method in Rust Stylus invokes the recipient contract, which may subsequently call other contracts. All the gas is supplied to the recipient, which it may burn. Conversely, the transfer method in Solidity is capped at 2300 gas. In Rust Stylus, you can cap the gas by using the low-level call method with a specified gas. An example of this is provided in the code on bottom of the page.
+
+These two methods are exactly equivalent under the hood:
 
 ```rust
-transfer_eth(recipient, value)?;                 
+transfer_eth(recipient, value)?;
 
 call(Call::new().value(value), recipient, &[])?;
 ```
 
-where to send:
-1. EOA Addresses
-2. Solidity smart contracts with receive (no calldata)
-3. Solidity smart contracts with fallback (with calldata)
-4. Stylus contracts with the payable methods
+## Where to Send Ether
 
+1. **Externally Owned Account (EOA) Addresses**: Directly send Ether to an EOA address.
 
-### src/main.rs
+2. **Solidity Smart Contracts with Receive Function (No Calldata)**: Send Ether to a Solidity smart contract that has a `receive` function without providing any calldata.
+
+3. **Solidity Smart Contracts with Fallback Function (With Calldata)**: Send Ether to a Solidity smart contract that has a `fallback` function by providing the necessary calldata.
+
+4. **Smart Contracts with Payable Methods (both Solidity and Stylus)**: Send Ether to smart contracts that have defined payable methods.
+
+Below you can find examples for each of these methods and how to define them in a Rust Stylus smart contract using the Stylus SDK:
+
+### `src/main.rs`
 
 ```rust
 #![no_main]
-#![no_std]
 extern crate alloc;
 
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
+static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use stylus_sdk::alloy_primitives::Address;
-use stylus_sdk::prelude::*;
-use stylus_sdk::storage::StorageAddress;
+use alloy_primitives::Address;
+use stylus_sdk::{
+    abi::Bytes,
+    call::{call, transfer_eth, Call},
+    msg::{self},
+    prelude::*,
+};
 
-// Consts must be 'static, so Rust primitives work well
-// Addresses are 20 bytes long, this one is 'checksummed'
-const OWNER: &str = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+sol_interface! {
+    interface ITarget {
+        function receiveEther() external payable;
+    }
+}
 
 #[solidity_storage]
 #[entrypoint]
-pub struct Contract {
-    owner: StorageAddress,
-}
+pub struct SendEther {}
 
 #[external]
-impl Contract {
-    // Sets the owner to the OWNER const set above
-    pub fn init(&mut self) -> Result<(), Vec<u8>> {
-        // Parse the const hex &str as a local Address variable
-        let owner_address = Address::parse_checksummed(OWNER, None).expect("Invalid address");
-
-        // Save the result as the owner
-        self.owner.set(owner_address);
-
+impl SendEther {
+    // Transfer Ether using the transfer_eth method
+    // This can be used to send Ether to an EOA or a Solidity smart contract that has a receive() function implemented
+    #[payable]
+    pub fn send_via_transfer(to: Address) -> Result<(), Vec<u8>> {
+        transfer_eth(to, msg::value())?;
         Ok(())
     }
 
-    // Returns the current owner
-    pub fn owner(&self) -> Result<Address, Vec<u8>> {
-        let owner_address = self.owner.get();
+    // Transfer Ether using a low-level call
+    // This can be used to send Ether to an EOA or a Solidity smart contract that has a receive() function implemented
+    #[payable]
+    pub fn send_via_call(&mut self, to: Address) -> Result<(), Vec<u8>> {
+        call(Call::new_in(self).value(msg::value()), to, &[])?;
+        Ok(())
+    }
 
-        Ok(owner_address)
+    // Transfer Ether using a low-level call with a specified gas limit
+    // This can be used to send Ether to an EOA or a Solidity smart contract that has a receive() function implemented
+    #[payable]
+    pub fn send_via_call_gas_limit(&mut self, to: Address, gas_amount: u64) -> Result<(), Vec<u8>> {
+        call(
+            Call::new_in(self).value(msg::value()).gas(gas_amount),
+            to,
+            &[],
+        )?;
+        Ok(())
+    }
+
+    // Transfer Ether using a low-level call with calldata
+    // This can be used to call a Solidity smart contract's fallback function and send Ether along with calldata
+    #[payable]
+    pub fn send_via_call_with_call_data(
+        &mut self,
+        to: Address,
+        data: Bytes,
+    ) -> Result<(), Vec<u8>> {
+        call(Call::new_in(self).value(msg::value()), to, data.as_slice())?;
+        Ok(())
+    }
+
+    // Transfer Ether to another smart contract via a payable method on the target contract
+    // The target contract can be either a Solidity smart contract or a Stylus contract that has a receiveEther function, which is a payable function
+    #[payable]
+    pub fn send_to_stylus_contract(&mut self, to: Address) -> Result<(), Vec<u8>> {
+        let target = ITarget::new(to);
+        let config = Call::new_in(self).value(msg::value());
+        target.receive_ether(config)?;
+        Ok(())
     }
 }
 ```
 
-### Cargo.toml
+### `Cargo.toml`
 
 ```toml
 [package]
-name = "constants"
-version = "0.1.0"
+name = "stylus-hello-world"
+version = "0.1.7"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/OffchainLabs/stylus-hello-world"
+repository = "https://github.com/OffchainLabs/stylus-hello-world"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus hello world example"
 
 [dependencies]
-# Note: Do not deploy to prod with debug flag set
-stylus-sdk = { version = "0.4.2", features = ["debug"] }
-wee_alloc = "0.4.5"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "0.7.6"
+alloy-sol-types = "0.7.6"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.5.2"
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[[bin]]
+name = "stylus-hello-world"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]
 
 [profile.release]
 codegen-units = 1
@@ -97,6 +157,4 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
-
-[workspace]
 ```
