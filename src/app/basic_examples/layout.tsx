@@ -1,13 +1,12 @@
-import { Metadata } from "next";
+import { Metadata } from 'next';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export const metadata: Metadata = {
-  title: "Basic Examples • Stylus by Example",
-  description:
-    "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
+  title: 'Basic Examples • Stylus by Example',
+  description: 'An introduction to Arbitrum Stylus with simple code examples in Rust and WASM',
 };
 
 export default function PageLayout({ children }: LayoutProps) {
