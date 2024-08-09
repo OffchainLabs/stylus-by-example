@@ -1,28 +1,26 @@
-import type { MDXComponents } from "mdx/types";
-import { css } from "@/styled-system/css";
-import { styled } from "@/styled-system/jsx";
-import { DetailedHTMLProps, HTMLAttributes, ReactPropTypes } from "react";
-import { CodePanel } from "@/components/app/code_panel";
+import type { MDXComponents } from 'mdx/types';
+import { css } from '@/styled-system/css';
+import { styled } from '@/styled-system/jsx';
+import { DetailedHTMLProps, HTMLAttributes, ReactPropTypes } from 'react';
+import { CodePanel } from '@/components/app/code_panel';
 
-function Pre({
-  children,
-}: DetailedHTMLProps<HTMLAttributes<HTMLPreElement>, HTMLPreElement>) {
+function Pre({ children }: DetailedHTMLProps<HTMLAttributes<HTMLPreElement>, HTMLPreElement>) {
   return <>{children}</>;
 }
 
 interface CodeProps extends React.HtmlHTMLAttributes<HTMLDivElement> {}
 
 function Code({ children, className }: CodeProps) {
-  if (className?.startsWith("language-")) {
-    className = className.split("-").pop();
+  if (className?.startsWith('language-')) {
+    className = className.split('-').pop();
     return <CodePanel language={className}>{`${children}`}</CodePanel>;
   } else {
     return (
       <code
         className={css({
-          bg: { _light: "stone.200", _dark: `stone.700` },
-          p: "2px",
-          borderRadius: "sm",
+          bg: { _light: 'stone.200', _dark: `stone.700` },
+          p: '2px',
+          borderRadius: 'sm',
         })}
       >
         {children}
@@ -38,11 +36,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h1: ({ children }) => (
       <h1
         className={css({
-          fontFamily: "heading",
-          fontSize: "3xl",
-          fontWeight: "bold",
-          mt: "4",
-          mb: "2",
+          fontFamily: 'heading',
+          fontSize: '3xl',
+          fontWeight: 'bold',
+          mt: '4',
+          mb: '2',
         })}
       >
         {children}
@@ -51,11 +49,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h2: ({ children }) => (
       <h2
         className={css({
-          fontFamily: "heading",
-          fontSize: "2xl",
-          fontWeight: "bold",
-          mt: "5",
-          mb: "2",
+          fontFamily: 'heading',
+          fontSize: '2xl',
+          fontWeight: 'bold',
+          mt: '5',
+          mb: '2',
         })}
       >
         {children}
@@ -64,26 +62,24 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h3: ({ children }) => (
       <h3
         className={css({
-          fontFamily: "mono",
-          mt: "5",
-          mb: "2",
-          fontSize: "18px",
+          fontFamily: 'mono',
+          mt: '5',
+          mb: '2',
+          fontSize: '18px',
         })}
       >
         {children}
       </h3>
     ),
-    em: ({ children }) => (
-      <em className={css({ fontStyle: "italic" })}>{children}</em>
-    ),
+    em: ({ children }) => <em className={css({ fontStyle: 'italic' })}>{children}</em>,
     p: ({ children }) => (
       <p
         className={css({
-          fontSize: "18px",
-          mt: "3",
-          mb: "3",
-          lineHeight: "1.75",
-          fontFamily: "body",
+          fontSize: '18px',
+          mt: '3',
+          mb: '3',
+          lineHeight: '1.75',
+          fontFamily: 'body',
         })}
       >
         {children}
@@ -110,7 +106,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           cursor="pointer"
           href={href}
           _hover={{
-            color: "pink.400",
+            color: 'pink.400',
           }}
         >
           {children}

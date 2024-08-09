@@ -1,32 +1,32 @@
-"use client";
-import * as React from "react";
-import { useTheme } from "next-themes";
-import { css } from "@/styled-system/css";
+'use client';
+import * as React from 'react';
+import { useTheme } from 'next-themes';
+import { css } from '@/styled-system/css';
 
 export function SideNavScroll({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
 
-  if (theme === "dark") {
+  if (theme === 'dark') {
     return (
       <div
         className={css({
-          flexGrow: "1",
-          h: "full",
-          pt: "6",
-          pb: "12",
-          px: "4",
-          overflowY: "scroll",
-          scrollbarWidth: "thin",
-          scrollbarColor: "stone.700 stone.900",
+          flexGrow: '1',
+          h: 'full',
+          pt: '6',
+          pb: '12',
+          px: '4',
+          overflowY: 'scroll',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'stone.700 stone.900',
           _scrollbar: {
-            w: "10px",
+            w: '10px',
           },
           _scrollbarThumb: {
-            background: "stone.700",
-            borderRadius: "14px",
+            background: 'stone.700',
+            borderRadius: '14px',
           },
           _scrollbarTrack: {
-            background: "stone.900",
+            background: 'stone.900',
           },
         })}
       >
@@ -39,23 +39,23 @@ export function SideNavScroll({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={css({
-        flexGrow: "1",
-        h: "full",
-        pt: "6",
-        pb: "12",
-        px: "4",
-        overflowY: "scroll",
-        scrollbarWidth: "thin",
-        scrollbarColor: "stone.400 stone.200",
+        flexGrow: '1',
+        h: 'full',
+        pt: '6',
+        pb: '12',
+        px: '4',
+        overflowY: 'scroll',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'stone.400 stone.200',
         _scrollbar: {
-          w: "10px",
+          w: '10px',
         },
         _scrollbarThumb: {
-          background: "stone.400",
-          borderRadius: "14px",
+          background: 'stone.400',
+          borderRadius: '14px',
         },
         _scrollbarTrack: {
-          background: "stone.200",
+          background: 'stone.200',
         },
       })}
     >

@@ -1,20 +1,20 @@
-import { gettingStarted, basicExamples, applications } from "@/data/routes";
-import { css } from "@/styled-system/css";
-import { stack } from "@/styled-system/patterns";
-import { Stack } from "@/styled-system/jsx";
+import { gettingStarted, basicExamples, applications } from '@/data/routes';
+import { css } from '@/styled-system/css';
+import { stack } from '@/styled-system/patterns';
+import { Stack } from '@/styled-system/jsx';
 
-import { SidebarLinks } from "@/components/app/sidebar_links";
-import { ReactNode } from "react";
+import { SidebarLinks } from '@/components/app/sidebar_links';
+import { ReactNode } from 'react';
 
 function SidebarHeading({ children }: { children: ReactNode }) {
   return (
     <h2
       className={css({
-        fontSize: { base: "20px", md: "22px", "2xl": "22px" },
-        fontWeight: "bold",
-        mb: "1",
-        px: "4",
-        fontFamily: "heading",
+        fontSize: { 'base': '20px', 'md': '22px', '2xl': '22px' },
+        fontWeight: 'bold',
+        mb: '1',
+        px: '4',
+        fontFamily: 'heading',
       })}
     >
       {children}
@@ -26,10 +26,10 @@ export function Sidebar() {
   return (
     <div
       className={stack({
-        pt: "4",
-        px: "1",
-        pb: "24",
-        gap: "0",
+        pt: '4',
+        px: '1',
+        pb: '24',
+        gap: '0',
       })}
     >
       <SidebarHeading>Getting Started</SidebarHeading>

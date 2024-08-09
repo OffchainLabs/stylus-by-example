@@ -51,7 +51,6 @@ cargo stylus deploy \
   --private-key-path=<PRIVKEY_FILE_PATH>
 ```
 
-
 ## Calling Your Program
 
 This example includes how to call and transact with your program in Rust using ethers-rs under `examples/vending_machine.rs`. Your programs are also Ethereum ABI equivalent if using the Stylus SDK, meaning they can be called and transacted with using any other Ethereum tooling.
@@ -66,7 +65,8 @@ PRIV_KEY_PATH=<the file path for your priv key to transact with>
 RPC_URL=https://stylus-testnet.arbitrum.io/rpc
 USER_ADDRESS=<the address of the user you want to interact with>
 ```
-Alternatively, you can  copy the `.env-sample` into a `.env` file:
+
+Alternatively, you can copy the `.env-sample` into a `.env` file:
 
 ```
 cp .env-sample .env

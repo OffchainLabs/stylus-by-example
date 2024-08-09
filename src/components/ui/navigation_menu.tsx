@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
-import { ChevronDown } from "lucide-react";
-import { createStyleContext } from "@shadow-panda/style-context";
-import { styled } from "@/styled-system/jsx";
-import { cx } from "@/styled-system/css";
-import { navigationMenu } from "@/styled-system/recipes";
+import * as React from 'react';
+import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
+import { ChevronDown } from 'lucide-react';
+import { createStyleContext } from '@shadow-panda/style-context';
+import { styled } from '@/styled-system/jsx';
+import { cx } from '@/styled-system/css';
+import { navigationMenu } from '@/styled-system/recipes';
 
 const { withProvider, withContext } = createStyleContext(navigationMenu);
 
@@ -29,53 +29,32 @@ const BaseNavigationMenuTrigger = React.forwardRef<
     {children} <ChevronDown aria-hidden="true" />
   </NavigationMenuPrimitive.Trigger>
 ));
-BaseNavigationMenuTrigger.displayName =
-  NavigationMenuPrimitive.Trigger.displayName;
+BaseNavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName;
 
-const ViewportWrapper = withContext(styled("div"), "viewportWrapper");
+const ViewportWrapper = withContext(styled('div'), 'viewportWrapper');
 
 const BaseNavigationMenuViewport = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Viewport>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Viewport>
 >(({ className, ...props }, ref) => (
   <ViewportWrapper>
-    <NavigationMenuPrimitive.Viewport
-      className={cx(className)}
-      ref={ref}
-      {...props}
-    />
+    <NavigationMenuPrimitive.Viewport className={cx(className)} ref={ref} {...props} />
   </ViewportWrapper>
 ));
-BaseNavigationMenuViewport.displayName =
-  NavigationMenuPrimitive.Viewport.displayName;
+BaseNavigationMenuViewport.displayName = NavigationMenuPrimitive.Viewport.displayName;
 
-export const NavigationMenu = withProvider(styled(BaseNavigationMenu), "root");
-export const NavigationMenuList = withContext(
-  styled(NavigationMenuPrimitive.List),
-  "list"
-);
-export const NavigationMenuItem = withContext(
-  styled(NavigationMenuPrimitive.Item),
-  "item"
-);
-export const NavigationMenuTrigger = withContext(
-  styled(BaseNavigationMenuTrigger),
-  "trigger"
-);
+export const NavigationMenu = withProvider(styled(BaseNavigationMenu), 'root');
+export const NavigationMenuList = withContext(styled(NavigationMenuPrimitive.List), 'list');
+export const NavigationMenuItem = withContext(styled(NavigationMenuPrimitive.Item), 'item');
+export const NavigationMenuTrigger = withContext(styled(BaseNavigationMenuTrigger), 'trigger');
 export const NavigationMenuContent = withContext(
   styled(NavigationMenuPrimitive.Content),
-  "content"
+  'content',
 );
-export const NavigationMenuLink = withContext(
-  styled(NavigationMenuPrimitive.Link),
-  "link"
-);
-export const NavigationMenuViewport = withContext(
-  styled(BaseNavigationMenuViewport),
-  "viewport"
-);
+export const NavigationMenuLink = withContext(styled(NavigationMenuPrimitive.Link), 'link');
+export const NavigationMenuViewport = withContext(styled(BaseNavigationMenuViewport), 'viewport');
 export const NavigationMenuIndicator = withContext(
   styled(NavigationMenuPrimitive.Indicator),
-  "indicator",
-  { children: <div /> }
+  'indicator',
+  { children: <div /> },
 );
