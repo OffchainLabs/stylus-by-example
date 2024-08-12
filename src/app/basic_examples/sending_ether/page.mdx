@@ -122,9 +122,6 @@ impl SendEther {
 name = "stylus-sending-ether"
 version = "0.1.7"
 edition = "2021"
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/OffchainLabs/stylus-hello-world"
-repository = "https://github.com/OffchainLabs/stylus-hello-world"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 description = "Stylus sending ether example"
 
@@ -142,10 +139,9 @@ eyre = "0.6.8"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
 
 [[bin]]
-name = "stylus-hello-world"
+name = "stylus-multi-call"
 path = "src/main.rs"
 
 [lib]
