@@ -21,7 +21,7 @@ eyre = "0.6.8"
 export-abi = ["stylus-sdk/export-abi"]
 
 [[bin]]
-name = "stylus-hello-world"
+name = "stylus-multi-call"
 path = "src/main.rs"
 
 [lib]
