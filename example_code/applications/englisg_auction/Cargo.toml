@@ -6,10 +6,10 @@ keywords = ["arbitrum", "ethereum", "stylus", "alloy", "english auction"]
 description = "Stylus english auction example"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "0.7.6"
+alloy-sol-types = "0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.5.0", features = ["docs"] }
+stylus-sdk = { version = "0.5.2", features = ["docs"] }
 hex = "0.4.3"
 
 [features]
