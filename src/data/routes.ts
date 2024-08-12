@@ -57,6 +57,11 @@ export const basicExamples = [
     description: "Errors on Stylus Rust smart contracts",
   },
   {
+    route: "/basic_examples/sending_ether",
+    title: "Sending Ether",
+    description: "Sending Ethers on Stylus Rust smart contracts",
+  },
+  {
     route: "/basic_examples/function_selector",
     title: "Function selector",
     description: "Compute the encoded function selector of a contract's function",
