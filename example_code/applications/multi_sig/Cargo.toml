@@ -1,9 +1,7 @@
 [package]
 name = "stylus-multisig-example"
-version = "0.1.5"
+version = "0.1.0"
 edition = "2021"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy", "multisig"]
-description = "Stylus multisig example"
 
 [dependencies]
 alloy-primitives = "0.7.6"
