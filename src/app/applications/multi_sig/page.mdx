@@ -193,7 +193,7 @@ impl MultiSig {
             txIndex: tx_index,
             to: to,
             value: value,
-            data: data.to_vec(),
+            data: data.to_vec().into(),
         });
         Ok(())
     }
@@ -381,15 +381,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "0.7.6"
+alloy-sol-types = "0.7.6"
 mini-alloc = "0.4.2"
 stylus-sdk = { version = "0.5.0", features = ["docs"] }
 hex = "0.4.3"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
 
 [lib]
 crate-type = ["lib", "cdylib"]
@@ -400,5 +399,4 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
-
 ```

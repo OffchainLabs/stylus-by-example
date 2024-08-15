@@ -12,7 +12,6 @@ hex = "0.4.3"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
 
 [lib]
 crate-type = ["lib", "cdylib"]
