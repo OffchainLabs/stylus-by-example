@@ -108,6 +108,7 @@ impl MultiSig {
 
         let tx_index = U256::from(self.transactions.len());
         
+        // Add the transaction to the transactions array.
         let mut new_tx = self.transactions.grow();
         new_tx.to.set(to);
         new_tx.value.set(value);
@@ -115,12 +116,13 @@ impl MultiSig {
         new_tx.executed.set(false);
         new_tx.num_confirmations.set(U256::from(0));
 
+        // Emit the `SubmitTransaction` event.
         evm::log(SubmitTransaction {
             owner: msg::sender(),
             txIndex: tx_index,
             to: to,
             value: value,
-            data: data.to_vec(),
+            data: data.to_vec().into(),
         });
         Ok(())
     }
