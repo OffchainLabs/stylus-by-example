@@ -1,9 +1,9 @@
 // Only run this as a WASM if the export-abi feature is not set.
-#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]extern crate alloc;
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
+extern crate alloc;
 
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-use alloc::vec;
 use alloc::vec::Vec;
 
 use alloy_primitives::Address;
