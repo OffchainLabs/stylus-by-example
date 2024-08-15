@@ -11,13 +11,13 @@ use stylus_sdk::{
 
 #[solidity_storage]
 #[entrypoint]
-pub struct Events {
+pub struct Data {
     
 }
 
 
 #[external]
-impl Events {
+impl Data {
 fn user_main(_input: Vec<u8>) -> ArbResult {
     // Use native Rust primitives where they make sense
     // and where no equivalent Alloy primitive exists
