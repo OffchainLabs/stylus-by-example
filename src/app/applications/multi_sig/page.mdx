@@ -193,7 +193,7 @@ impl MultiSig {
             txIndex: tx_index,
             to: to,
             value: value,
-            data: data.to_vec(),
+            data: data.to_vec().into(),
         });
         Ok(())
     }
