@@ -27,7 +27,7 @@ console!("{local_variable} is awesome!");
 console!("When will you try out {}?", local_variable);
 ```
 
-### src/main.rs
+### src/lib.rs
 
 ```rust
 #![no_main]
@@ -35,10 +35,16 @@ console!("When will you try out {}?", local_variable);
 extern crate alloc;
 
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+
 use alloc::vec::Vec;
 
 use stylus_sdk::{console, stylus_proc::entrypoint, ArbResult};
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
 
 #[entrypoint]
 fn user_main(_input: Vec<u8>) -> ArbResult {
