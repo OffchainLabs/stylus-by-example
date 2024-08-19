@@ -66,6 +66,16 @@ export const basicExamples = [
     title: "Function selector",
     description: "Compute the encoded function selector of a contract's function",
   },
+  {
+    route: "/basic_examples/inheritance",
+    title: "Inheritance",
+    description: "Inheritance in the Stylus Rust SDK",
+  },
+  {
+    route: "/basic_examples/vm_affordances",
+    title: "VM affordances",
+    description: "Accesing VM affordances in the Stylus Rust SDK",
+  },
 ];
 
 export const applications = [
