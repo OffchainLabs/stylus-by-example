@@ -11,8 +11,12 @@ import { ThemeProvider } from "./theme_provider";
 import SideNav from "./side_nav";
 import { Breadcrumbs } from "@/components/app/breadcrumbs";
 import { PageScroll } from "@/components/app/page_scroll";
-import PostHogPageView from "./PostHogPageView";
 import { PHProvider } from "./providers";
+import dynamic from "next/dynamic";
+
+const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "Stylus by Example",
@@ -20,7 +24,7 @@ export const metadata: Metadata = {
     "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
 };
 
-export default function RootLayout ({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
