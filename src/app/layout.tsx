@@ -11,6 +11,8 @@ import { ThemeProvider } from "./theme_provider";
 import SideNav from "./side_nav";
 import { Breadcrumbs } from "@/components/app/breadcrumbs";
 import { PageScroll } from "@/components/app/page_scroll";
+import PostHogPageView from "./PostHogPageView";
+import { PHProvider } from "./providers";
 
 export const metadata: Metadata = {
   title: "Stylus by Example",
@@ -18,7 +20,7 @@ export const metadata: Metadata = {
     "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
 };
 
-export default function RootLayout({
+export default function RootLayout ({
   children,
 }: {
   children: React.ReactNode;
@@ -28,46 +30,50 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${font_mono.variable} ${font_body.variable} ${font_heading.variable}`}
     >
-      <body
-        className={css({
-          overflow: "hidden",
-          h: "100dvh",
-          w: "100dvw",
-          fontFamily: "body",
-        })}
-      >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Stack
-            gap="0"
-            h="full"
-            w="full"
-            overflow="hidden"
-            bg="stone.50"
-            flexDir={{ base: "column-reverse", md: "column" }}
-            _dark={{ bg: "stone.800" }}
-          >
-            <Navigation />
-            <HStack
-              className={css({
-                flexGrow: "1",
-                overflow: "hidden",
-              })}
+      <PHProvider>
+        <body
+          className={css({
+            overflow: "hidden",
+            h: "100dvh",
+            w: "100dvw",
+            fontFamily: "body",
+          })}
+        >
+          <PostHogPageView />
+
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <Stack
+              gap="0"
+              h="full"
+              w="full"
+              overflow="hidden"
+              bg="stone.50"
+              flexDir={{ base: "column-reverse", md: "column" }}
+              _dark={{ bg: "stone.800" }}
             >
-              <SideNav />
-              <PageScroll>
-                <div
-                  className={container({
-                    maxW: "5xl",
-                  })}
-                >
-                  <Breadcrumbs />
-                  {children}
-                </div>
-              </PageScroll>
-            </HStack>
-          </Stack>
-        </ThemeProvider>
-      </body>
+              <Navigation />
+              <HStack
+                className={css({
+                  flexGrow: "1",
+                  overflow: "hidden",
+                })}
+              >
+                <SideNav />
+                <PageScroll>
+                  <div
+                    className={container({
+                      maxW: "5xl",
+                    })}
+                  >
+                    <Breadcrumbs />
+                    {children}
+                  </div>
+                </PageScroll>
+              </HStack>
+            </Stack>
+          </ThemeProvider>
+        </body>
+      </PHProvider>
     </html>
   );
 }
