@@ -57,10 +57,33 @@ export const basicExamples = [
     description: "Errors on Stylus Rust smart contracts",
   },
   {
+    route: "/basic_examples/sending_ether",
+    title: "Sending Ether",
+    description: "Sending Ethers on Stylus Rust smart contracts",
+  },
+  {
     route: "/basic_examples/function_selector",
     title: "Function selector",
     description: "Compute the encoded function selector of a contract's function",
   },
+  {
+    route: "/basic_examples/abi_encode",
+    title: "ABI Encode",
+    description:
+      "A simple solidity ABI encode and decode example",
+  },
+  {
+    route: "/basic_examples/abi_decode",
+    title: "ABI Decode",
+    description:
+      "A simple solidity ABI encode and decode example",
+  },
+  {
+    route: "/basic_examples/hashing",
+    title: "Hashing with keccak256",
+    description:
+      "A simple solidity ABI encode and decode example",
+  }
 ];
 
 export const applications = [
