@@ -41,3 +41,6 @@ next-env.d.ts
 
 # example code artifacts
 /example_code/**/target/**
+/example_code/**/Cargo.lock
+
+.env
