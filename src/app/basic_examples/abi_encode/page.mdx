@@ -24,7 +24,7 @@ use stylus_sdk::{alloy_primitives::{U256, Address, FixedBytes}, abi::Bytes, prel
 use alloc::string::String;
 ```
 
-Secondly because we will use the method `abi_encode_sequence` and `abi_encode_packed` under `alloy_sol_types` to encode data, we also need to import the types from `alloy_sol_types`:
+Secondly because we will use the method [`abi_encode_sequence`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolValue.html#method.abi_encode_sequence) and [`abi_encode_packed`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolValue.html#method.abi_encode_packed) under `alloy_sol_types` to encode data, we also need to import the types from `alloy_sol_types`:
 
 ```rust
 // Becauce the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
