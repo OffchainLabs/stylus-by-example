@@ -228,7 +228,7 @@ impl TimeLock  {
         let calldata = [&hashed_function_selector[..4], &data].concat();
         
         // Call the target contract with the provided parameters
-        match call(Call::new().value(value), target, &calldata) {
+        match call(Call::new_in(self).value(value), target, &calldata) {
             // Log the transaction execution if successful
             Ok(_) => {
                 evm::log(Execute {

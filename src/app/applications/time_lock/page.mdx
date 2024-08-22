@@ -46,10 +46,30 @@ interface ITimeLock {
     error TimestampExpiredError(uint256, uint256);
 
     error TxFailedError();
+
+    event Queue(
+        bytes32 indexed txId,
+        address indexed target,
+        uint256 value,
+        string func,
+        bytes data,
+        uint256 timestamp
+    );
+
+    event Execute(
+        bytes32 indexed txId,
+        address indexed target,
+        uint256 value,
+        string func,
+        bytes data,
+        uint256 timestamp
+    );
+    
+    event Cancel(bytes32 indexed txId);
 }
 ```
 
-Example implementation of a Timelock Wallet contract written in Rust.
+Example implementation of a Timelock contract written in Rust.
 
 ### src/lib.rs
 
