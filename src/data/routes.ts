@@ -98,6 +98,11 @@ export const applications = [
     description: "An example implementation of the ERC-721 token standard in Rust",
   },
   {
+    route: "/applications/time_lock",
+    title: "Time Lock",
+    description: "An example implementation of the Timelock wallet in Rust using Arbitrum Stylus.",
+  },
+  {
     route: "/applications/english_auction",
     title: "English Auction",
     description: "An example implementation of the English Auction in Rust using Arbitrum Stylus.",
