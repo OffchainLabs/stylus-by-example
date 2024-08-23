@@ -1,7 +1,6 @@
 export const metadata = {
-  title: "MultiSig • Stylus by Example",
-  description:
-    "An example implementation of the MultiSig wallet in Rust using Arbitrum Stylus.",
+  title: 'MultiSig • Stylus by Example',
+  description: 'An example implementation of the MultiSig wallet in Rust using Arbitrum Stylus.',
 };
 
 {/* Begin Content */}
@@ -164,8 +163,8 @@ impl MultiSig {
         let amount = msg::value();
         evm::log(
             Deposit{
-                sender: sender, 
-                amount: amount, 
+                sender: sender,
+                amount: amount,
                 balance: contract::balance()
             });
     }
@@ -178,7 +177,7 @@ impl MultiSig {
         }
 
         let tx_index = U256::from(self.transactions.len());
-        
+
         // Add the transaction to the transactions array.
         let mut new_tx = self.transactions.grow();
         new_tx.to.set(to);
@@ -257,9 +256,9 @@ impl MultiSig {
             if entry.num_confirmations.get() < self.num_confirmations_required.get() {
                 return Err(MultiSigError::ConfirmationNumberNotEnough(ConfirmationNumberNotEnough{}));
             }
-            
+
             entry.executed.set(true);
-            
+
             // Execute the transaction
             match call(Call::new().value(entry.value.get()), entry.to.get(), &entry.data.get_bytes()) {
                 // If the transaction is successful, emit the `ExecuteTransaction` event.
@@ -275,7 +274,7 @@ impl MultiSig {
                     return Err(MultiSigError::ExecuteFailed(ExecuteFailed{}));
                 }
             }
-            
+
         } else {
             return Err(MultiSigError::TxDoesNotExist(TxDoesNotExist{}));
         }

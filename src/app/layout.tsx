@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
-import { HStack, Stack } from "@/styled-system/jsx";
-import { css, cx } from "@/styled-system/css";
-import { container, flex, stack } from "@/styled-system/patterns";
-import Navigation from "@/components/app/navigation";
-import { font_mono, font_body, font_heading } from "@/styles/font";
+import { HStack, Stack } from '@/styled-system/jsx';
+import { css, cx } from '@/styled-system/css';
+import { container, flex, stack } from '@/styled-system/patterns';
+import Navigation from '@/components/app/navigation';
+import { font_mono, font_body, font_heading } from '@/styles/font';
 
 import "./globals.css";
 import { ThemeProvider } from "./theme_provider";
@@ -19,16 +19,11 @@ const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
 });
 
 export const metadata: Metadata = {
-  title: "Stylus by Example",
-  description:
-    "An introduction to Arbitrum Stylus with simple code examples in Rust and WASM",
+  title: 'Stylus by Example',
+  description: 'An introduction to Arbitrum Stylus with simple code examples in Rust and WASM',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       suppressHydrationWarning
