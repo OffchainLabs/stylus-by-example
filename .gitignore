@@ -44,3 +44,4 @@ next-env.d.ts
 /example_code/**/Cargo.lock
 
 .env
+example_code/check_results.log
