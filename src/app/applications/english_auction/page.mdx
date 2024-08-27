@@ -1,7 +1,6 @@
 export const metadata = {
-  title: "English Auction • Stylus by Example",
-  description:
-    "An example implementation of the English Auction in Rust using Arbitrum Stylus.",
+  title: 'English Auction • Stylus by Example',
+  description: 'An example implementation of the English Auction in Rust using Arbitrum Stylus.',
 };
 
 {/* Begin Content */}
@@ -11,12 +10,14 @@ export const metadata = {
 An Arbitrum Stylus version implementation of [Solidity English Auction](https://solidity-by-example.org/app/english-auction/).
 
 ## Auction
+
 1. Seller of NFT deploys this contract.
 2. Auction lasts for 7 days.
 3. Participants can bid by depositing ETH greater than the current highest bidder.
 4. All bidders can withdraw their bid if it is not the current highest bid.
 
 ## After the auction
+
 1. Highest bidder becomes the new owner of NFT.
 2. The seller receives the highest bid of ETH.
 
@@ -150,7 +151,7 @@ sol_storage! {
 #[external]
 impl EnglishAuction {
     pub const ONE_DAY: u64 = 86400; // 1 day = 24 hours * 60 minutes * 60 seconds = 86400 seconds.
-    
+
     // Get nft address
     pub fn nft(&self) -> Result<Address, EnglishAuctionError> {
         Ok(self.nft_address.get())
@@ -202,7 +203,7 @@ impl EnglishAuction {
             // Return an error if the contract has already been initialized.
             return Err(EnglishAuctionError::AlreadyInitialized(AlreadyInitialized{}));
         }
-        
+
         // Initialize the contract with the NFT address, the NFT ID, the seller, and the starting bid.
         self.nft_address.set(nft);
         self.nft_id.set(nft_id);
@@ -216,13 +217,13 @@ impl EnglishAuction {
         if self.started.get() {
             return Err(EnglishAuctionError::AlreadyStarted(AlreadyStarted{}));
         }
-        
+
         // Check if the sender is the seller.
         if self.seller.get() != msg::sender() {
             // Return an error if the sender is the seller.
             return Err(EnglishAuctionError::NotSeller(NotSeller{}));
         }
-        
+
         // Create a new instance of the IERC721 interface.
         let nft = IERC721::new(*self.nft_address);
         // Get the NFT ID.
@@ -231,7 +232,7 @@ impl EnglishAuction {
         // Transfer the NFT to the contract.
         let config = Call::new_in(self);
         let result = nft.transfer_from(config, msg::sender(), contract::address(), nft_id);
-        
+
         match result {
             // If the transfer is successful, start the auction.
             Ok(_) => {
@@ -246,7 +247,7 @@ impl EnglishAuction {
             Err(_) => {
                 return Err(EnglishAuctionError::NotSeller(NotSeller{}));
             }
-            
+
         }
     }
 
@@ -258,26 +259,26 @@ impl EnglishAuction {
             // Return an error if the auction has not started.
             return Err(EnglishAuctionError::NotSeller(NotSeller{}));
         }
-        
+
         // Check if the auction has ended.
         if U256::from(block::timestamp()) >= self.end_at.get() {
             // Return an error if the auction has ended.
             return Err(EnglishAuctionError::AuctionEnded(AuctionEnded{}));
         }
-        
+
         // Check if the bid amount is higher than the current highest bid.
         if msg::value() <= self.highest_bid.get() {
             // Return an error if the bid amount is too low.
             return Err(EnglishAuctionError::BidTooLow(BidTooLow{}));
         }
-        
+
         // Refund the previous highest bidder. (But will not transfer back at this call, needs bidders to call withdraw() to get back the fund.
         if self.highest_bidder.get() != Address::default() {
             let mut bid = self.bids.setter(self.highest_bidder.get());
             let current_bid = bid.get();
             bid.set(current_bid + self.highest_bid.get());
         }
-        
+
         // Update the highest bidder and the highest bid.
         self.highest_bidder.set(msg::sender());
         self.highest_bid.set(msg::value());
@@ -314,19 +315,19 @@ impl EnglishAuction {
             // Return an error if the auction has not started.
             return Err(EnglishAuctionError::NotStarted(NotStarted{}));
         }
-        
+
         // Check if the auction has ended.
         if U256::from(block::timestamp()) < storage.borrow_mut().end_at.get() {
             // Return an error if the auction has not ended.
             return Err(EnglishAuctionError::NotEnded(NotEnded{}));
         }
-        
+
         // Check if the auction has already ended.
         if storage.borrow_mut().ended.get() {
             // Return an error if the auction has already ended.
             return Err(EnglishAuctionError::AuctionEnded(AuctionEnded{}));
         }
-        
+
         // End the auction and transfer the NFT and the highest bid to the winner.
         storage.borrow_mut().ended.set(true);
         let nft_contract_address = *storage.borrow_mut().nft_address;
