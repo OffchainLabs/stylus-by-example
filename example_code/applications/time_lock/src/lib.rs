@@ -2,10 +2,6 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-// Use an efficient WASM allocator for memory management.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use sha3::{Digest, Keccak256};
 use alloc::string::String;
 use alloy_primitives::{Address, FixedBytes, U256};
@@ -78,7 +74,7 @@ pub enum TimeLockError {
 }
 
 // Marks `TimeLock` as a contract with the specified external methods
-#[external]
+#[public]
 impl TimeLock  {
 
     // Minimum delay allowed for a transaction
