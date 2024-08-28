@@ -140,16 +140,12 @@ impl Contract {
 To mix external and internal functions within the same contract, you should use two separate `impl` blocks with the same contract name. External functions are defined within an `impl` block annotated with the `#[external]` attribute, signifying that these functions are part of the contract's public interface and can be invoked from outside the contract.
 In contrast, internal functions are placed within a separate `impl` block that does not have the `#[external]` attribute, making them internal to the contract and inaccessible to external entities.
 
-### src/main.rs
+### src/lib.rs
 
 ```rust
 // Only run this as a WASM if the export-abi feature is not set.
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
-
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 
 use alloc::vec;
 use stylus_sdk::alloy_primitives::Address;
@@ -161,14 +157,14 @@ use stylus_sdk::storage::StorageU256;
 use stylus_sdk::console;
 
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct ExampleContract {
     owner: StorageAddress,
     data: StorageU256,
 }
 
-#[external]
+#[public]
 impl ExampleContract {
     // External function to set the data
     pub fn set_data(&mut self, value: U256) {
@@ -212,7 +208,7 @@ edition = "2021"
 alloy-primitives = "0.7.3"
 alloy-sol-types = "0.7.3"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.5.2"
+stylus-sdk = { git = "https://github.com/OffchainLabs/stylus-sdk-rs", branch = "audit" }
 hex = "0.4.3"
 sha3 = "0.10.8"
 
