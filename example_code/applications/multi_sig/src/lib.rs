@@ -6,8 +6,6 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-use std::borrow::BorrowMut;
-
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{contract, evm, msg, prelude::*, call::{Call, call}, alloy_primitives::{Address, U256}, abi::Bytes};
 use alloy_sol_types::sol;
@@ -167,37 +165,35 @@ impl MultiSig {
     }
 
     // The `execute_transaction` method executes a transaction.
-    pub fn execute_transaction<S: TopLevelStorage + BorrowMut<Self>>(storage: &mut S, tx_index: U256) -> Result<(), MultiSigError>{
+    pub fn execute_transaction(&mut self, tx_index: U256) -> Result<(), MultiSigError>{
         // The sender must be an owner.
-        let storage_ref = storage.borrow_mut();
-        if !storage_ref.is_owner.get(msg::sender()) {
+        if !self.is_owner.get(msg::sender()) {
             return Err(MultiSigError::NotOwner(NotOwner{}));
         }
 
         // The transaction must exist.
         let tx_index = tx_index.to::<usize>();
-        if tx_index >= storage_ref.transactions.len() {
+        if tx_index >= self.transactions.len() {
             return Err(MultiSigError::TxDoesNotExist(TxDoesNotExist{}));
         }
 
         // Try get transaction and check transaction is valid or not, if valid, execute it, if not, revert tx.
-        if let Some(mut entry) = storage_ref.transactions.get_mut(tx_index) {
+        if let Some(mut entry) = self.transactions.get_mut(tx_index) {
             if entry.executed.get() {
                 return Err(MultiSigError::TxAlreadyExecuted(TxAlreadyExecuted{}));
             }
 
-            if entry.num_confirmations.get() < storage_ref.num_confirmations_required.get() {
+            if entry.num_confirmations.get() < self.num_confirmations_required.get() {
                 return Err(MultiSigError::ConfirmationNumberNotEnough(ConfirmationNumberNotEnough{}));
             }
             
             entry.executed.set(true);
-            
-            // Execute the transaction
             let entry_value = entry.value.get();
             let entry_to = entry.to.get();
             let entry_data = entry.data.get_bytes();
-            
-            match call(Call::new_in(storage).value(entry_value), entry_to, &entry_data) {                // If the transaction is successful, emit the `ExecuteTransaction` event.
+            // Execute the transaction
+            match call(Call::new_in(self).value(entry_value), entry_to, &entry_data) {
+                // If the transaction is successful, emit the `ExecuteTransaction` event.
                 Ok(_) => {
                     evm::log(ExecuteTransaction {
                         owner: msg::sender(),
