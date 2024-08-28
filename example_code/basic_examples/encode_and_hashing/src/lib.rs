@@ -1,10 +1,10 @@
-#![no_main]
-#![no_std]
+// Only run this as a WASM if the export-abi feature is not set.
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address, FixedBytes}, abi::Bytes, prelude::*, crypto::keccak};
@@ -25,14 +25,10 @@ pub enum HasherError{
     DecodedFailed(DecodedFailed)
 }
 
-// Define some persistent storage using the Solidity ABI.
-// `Hasher` will be the entrypoint.
-sol_storage! {
-    #[entrypoint]
-    pub struct Hasher {
-    }
+#[solidity_storage]
+#[entrypoint]
+pub struct Hasher {
 }
-
 /// Declare that `Hasher` is a contract with the following external methods.
 #[external]
 impl Hasher {
