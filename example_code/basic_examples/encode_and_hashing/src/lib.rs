@@ -1,5 +1,5 @@
-#![no_main]
-#![no_std]
+// Only run this as a WASM if the export-abi feature is not set.
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
@@ -21,14 +21,10 @@ pub enum HasherError{
     DecodedFailed(DecodedFailed)
 }
 
-// Define some persistent storage using the Solidity ABI.
-// `Hasher` will be the entrypoint.
-sol_storage! {
-    #[entrypoint]
-    pub struct Hasher {
-    }
+#[solidity_storage]
+#[entrypoint]
+pub struct Hasher {
 }
-
 /// Declare that `Hasher` is a contract with the following external methods.
 #[public]
 impl Hasher {
