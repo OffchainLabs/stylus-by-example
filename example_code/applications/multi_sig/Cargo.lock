@@ -773,6 +773,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mini-alloc"
+version = "0.5.2"
+source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=audit#a1267bfe56bbe7953728047082491fb4582d41c8"
+dependencies = [
+ "cfg-if 1.0.0",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1249,15 +1257,14 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "hex",
- "mini-alloc",
+ "mini-alloc 0.4.2",
  "stylus-sdk",
 ]
 
 [[package]]
 name = "stylus-proc"
 version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dbf5e4af9b0c0f25877ff19da60ecfd721a0e8fd0a17336892a0d0521648ff"
+source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=audit#a1267bfe56bbe7953728047082491fb4582d41c8"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -1275,8 +1282,7 @@ dependencies = [
 [[package]]
 name = "stylus-sdk"
 version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5426b95831da7fde45a91785cafd2121ad8e720b503f0fc7c709667cff5336cf"
+source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=audit#a1267bfe56bbe7953728047082491fb4582d41c8"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -1285,6 +1291,7 @@ dependencies = [
  "hex",
  "keccak-const",
  "lazy_static",
+ "mini-alloc 0.5.2",
  "regex",
  "stylus-proc",
 ]
