@@ -2,8 +2,6 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 use alloc::vec::Vec;
 use alloc::{string::ToString, vec};
 
@@ -18,14 +16,14 @@ sol! {
     event AnotherLog();
 }
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct Events {
     
 }
 
 
-#[external]
+#[public]
 impl Events {
 fn user_main(_input: Vec<u8>) -> ArbResult {
     // emits a 'Log' event, defined above in the sol! macro
