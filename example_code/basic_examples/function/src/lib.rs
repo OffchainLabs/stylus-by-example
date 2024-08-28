@@ -2,10 +2,6 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
-
 use alloc::vec;
 use stylus_sdk::alloy_primitives::Address;
 use stylus_sdk::prelude::*;
@@ -16,14 +12,14 @@ use stylus_sdk::storage::StorageU256;
 use stylus_sdk::console;
 
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct ExampleContract {
     owner: StorageAddress,
     data: StorageU256,
 }
 
-#[external]
+#[public]
 impl ExampleContract {
     // External function to set the data
     pub fn set_data(&mut self, value: U256) {
