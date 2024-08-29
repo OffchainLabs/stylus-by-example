@@ -66,6 +66,11 @@ export const basicExamples = [
     description: "Compute the encoded function selector of a contract's function",
   },
   {
+    route: "/basic_examples/interfaces",
+    title: "Interfaces",
+    description: "Export Rust contract interfaces and import external contract interfaces",
+  },
+  {
     route: "/basic_examples/abi_encode",
     title: "ABI Encode",
     description:
