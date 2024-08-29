@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prettier": "prettier --write ."
   },
   "dependencies": {
     "@mdx-js/loader": "3.0.0",
@@ -23,17 +24,20 @@
     "lucide-react": "0.294.0",
     "next": "14.0.3",
     "next-themes": "0.2.1",
+    "posthog-js": "^1.157.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-syntax-highlighter": "15.5.0"
   },
   "devDependencies": {
+    "@offchainlabs/prettier-config": "0.2.1",
     "@pandacss/dev": "0.22.0",
     "@shadow-panda/preset": "0.7.1",
     "@types/node": "20.10.4",
     "@types/react": "18.2.45",
     "@types/react-dom": "18.2.17",
     "@types/react-syntax-highlighter": "15.5.11",
+    "prettier": "^2.8.3",
     "typescript": "5.3.3"
   },
   "browserslist": [
