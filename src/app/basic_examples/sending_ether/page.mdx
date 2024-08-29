@@ -17,7 +17,7 @@ These two methods are exactly equivalent under the hood:
 ```rust
 transfer_eth(recipient, value)?;
 
-call(Call::new().value(value), recipient, &[])?;
+call(Call::new_in(self).value(value), recipient, &[])?;
 ```
 
 ## Where to Send Ether
@@ -28,7 +28,7 @@ call(Call::new().value(value), recipient, &[])?;
 
 3. **Solidity Smart Contracts with Fallback Function (With Calldata)**: Send Ether to a Solidity smart contract that has a `fallback` function by providing the necessary calldata.
 
-4. **Smart Contracts with Payable Methods (both Solidity and Stylus)**: Send Ether to smart contracts that have defined payable methods.
+4. **Smart Contracts with Payable Methods (both Solidity and Stylus)**: Send Ether to smart contracts that have defined payable methods. Payable methods are identified by the `payable` modifier in Solidity, and the `#[payable]` macro in Rust.
 
 Below you can find examples for each of these methods and how to define them in a Rust Stylus smart contract using the Stylus SDK:
 
