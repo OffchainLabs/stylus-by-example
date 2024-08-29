@@ -95,6 +95,8 @@ Finally, since the inherited types can also inherit other types themselves, keep
 
 Because methods are checked in the inherited order, if two types implement the same method, the one in the higher level in the hierarchy will override the one in the lower levels, which won’t be callable. This allows for patterns where the developer imports a crate implementing a standard, like ERC-20, and then adds or overrides just the methods they want to without modifying the imported ERC-20 type.
 
+**Important warning**: The Stylus Rust SDK does not currently contain explicit `override` or `virtual` keywords for explicitly marking override functions. It is important, therefore, to carefully ensure that contracts are only overriding the functions.
+
 Let's see an example:
 
 ```rust
