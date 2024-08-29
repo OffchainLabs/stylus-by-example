@@ -8,12 +8,12 @@ export const metadata = {
 
 # Inheritance
 
-The Stylus Rust SDK replicates the composition pattern of Solidity. The `#[external]` macro provides the [Router](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/trait.Router.html) trait, which can be used to connect types via inheritance, via the `#[inherit]` macro.
+The Stylus Rust SDK replicates the composition pattern of Solidity. The `#[public]` macro provides the [Router](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/trait.Router.html) trait, which can be used to connect types via inheritance, via the `#[inherit]` macro.
 
 Let's see an example:
 
 ```rust
-#[external]
+#[public]
 #[inherit(Erc20)]
 impl Token {
     pub fn mint(&mut self, amount: U256) -> Result<(), Vec<u8>> {
@@ -21,7 +21,7 @@ impl Token {
     }
 }
 
-#[external]
+#[public]
 impl Erc20 {
     pub fn balance_of() -> Result<U256> {
         ...
@@ -29,9 +29,9 @@ impl Erc20 {
 }
 ```
 
-In the above code, we can see how `Token` inherits from `Erc20`, meaning that it will inherit the external methods available in `Erc20`. If someone called the `Token` contract on the function `balanceOf`, the function `Erc20.balance_of()` would be executed.
+In the above code, we can see how `Token` inherits from `Erc20`, meaning that it will inherit the public methods available in `Erc20`. If someone called the `Token` contract on the function `balanceOf`, the function `Erc20.balance_of()` would be executed.
 
-Additionally, the inheriting type must implement the [Borrow](https://doc.rust-lang.org/core/borrow/trait.Borrow.html) trait for borrowing data from the inherited type. In the case above, `Token` should implement `Borrow<Erc20>`. For simplicity, `#[solidity_storage]` and `sol_storage!` provide a `#[borrow]` annotation that can be used instead of manually implementing the trait:
+Additionally, the inheriting type must implement the [Borrow](https://doc.rust-lang.org/core/borrow/trait.Borrow.html) trait for borrowing data from the inherited type. In the case above, `Token` should implement `Borrow<Erc20>`. For simplicity, `#[storage]` and `sol_storage!` provide a `#[borrow]` annotation that can be used instead of manually implementing the trait:
 
 ```rust
 sol_storage! {
@@ -50,12 +50,12 @@ sol_storage! {
 
 ## Methods search order
 
-A type can inherit multiple other types (as long as they use the `#[external]` macro). Since execution begins in the type that uses the `#[entrypoint]` macro, that type will be first checked when searching a specific method. If the method is not found in that type, the search will continue in the inherited types, in order of inheritance. If the method is not found in any of the inherited methods, the call will revert.
+A type can inherit multiple other types (as long as they use the `#[public]` macro). Since execution begins in the type that uses the `#[entrypoint]` macro, that type will be first checked when searching a specific method. If the method is not found in that type, the search will continue in the inherited types, in order of inheritance. If the method is not found in any of the inherited methods, the call will revert.
 
 Let's see an example:
 
 ```rust
-#[external]
+#[public]
 #[inherit(B, C)]
 impl A {
     pub fn foo() -> Result<(), Vec<u8>> {
@@ -63,14 +63,14 @@ impl A {
     }
 }
 
-#[external]
+#[public]
 impl B {
     pub fn bar() -> Result<(), Vec<u8>> {
         ...
     }
 }
 
-#[external]
+#[public]
 impl C {
     pub fn bar() -> Result<(), Vec<u8>> {
         ...
@@ -100,7 +100,7 @@ Because methods are checked in the inherited order, if two types implement the s
 Let's see an example:
 
 ```rust
-#[external]
+#[public]
 #[inherit(B, C)]
 impl A {
     pub fn foo() -> Result<(), Vec<u8>> {
@@ -108,7 +108,7 @@ impl A {
     }
 }
 
-#[external]
+#[public]
 impl B {
     pub fn foo() -> Result<(), Vec<u8>> {
         ...
@@ -125,7 +125,7 @@ In the example above, even though `B` has an implementation for `foo()`, calling
 ## Learn More
 
 - [`Arbitrum documentation`](https://docs.arbitrum.io/stylus/reference/rust-sdk-guide#inheritance-inherit-and-borrow)
-- [`inheritance, #[inherit] and #[borrow]`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/attr.external.html#inheritance-inherit-and-borrow)
+- [`inheritance, #[inherit] and #[borrow]`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/attr.public.html#inheritance-inherit-and-borrow)
 - [`Router trait`](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/trait.Router.html)
 - [`Borrow trait`](https://doc.rust-lang.org/core/borrow/trait.Borrow.html)
 - [`BorrowMut trait`](https://doc.rust-lang.org/core/borrow/trait.BorrowMut.html)
