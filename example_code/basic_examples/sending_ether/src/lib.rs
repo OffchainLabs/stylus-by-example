@@ -2,10 +2,6 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-use alloc::vec::Vec;
-
 use alloy_primitives::Address;
 use stylus_sdk::{
     abi::Bytes,
@@ -20,11 +16,11 @@ sol_interface! {
     }
 }
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct SendEther {}
 
-#[external]
+#[public]
 impl SendEther {
     // Transfer Ether using the transfer_eth method
     // This can be used to send Ether to an EOA or a Solidity smart contract that has a receive() function implemented

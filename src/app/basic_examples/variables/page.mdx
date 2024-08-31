@@ -31,16 +31,12 @@ Unlike Solidity, Rust was not built inherently with the blockchain in mind. It i
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-use alloc::vec::Vec;
-
 use stylus_sdk::alloy_primitives::{U16, U256};
 use stylus_sdk::prelude::*;
 use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256};
 use stylus_sdk::{block, console, msg};
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct Contract {
     initialized: StorageBool,
@@ -48,7 +44,7 @@ pub struct Contract {
     max_supply: StorageU256,
 }
 
-#[external]
+#[public]
 impl Contract {
     // State variables are initialized in an `init` function.
     pub fn init(&mut self) -> Result<(), Vec<u8>> {
@@ -71,16 +67,16 @@ impl Contract {
     pub fn do_something() -> Result<(), Vec<u8>> {
         // Local variables are not saved to the blockchain
         // 16-bit Rust integer
-        let i = 456_u16;
+        let _i = 456_u16;
         // 16-bit int inferred from U16 Alloy primitive
-        let j = U16::from(123);
+        let _j = U16::from(123);
 
         // Here are some global variables
-        let timestamp = block::timestamp();
-        let amount = msg::value();
+        let _timestamp = block::timestamp();
+        let _amount = msg::value();
 
-        console!("Local variables: {i}, {j}");
-        console!("Global variables: {timestamp}, {amount}");
+        console!("Local variables: {_i}, {_j}");
+        console!("Global variables: {_timestamp}, {_amount}");
 
         Ok(())
     }
@@ -102,7 +98,7 @@ keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 alloy-primitives = "0.7.6"
 alloy-sol-types = "0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.5.2"
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [dev-dependencies]
@@ -122,4 +118,5 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
+
 ```

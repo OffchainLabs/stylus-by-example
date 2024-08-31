@@ -12,10 +12,6 @@ use stylus_sdk::{
 };
 use crate::erc721::{Erc721, Erc721Params, Erc721Error};
 
-/// Initializes a custom, global allocator for Rust programs compiled to WASM.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 /// Immutable definitions
 struct StylusNFTParams;
 impl Erc721Params for StylusNFTParams {
@@ -38,7 +34,7 @@ sol_storage! {
     }
 }
 
-#[external]
+#[public]
 #[inherit(Erc721<StylusNFTParams>)]
 impl StylusNFT {
     /// Mints an NFT

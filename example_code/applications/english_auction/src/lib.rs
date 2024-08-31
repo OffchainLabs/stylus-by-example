@@ -2,10 +2,6 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use std::borrow::BorrowMut;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
@@ -72,7 +68,7 @@ sol_storage! {
 }
 
 /// Declare that `Counter` is a contract with the following external methods.
-#[external]
+#[public]
 impl EnglishAuction {
     pub const ONE_DAY: u64 = 86400; // 1 day = 24 hours * 60 minutes * 60 seconds = 86400 seconds.
     

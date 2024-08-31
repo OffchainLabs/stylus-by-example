@@ -78,10 +78,6 @@ Example implementation of a Timelock contract written in Rust.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-// Use an efficient WASM allocator for memory management.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use sha3::{Digest, Keccak256};
 use alloc::string::String;
 use alloy_primitives::{Address, FixedBytes, U256};
@@ -154,7 +150,7 @@ pub enum TimeLockError {
 }
 
 // Marks `TimeLock` as a contract with the specified external methods
-#[external]
+#[public]
 impl TimeLock  {
 
     // Minimum delay allowed for a transaction
@@ -304,7 +300,7 @@ impl TimeLock  {
         let calldata = [&hashed_function_selector[..4], &data].concat();
         
         // Call the target contract with the provided parameters
-        match call(Call::new().value(value), target, &calldata) {
+        match call(Call::new_in(self).value(value), target, &calldata) {
             // Log the transaction execution if successful
             Ok(_) => {
                 evm::log(Execute {
@@ -356,6 +352,8 @@ impl TimeLock  {
         // Return Ok if the transaction is successfully cancelled
         Ok(())
     }
+
+    
 }
 ```
 
@@ -371,7 +369,7 @@ edition = "2021"
 alloy-primitives = "0.7.5"
 alloy-sol-types = "0.7.5"
 mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.5.1" , features = ["docs"] }
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 sha3 = "0.10.8"
 
