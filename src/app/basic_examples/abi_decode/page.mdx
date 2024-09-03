@@ -47,12 +47,10 @@ pub fn encode_and_decode(
 ### src/main.rs
 
 ```rust
-#![no_main]
-#![no_std]
+
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address}, prelude::*};
@@ -81,7 +79,7 @@ sol_storage! {
 
 
 /// Declare that `Decoder` is a contract with the following external methods.
-#[external]
+#[public]
 impl Decoder {
     // This should always return true
     pub fn encode_and_decode(
@@ -114,7 +112,7 @@ impl Decoder {
 
 ```rust
 [package]
-name = "stylus-encode-hashing"
+name = "stylus-decode-hashing"
 version = "0.1.0"
 edition = "2021"
 
