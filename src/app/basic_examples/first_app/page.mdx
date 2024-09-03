@@ -21,16 +21,13 @@ Simple contract that defines a count value in storage that can be incremented, d
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 use stylus_sdk::{alloy_primitives::U256, prelude::*, storage::StorageU256};
 
 /// The solidity_storage macro allows this struct to be used in persistent
 /// storage. It accepts fields that implement the StorageType trait. Built-in
 /// storage types for Solidity ABI primitives are found under
 /// stylus_sdk::storage.
-#[solidity_storage]
+#[storage]
 /// The entrypoint macro defines where Stylus execution begins. External methods
 /// are exposed by annotating an impl for this struct with #[external] as seen
 /// below.
@@ -41,7 +38,7 @@ pub struct Counter {
 
 /// Define an implementation of the Counter struct, defining a set_count
 /// as well as inc and dec methods using the features of the Stylus SDK.
-#[external]
+#[public]
 impl Counter {
     /// Gets the number from storage.
     pub fn get(&self) -> Result<U256, Vec<u8>> {
@@ -75,7 +72,7 @@ impl Counter {
 
 #[cfg(feature = "export-abi")]
 fn main() {
-    stylus_counter::main();
+    stylus_counter::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
 }
 ```
 
@@ -84,15 +81,14 @@ fn main() {
 ```toml
 [package]
 name = "stylus-counter"
-version = "0.1.5"
+version = "0.1.7"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
-stylus-sdk = "0.4.1"
+alloy-primitives = "0.7.6"
+alloy-sol-types = "0.7.6"
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
-wee_alloc = "0.4.5"
 
 [dev-dependencies]
 tokio = { version = "1.12.0", features = ["full"] }
