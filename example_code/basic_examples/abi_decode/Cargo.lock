@@ -3229,7 +3229,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stylus-encode-hashing"
+name = "stylus-decode-hashing"
 version = "0.1.7"
 dependencies = [
  "alloy-primitives",

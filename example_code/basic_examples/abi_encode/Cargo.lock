@@ -3238,6 +3238,7 @@ dependencies = [
  "eyre",
  "hex",
  "mini-alloc 0.4.2",
+ "sha3",
  "stylus-sdk",
  "tokio",
 ]

@@ -11,6 +11,7 @@ alloy-sol-types = "0.7.6"
 mini-alloc = "0.4.2"
 stylus-sdk = "0.6.0"
 hex = "0.4.3"
+sha3 = "0.10"
 
 [dev-dependencies]
 tokio = { version = "1.12.0", features = ["full"] }
