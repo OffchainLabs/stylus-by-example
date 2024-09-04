@@ -1,9 +1,13 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-
 use alloy_sol_types::sol;
-use stylus_sdk::{abi::Bytes, alloy_primitives::{Address, U256}, call::RawCall, prelude::*};
+use stylus_sdk::{
+    abi::Bytes,
+    alloy_primitives::{Address, U256},
+    call::RawCall,
+    prelude::*,
+};
 
 #[storage]
 #[entrypoint]
@@ -39,7 +43,11 @@ impl MultiCall {
                 RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
             let data = match result {
                 Ok(data) => data,
-                Err(_data) => return Err(MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) })),
+                Err(_data) => {
+                    return Err(MultiCallErrors::CallFailed(CallFailed {
+                        call_index: U256::from(i),
+                    }))
+                }
             };
             results.push(data.into())
         }

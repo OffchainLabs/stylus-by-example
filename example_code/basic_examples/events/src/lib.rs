@@ -18,39 +18,36 @@ sol! {
 
 #[storage]
 #[entrypoint]
-pub struct Events {
-    
-}
-
+pub struct Events {}
 
 #[public]
 impl Events {
-fn user_main(_input: Vec<u8>) -> ArbResult {
-    // emits a 'Log' event, defined above in the sol! macro
-    evm::log(Log {
-        sender: Address::from([0x11; 20]),
-        message: "Hello world!".to_string(),
-    });
+    fn user_main(_input: Vec<u8>) -> ArbResult {
+        // emits a 'Log' event, defined above in the sol! macro
+        evm::log(Log {
+            sender: Address::from([0x11; 20]),
+            message: "Hello world!".to_string(),
+        });
 
-    // no data, but event will still log to the chain
-    evm::log(AnotherLog {});
+        // no data, but event will still log to the chain
+        evm::log(AnotherLog {});
 
-    // set up local variables
-    let user = Address::from([0x22; 20]);
-    let balance = U256::from(10_000_000);
+        // set up local variables
+        let user = Address::from([0x22; 20]);
+        let balance = U256::from(10_000_000);
 
-    // declare up to 4 topics
-    // topics must be of type FixedBytes<32>
-    let topics = &[user.into_word()];
+        // declare up to 4 topics
+        // topics must be of type FixedBytes<32>
+        let topics = &[user.into_word()];
 
-    // store non-indexed data in a byte Vec
-    let mut data: Vec<u8> = vec![];
-    // to_be_bytes means 'to big endian bytes'
-    data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
+        // store non-indexed data in a byte Vec
+        let mut data: Vec<u8> = vec![];
+        // to_be_bytes means 'to big endian bytes'
+        data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
 
-    // unwrap() here 'consumes' the Result
-    evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
+        // unwrap() here 'consumes' the Result
+        evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
 
-    Ok(Vec::new())
-}
+        Ok(Vec::new())
+    }
 }
