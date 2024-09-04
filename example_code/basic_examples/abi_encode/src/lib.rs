@@ -6,7 +6,7 @@ extern crate alloc;
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address, FixedBytes}, abi::Bytes, prelude::*};
 use alloc::string::String;
-// Becauce the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
+// Because the naming of alloy_primitives and alloy_sol_types is the same, so we need to re-name the types in alloy_sol_types
 use alloy_sol_types::{sol_data::{Address as SOLAddress, String as SOLString, Bytes as SOLBytes, *}, SolType};
 use sha3::{Digest, Keccak256};
 
