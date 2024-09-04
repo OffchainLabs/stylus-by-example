@@ -48,7 +48,7 @@ impl Encoder {
         // set the tuple
         let tx_hash_data = (target, value, func, data, timestamp);
         // encode the tuple
-        let tx_hash_data_encode = TxIdHashType::abi_encode_sequence(&tx_hash_data);
+        let tx_hash_data_encode = TxIdHashType::abi_encode_params(&tx_hash_data);
         tx_hash_data_encode
     }
 
@@ -94,7 +94,7 @@ impl Encoder {
     ) -> Vec<u8> {
         type TransferType = (SOLAddress, Uint<256>);
         let tx_data = (address, amount);
-        let data = TransferType::abi_encode_sequence(&tx_data);
+        let data = TransferType::abi_encode_params(&tx_data);
         // Get function selector
         let hashed_function_selector = self.keccak256(func.as_bytes().to_vec().into());
         // Combine function selector and input data (use abi_packed way)
