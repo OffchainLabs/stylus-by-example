@@ -1,17 +1,14 @@
+
 #![no_main]
 #![no_std]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 use alloy_primitives::FixedBytes;
 /// Import items from the SDK. The prelude contains common traits and macros.
-use stylus_sdk::{abi::Bytes, alloy_primitives::{address, Address, U256}, call::{self, Call}, prelude::*};
+use stylus_sdk::{abi::Bytes, alloy_primitives::{address, Address, U256}, call::{self, Call}, prelude::*, crypto::keccak};
 use alloc::string::String;
 use alloy_sol_types::{sol_data::{Address as SOLAddress, FixedBytes as SolFixedBytes, *}, SolType, sol};
-use sha3::{Digest, Keccak256};
 
 type ECRECOVERType = (SolFixedBytes<32>, Uint<8>, SolFixedBytes<32>, SolFixedBytes<32>);
 
@@ -37,23 +34,9 @@ pub enum VerifySignatureError {
 
 const ECRECOVER: Address = address!("0000000000000000000000000000000000000001");
 const SIGNED_MESSAGE_HEAD: &'static str = "\x19Ethereum Signed Message:\n32";
-// Declare private method.
-impl VerifySignature {
-    fn keccak256(&self, data: Bytes) -> FixedBytes<32> {
-        // prepare hasher
-        let mut hasher = Keccak256::new();
-        // populate the data
-        hasher.update(data);
-        // hashing with keccack256
-        let result = hasher.finalize();
-        // convert the result hash to FixedBytes<32>
-        let result_vec = result.to_vec();
-        FixedBytes::<32>::from_slice(&result_vec)   
-    }
-}
 
 /// Declare that `VerifySignature` is a contract with the following external methods.
-#[external]
+#[public]
 impl VerifySignature {
     /* 1. Unlock MetaMask account
     ethereum.enable()
@@ -77,7 +60,7 @@ impl VerifySignature {
         nonce: U256,
     ) -> FixedBytes<32> {
         let message_data = [&to.to_vec(), &amount.to_be_bytes_vec(), message.as_bytes(), &nonce.to_be_bytes_vec()].concat();
-        self.keccak256(message_data.into())
+        keccak(message_data).into()
     }
 
     /* 3. Sign message hash
@@ -93,7 +76,7 @@ impl VerifySignature {
     */
     pub fn get_eth_signed_message_hash(&self, message_hash: FixedBytes<32>) -> FixedBytes<32> {
         let message_to_be_decoded = [SIGNED_MESSAGE_HEAD.as_bytes(), &message_hash.to_vec()].concat();
-        self.keccak256(message_to_be_decoded.into())
+        keccak(message_to_be_decoded).into()
     }
 
     /* 4. Verify signature
@@ -128,21 +111,11 @@ impl VerifySignature {
         signature: Bytes
     ) -> Result<Address, VerifySignatureError> {
         let (r, s, v) = self.split_signature(signature);
-        self.ecrecover(eth_signed_message_hash, v, r, s)
-    }
-
-    pub fn split_signature(
-        &self,
-        signature: Bytes
-    ) -> (FixedBytes<32>, FixedBytes<32>, u8) {
-        let r = FixedBytes::from_slice(&signature[0..32]);
-        let s = FixedBytes::from_slice(&signature[32..64]);
-        let v = signature[64];
-        (r, s, v)
+        self.ecrecover_call(eth_signed_message_hash, v, r, s)
     }
 
     /// Invoke the ECRECOVER precompile.
-    pub fn ecrecover(
+    pub fn ecrecover_call(
         &self,
         hash: FixedBytes<32>,
         v: u8,
@@ -155,6 +128,17 @@ impl VerifySignature {
             Ok(result) => Ok(SOLAddress::abi_decode(&result, false).unwrap()),
             Err(_) => Err(VerifySignatureError::EcrecoverCallError(EcrecoverCallError{})),
         }
+    }
+
+
+    pub fn split_signature(
+        &self,
+        signature: Bytes
+    ) -> (FixedBytes<32>, FixedBytes<32>, u8) {
+        let r = FixedBytes::from_slice(&signature[0..32]);
+        let s = FixedBytes::from_slice(&signature[32..64]);
+        let v = signature[64];
+        (r, s, v)
     }
             
 }
