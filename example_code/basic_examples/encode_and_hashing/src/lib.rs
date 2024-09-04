@@ -31,7 +31,8 @@ pub enum HasherError {
 
 #[solidity_storage]
 #[entrypoint]
-pub struct Hasher {}
+pub struct Hasher;
+
 /// Declare that `Hasher` is a contract with the following external methods.
 #[public]
 impl Hasher {
