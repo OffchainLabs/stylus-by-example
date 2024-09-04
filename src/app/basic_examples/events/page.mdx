@@ -30,7 +30,12 @@ sol! {
     event AnotherLog();
 }
 
+#[storage]
 #[entrypoint]
+pub struct Events {}
+
+#[public]
+impl Events {
 fn user_main(_input: Vec<u8>) -> ArbResult {
     // emits a 'Log' event, defined above in the sol! macro
     evm::log(Log {
@@ -42,6 +47,7 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
     evm::log(AnotherLog {});
 
     Ok(vec![])
+}
 }
 ```
 
@@ -143,10 +149,7 @@ sol! {
 
 #[storage]
 #[entrypoint]
-pub struct Events {
-    
-}
-
+pub struct Events {}
 
 #[public]
 impl Events {
@@ -192,8 +195,8 @@ license = "MIT OR Apache-2.0"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-alloy-primitives = "0.7.6"
-alloy-sol-types = "0.7.6"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
 stylus-sdk = "0.6.0"
 hex = "0.4.3"

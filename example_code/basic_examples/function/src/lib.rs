@@ -8,9 +8,8 @@ use stylus_sdk::prelude::*;
 use stylus_sdk::storage::StorageAddress;
 
 use stylus_sdk::alloy_primitives::U256;
-use stylus_sdk::storage::StorageU256;
 use stylus_sdk::console;
-
+use stylus_sdk::storage::StorageU256;
 
 #[storage]
 #[entrypoint]
