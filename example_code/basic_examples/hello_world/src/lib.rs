@@ -7,9 +7,7 @@ use stylus_sdk::{console, prelude::*, stylus_proc::entrypoint, ArbResult};
 
 #[storage]
 #[entrypoint]
-pub struct Hello {
-    
-}
+pub struct Hello;
 
 
 #[public]
