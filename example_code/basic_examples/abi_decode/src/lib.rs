@@ -39,12 +39,12 @@ impl Decoder {
         // set the tuple
         let tx_hash_data = (address, amount);
         // encode the tuple
-        let tx_hash_data_encode = TxIdHashType::abi_encode_sequence(&tx_hash_data);
+        let tx_hash_data_encode = TxIdHashType::abi_encode_params(&tx_hash_data);
 
         let validate = true;
         
         // Check the result
-        match TxIdHashType::abi_decode_sequence(&tx_hash_data_encode, validate) {
+        match TxIdHashType::abi_decode_params(&tx_hash_data_encode, validate) {
             Ok(res) => Ok(res == tx_hash_data),
             Err(_) => {
                 return Err(DecoderError::DecodedFailed(DecodedFailed{}));
