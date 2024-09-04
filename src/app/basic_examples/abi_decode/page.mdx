@@ -68,14 +68,9 @@ pub enum DecoderError{
     DecodedFailed(DecodedFailed)
 }
 
-// Define some persistent storage using the Solidity ABI.
-// `Decoder` will be the entrypoint.
-sol_storage! {
-    #[entrypoint]
-    pub struct Decoder {
-    }
-}
-
+#[storage]
+#[entrypoint]
+pub struct Decoder;
 
 /// Declare that `Decoder` is a contract with the following external methods.
 #[public]
