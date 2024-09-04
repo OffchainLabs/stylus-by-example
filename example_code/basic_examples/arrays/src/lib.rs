@@ -6,10 +6,10 @@ extern crate alloc;
 use stylus_sdk::{alloy_primitives::{Address, U256}, prelude::*, msg};
 
 // Define some persistent storage using the Solidity ABI.
-// `Counter` will be the entrypoint.
+// `Arrays` will be the entrypoint.
 sol_storage! {
     #[entrypoint]
-    pub struct Counter {
+    pub struct Arrays {
         uint256[] arr;
         uint256[10] arr2; // fixed length array
         Info[] arr3; // struct array
@@ -21,51 +21,61 @@ sol_storage! {
     }
 }
 
-/// Declare that `Counter` is a contract with the following external methods.
+/// Declare that `Arrays` is a contract with the following external methods.
 #[public]
-impl Counter {
+impl Arrays {
+    // dynamic array
+    // push an element to the dynamic array
     pub fn push(&mut self, i: U256) {
         self.arr.push(i);
     }
 
-
+    // get the element at the index
     pub fn get_element(&self, index: U256) -> U256 {
         self.arr.get(index).unwrap()
     }
 
+    // get the length of the array
     pub fn get_arr_length(&self) -> U256 {
         U256::from(self.arr.len())
     }
 
+    // remove will not change the length of the array
     pub fn remove(&mut self, index: U256) {
         let mut last_element = self.arr.setter(index).unwrap();
         last_element.erase()
     }
 
     // fixed length array
-    pub fn get_arr2_size(&self) -> U256 {
-        U256::from(self.arr2.len())
-    }
-
+    // get an element from the fixed length array
     pub fn get_arr2_element(&self, index: U256) -> U256 {
         self.arr2.get(index).unwrap()
     }
 
+    // get the fixed length array size
+    pub fn get_arr2_length(&self) -> U256 {
+        U256::from(self.arr2.len())
+    }
+
+    // set an element in the fixed length array
     pub fn set_arr2_value(&mut self, index: U256, value: U256) {
         self.arr2.setter(index).unwrap().set(value);
     }
 
     // struct array
+    //  push an element to the struct array
     pub fn push_arr3_info(&mut self, value: U256) {
         let mut new_info = self.arr3.grow();
         new_info.setter.set(msg::sender());
         new_info.value.set(value);
     }
 
+    // get the length of the struct array
     pub fn get_arr3_length(&self) -> U256 {
         U256::from(self.arr3.len())
     }
 
+    // get the value of the struct array at the index
     pub fn get_arr3_info(&self, index: U256) -> (Address, U256) {
         let info = self.arr3.get(index).unwrap();
         (info.setter.get(), info.value.get())
