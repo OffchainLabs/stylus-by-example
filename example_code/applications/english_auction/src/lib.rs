@@ -2,9 +2,7 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+use std::borrow::BorrowMut;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{Address, U256}, block, call::{transfer_eth, Call}, contract, evm, msg, prelude::*};
@@ -70,7 +68,7 @@ sol_storage! {
 }
 
 /// Declare that `Counter` is a contract with the following external methods.
-#[external]
+#[public]
 impl EnglishAuction {
     pub const ONE_DAY: u64 = 86400; // 1 day = 24 hours * 60 minutes * 60 seconds = 86400 seconds.
     
@@ -152,7 +150,7 @@ impl EnglishAuction {
         let nft_id = self.nft_id.get();
 
         // Transfer the NFT to the contract.
-        let config = Call::new();
+        let config = Call::new_in(self);
         let result = nft.transfer_from(config, msg::sender(), contract::address(), nft_id);
         
         match result {
@@ -231,37 +229,38 @@ impl EnglishAuction {
     }
 
     // The end method allows the seller to end the auction.
-    pub fn end(&mut self) -> Result<(), EnglishAuctionError> {
+    pub fn end<S: TopLevelStorage + BorrowMut<Self>>(storage: &mut S) -> Result<(), EnglishAuctionError> {
         // Check if the auction has started.
-        if !self.started.get() {
+        if !storage.borrow_mut().started.get() {
             // Return an error if the auction has not started.
             return Err(EnglishAuctionError::NotStarted(NotStarted{}));
         }
         
         // Check if the auction has ended.
-        if U256::from(block::timestamp()) < self.end_at.get() {
+        if U256::from(block::timestamp()) < storage.borrow_mut().end_at.get() {
             // Return an error if the auction has not ended.
             return Err(EnglishAuctionError::NotEnded(NotEnded{}));
         }
         
         // Check if the auction has already ended.
-        if self.ended.get() {
+        if storage.borrow_mut().ended.get() {
             // Return an error if the auction has already ended.
             return Err(EnglishAuctionError::AuctionEnded(AuctionEnded{}));
         }
         
         // End the auction and transfer the NFT and the highest bid to the winner.
-        self.ended.set(true);
-
-        let seller_address = self.seller.get();
-        let highest_bid = self.highest_bid.get();
-        let highest_bidder = self.highest_bidder.get();
-        let nft_id = self.nft_id.get();
-        let config = Call::new();
-        let nft = IERC721::new(*self.nft_address);
+        storage.borrow_mut().ended.set(true);
+        let nft_contract_address = *storage.borrow_mut().nft_address;
+        let seller_address = storage.borrow_mut().seller.get();
+        let highest_bid = storage.borrow_mut().highest_bid.get();
+        let highest_bidder = storage.borrow_mut().highest_bidder.get();
+        let nft_id = storage.borrow_mut().nft_id.get();
+        let config = Call::new_in(storage.borrow_mut());
+        
+        let nft = IERC721::new(nft_contract_address);
         
         // Check if there is highest bidder.
-        if self.highest_bidder.get() != Address::default() {
+        if highest_bidder != Address::default() {
             // If there is a highest bidder, transfer the NFT to the highest bidder.
             let _ = nft.safe_transfer_from(config, contract::address(), highest_bidder, nft_id);
             // Transfer the highest bid to the seller.

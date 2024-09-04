@@ -2,5 +2,5 @@
 
 #[cfg(feature = "export-abi")]
 fn main() {
-    cupcake_example::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
+    stylus_cupcake_example::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
 }
