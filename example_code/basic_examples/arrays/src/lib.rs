@@ -63,7 +63,7 @@ impl Arrays {
     }
 
     // struct array
-    //  push an element to the struct array
+    // push an element to the struct array
     pub fn push_arr3_info(&mut self, value: U256) {
         let mut new_info = self.arr3.grow();
         new_info.setter.set(msg::sender());
