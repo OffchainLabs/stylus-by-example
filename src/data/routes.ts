@@ -71,6 +71,16 @@ export const basicExamples = [
     description: "Inheritance in the Stylus Rust SDK",
   },
   {
+    route: "/basic_examples/import_interfaces",
+    title: "Import interfaces",
+    description: "Import external contract interfaces",
+  },
+  {
+    route: "/basic_examples/export_interface",
+    title: "Export contract interface",
+    description: "Export the Solidity ABI interface of your Rust contract",
+  },
+  {
     route: "/basic_examples/vm_affordances",
     title: "VM affordances",
     description: "Accesing VM affordances in the Stylus Rust SDK",
