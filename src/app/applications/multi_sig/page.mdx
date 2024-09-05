@@ -72,10 +72,6 @@ Example implementation of a MultiSig Wallet contract written in Rust.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{contract, evm, msg, prelude::*, call::{Call, call}, alloy_primitives::{Address, U256}, abi::Bytes};
 use alloy_sol_types::sol;
@@ -150,7 +146,7 @@ pub enum MultiSigError {
 }
 
 /// Declare that `MultiSig` is a contract with the following external methods.
-#[external]
+#[public]
 impl MultiSig {
     pub fn num_confirmations_required(&self) -> Result<U256, MultiSigError> {
         Ok(self.num_confirmations_required.get())
@@ -382,10 +378,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.7.6"
-alloy-sol-types = "0.7.6"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.5.0", features = ["docs"] }
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [features]

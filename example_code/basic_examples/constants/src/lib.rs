@@ -2,9 +2,6 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -14,13 +11,13 @@ use stylus_sdk::storage::StorageAddress;
 
 const OWNER: &str = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct Contract {
     owner: StorageAddress,
 }
 
-#[external]
+#[public]
 impl Contract {
     pub fn init(&mut self) -> Result<(), Vec<u8>> {
         // Parse the const &str as a local Address variable

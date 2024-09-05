@@ -2,10 +2,6 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{contract, evm, msg, prelude::*, call::{Call, call}, alloy_primitives::{Address, U256}, abi::Bytes};
 use alloy_sol_types::sol;
@@ -80,7 +76,7 @@ pub enum MultiSigError {
 }
 
 /// Declare that `MultiSig` is a contract with the following external methods.
-#[external]
+#[public]
 impl MultiSig {
     pub fn num_confirmations_required(&self) -> Result<U256, MultiSigError> {
         Ok(self.num_confirmations_required.get())

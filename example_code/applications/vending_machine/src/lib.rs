@@ -11,10 +11,6 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-// Use an efficient WASM allocator for memory management.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use alloy_primitives::{Address, Uint};
 // Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::alloy_primitives::U256;
@@ -34,7 +30,7 @@ sol_storage! {
 }
 
 // Declare that `VendingMachine` is a contract with the following external methods.
-#[external]
+#[public]
 impl VendingMachine {
     // Give a cupcake to the specified user if they are eligible (i.e., if at least 5 seconds have passed since their last cupcake).
     pub fn give_cupcake_to(&mut self, user_address: Address) -> bool {
@@ -70,7 +66,6 @@ impl VendingMachine {
     }
 
     // Get the cupcake balance for the specified user.
-    #[view]
     pub fn get_cupcake_balance_for(&self, user_address: Address) -> Uint<256, 4> {
         // Return the user's cupcake balance from storage.
         return self.cupcake_balances.get(user_address);

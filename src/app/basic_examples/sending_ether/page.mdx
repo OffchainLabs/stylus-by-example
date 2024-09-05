@@ -17,7 +17,7 @@ These two methods are exactly equivalent under the hood:
 ```rust
 transfer_eth(recipient, value)?;
 
-call(Call::new().value(value), recipient, &[])?;
+call(Call::new_in(self).value(value), recipient, &[])?;
 ```
 
 ## Where to Send Ether
@@ -28,7 +28,7 @@ call(Call::new().value(value), recipient, &[])?;
 
 3. **Solidity Smart Contracts with Fallback Function (With Calldata)**: Send Ether to a Solidity smart contract that has a `fallback` function by providing the necessary calldata.
 
-4. **Smart Contracts with Payable Methods (both Solidity and Stylus)**: Send Ether to smart contracts that have defined payable methods.
+4. **Smart Contracts with Payable Methods (both Solidity and Stylus)**: Send Ether to smart contracts that have defined payable methods. Payable methods are identified by the `payable` modifier in Solidity, and the `#[payable]` macro in Rust.
 
 Below you can find examples for each of these methods and how to define them in a Rust Stylus smart contract using the Stylus SDK:
 
@@ -38,10 +38,6 @@ Below you can find examples for each of these methods and how to define them in 
 // Only run this as a WASM if the export-abi feature is not set.
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
-
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-use alloc::vec::Vec;
 
 use alloy_primitives::Address;
 use stylus_sdk::{
@@ -57,11 +53,11 @@ sol_interface! {
     }
 }
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct SendEther {}
 
-#[external]
+#[public]
 impl SendEther {
     // Transfer Ether using the transfer_eth method
     // This can be used to send Ether to an EOA or a Solidity smart contract that has a receive() function implemented
@@ -126,10 +122,10 @@ license = "MIT OR Apache-2.0"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-alloy-primitives = "0.7.6"
-alloy-sol-types = "0.7.6"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.5.2"
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [dev-dependencies]
@@ -149,4 +145,5 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
+
 ```

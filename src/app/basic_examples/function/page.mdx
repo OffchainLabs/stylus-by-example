@@ -21,9 +21,11 @@ This guide covers the syntax and usage of functions, including internal and exte
 
 A function in Stylus consists of a name, a set of parameters, an optional return type, and a body.
 
+Just as with storage, Stylus methods are Solidity ABI equivalent. This means that contracts written in different programming languages are fully interoperable.
+
 Functions are declared with the `fn` keyword. Parameters allow the function to accept inputs, and the return type specifies the output of the function. If no return type is specified, the function returns `void`.
 
-Following is an examole of a function `add` that takes two `uint256` values and returns their sum.
+Following is an example of a function `add` that takes two `uint256` values and returns their sum.
 
 ```rust
 fn add(a: uint256, b: uint256) -> uint256 {
@@ -95,18 +97,19 @@ pub fn perform_operation(value: u32) -> Result<u32, CustomError> {
 }
 ```
 
-## External Functions
+## Public Functions
 
-External functions are those that can be called by other contracts.
+Public functions are those that can be called by other contracts.
 
-To define an external function in a Stylus contract, you use the `#[external]` macro. This macro ensures that the function is accessible from outside the contract.
+To define a public function in a Stylus contract, you use the `#[public]` macro. This macro ensures that the function is accessible from outside the contract.
 
-Previously, all external methods were required to return a `Result` type with `Vec<u8>` as the error type. This is now optional. Specifically, if a method is "infallible" (i.e., it cannot produce an error), it does not need to return a Result type. Here's what this means:
+Previously, all public methods were required to return a `Result` type with `Vec<u8>` as the error type. This is now optional. Specifically, if a method is "infallible" (i.e., it cannot produce an error), it does not need to return a Result type. Here's what this means:
 
 - Infallible methods: Methods that are guaranteed not to fail (no errors possible) do not need to use the `Result` type. They can return their result directly without wrapping it in `Result`.
+
 - Optional error handling: The `Result` type with `Vec<u8>` as the error type is now optional for methods that cannot produce an error.
 
-In the following example, `owner` is an external function that returns the contract owner's address. Since this function is infallible (i.e., it cannot produce an error), it does not need to return a `Result` type.
+In the following example, `owner` is a public function that returns the contract owner's address. Since this function is infallible (i.e., it cannot produce an error), it does not need to return a `Result` type.
 
 ```rust
 #[external]
@@ -122,9 +125,9 @@ impl Contract {
 
 Internal functions are those that can only be called within the contract itself. These functions are not exposed to external calls.
 
-To define an internal function, you simply include it within your contract's implementation without the `#[external]` macro.
+To define an internal function, you simply include it within your contract's implementation without the `#[public]` macro.
 
-The choice between external and internal functions depends on the desired level of accessibility and interaction within and across contracts.
+The choice between public and internal functions depends on the desired level of accessibility and interaction within and across contracts.
 
 In the followinge example, `set_owner` is an internal function that sets a new owner for the contract. It is only callable within the contract itself.
 
@@ -137,19 +140,15 @@ impl Contract {
 }
 ```
 
-To mix external and internal functions within the same contract, you should use two separate `impl` blocks with the same contract name. External functions are defined within an `impl` block annotated with the `#[external]` attribute, signifying that these functions are part of the contract's public interface and can be invoked from outside the contract.
-In contrast, internal functions are placed within a separate `impl` block that does not have the `#[external]` attribute, making them internal to the contract and inaccessible to external entities.
+To mix public and internal functions within the same contract, you should use two separate `impl` blocks with the same contract name. Public functions are defined within an `impl` block annotated with the `#[public]` attribute, signifying that these functions are part of the contract's public interface and can be invoked from outside the contract.
+In contrast, internal functions are placed within a separate `impl` block that does not have the `#[public]` attribute, making them internal to the contract and inaccessible to external entities.
 
-### src/main.rs
+### src/lib.rs
 
 ```rust
 // Only run this as a WASM if the export-abi feature is not set.
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
-
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 
 use alloc::vec;
 use stylus_sdk::alloy_primitives::Address;
@@ -161,14 +160,14 @@ use stylus_sdk::storage::StorageU256;
 use stylus_sdk::console;
 
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct ExampleContract {
     owner: StorageAddress,
     data: StorageU256,
 }
 
-#[external]
+#[public]
 impl ExampleContract {
     // External function to set the data
     pub fn set_data(&mut self, value: U256) {
@@ -209,10 +208,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.7.3"
-alloy-sol-types = "0.7.3"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.5.2"
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 sha3 = "0.10.8"
 
