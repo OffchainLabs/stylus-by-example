@@ -31,7 +31,7 @@ sol_interface! {
 
 The above will define `IService` and `ITree` for calling the methods of the two contracts. Notice how Solidity syntax is used to declare the interfaces.
 
-With this example interface, for example, we can call method `make_payment` from `IService` that accepts an `Address` and returns a `B256`.
+With this example interface, for instance, we can call method `make_payment` from `IService` that accepts an `Address` and returns a `B256`.
 
 ```rust
 pub fn do_call(&mut self, account: IService, user: Address) -> Result<String, Error> {
