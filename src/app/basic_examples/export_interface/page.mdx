@@ -50,7 +50,7 @@ fn main() {
 }
 ```
 
-And part of the `Cargo.toml` file, notice that it has the `export-abi` feature flag enabled.
+And the relevant parts of the `Cargo.toml` file, notice that it has the `export-abi` feature flag enabled.
 
 ```toml
 ...
@@ -86,9 +86,7 @@ interface ICounter {
 
 Observe that the method names change from Rust's `snake_case` to Solidity's `camelCase`. For compatibility reasons, on-chain method selectors are always `camelCase`.
 
-You can also obtain a JSON formatted ABI using the parameter `--json`.
-
-Running
+You can also obtain a JSON formatted ABI using the parameter `--json`. Running
 
 ```shell
 cargo stylus export-abi --json
@@ -100,7 +98,7 @@ will result in
 [{"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"number","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"new_number","type":"uint256"}],"name":"setNumber","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 ```
 
-Additionally, when using argument names like `address`, the SDK will prepend an `_` when generating the Solidity ABI interface. For example:
+Finally, note that when using argument names like `address`, the SDK will prepend an `_` when generating the Solidity ABI interface. For example:
 
 ```solidity
 interface Erc20 {
