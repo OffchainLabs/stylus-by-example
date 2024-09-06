@@ -25,8 +25,7 @@ which outputs:
 pragma solidity ^0.8.23;
 
 interface IMultiCall {
-      function multicall(address[] addresses, bytes[] data) external returns(bytes[]);
-}
+    function multicall(address[] memory addresses, bytes[] memory data) external view returns (bytes[] memory);}
 ```
 
 ## Deploying
