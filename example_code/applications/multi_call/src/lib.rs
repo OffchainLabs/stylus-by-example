@@ -1,14 +1,11 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
 use alloy_primitives::U256;
 use alloy_sol_types::sol;
 use stylus_sdk::{abi::Bytes, alloy_primitives::Address, call::RawCall, prelude::*};
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct MultiCall;
 
@@ -24,7 +21,7 @@ pub enum MultiCallErrors {
     CallFailed(CallFailed),
 }
 
-#[external]
+#[public]
 impl MultiCall {
     pub fn multicall(
         &self,
