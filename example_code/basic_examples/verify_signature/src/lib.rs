@@ -19,12 +19,10 @@ sol!{
 
 // Define some persistent storage using the Solidity ABI.
 // `VerifySignature` will be the entrypoint.
-sol_storage! {
-    #[entrypoint]
-    pub struct VerifySignature {
-        
-    }
-}
+#[storage]  
+#[entrypoint]  
+pub struct VerifySignature;  
+
 
 #[derive(SolidityError)]
 pub enum VerifySignatureError {
