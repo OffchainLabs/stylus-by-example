@@ -1,7 +1,6 @@
 export const metadata = {
-  title: "MultiSig • Stylus by Example",
-  description:
-    "An example implementation of the MultiSig wallet in Rust using Arbitrum Stylus.",
+  title: 'MultiSig • Stylus by Example',
+  description: 'An example implementation of the MultiSig wallet in Rust using Arbitrum Stylus.',
 };
 
 {/* Begin Content */}
@@ -72,10 +71,6 @@ Example implementation of a MultiSig Wallet contract written in Rust.
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-
-/// Use an efficient WASM allocator.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{contract, evm, msg, prelude::*, call::{Call, call}, alloy_primitives::{Address, U256}, abi::Bytes};
@@ -151,7 +146,7 @@ pub enum MultiSigError {
 }
 
 /// Declare that `MultiSig` is a contract with the following external methods.
-#[external]
+#[public]
 impl MultiSig {
     pub fn num_confirmations_required(&self) -> Result<U256, MultiSigError> {
         Ok(self.num_confirmations_required.get())
@@ -193,7 +188,7 @@ impl MultiSig {
             txIndex: tx_index,
             to: to,
             value: value,
-            data: data.to_vec(),
+            data: data.to_vec().into(),
         });
         Ok(())
     }
@@ -259,9 +254,11 @@ impl MultiSig {
             }
             
             entry.executed.set(true);
-            
+            let entry_value = entry.value.get();
+            let entry_to = entry.to.get();
+            let entry_data = entry.data.get_bytes();
             // Execute the transaction
-            match call(Call::new().value(entry.value.get()), entry.to.get(), &entry.data.get_bytes()) {
+            match call(Call::new_in(self).value(entry_value), entry_to, &entry_data) {
                 // If the transaction is successful, emit the `ExecuteTransaction` event.
                 Ok(_) => {
                     evm::log(ExecuteTransaction {
@@ -381,15 +378,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.5.0", features = ["docs"] }
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
 
 [lib]
 crate-type = ["lib", "cdylib"]
@@ -400,5 +396,4 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
-
 ```

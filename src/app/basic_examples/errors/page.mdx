@@ -1,20 +1,18 @@
 export const metadata = {
-  title: "Errors • Stylus by Example",
-  description:
-    "How to define and use Errors on Stylus Rust smart contracts",
+  title: 'Errors • Stylus by Example',
+  description: 'How to define and use Errors on Stylus Rust smart contracts',
 };
 
 {/* Begin Content */}
 
 # Errors
 
-In Rust Stylus contracts, error handling is a crucial aspect of writing robust and reliable smart contracts. Rust differentiates between recoverable and unrecoverable errors. Recoverable errors are represented using the `Result` type, which can either be `Ok`, indicating success, or `Err`, indicating failure. This allows developers to manage errors gracefully and maintain control over the flow of execution. Unrecoverable errors are handled with the `panic!` macro, which stops execution, unwinds the stack, and returns a dataless error. 
+In Rust Stylus contracts, error handling is a crucial aspect of writing robust and reliable smart contracts. Rust differentiates between recoverable and unrecoverable errors. Recoverable errors are represented using the `Result` type, which can either be `Ok`, indicating success, or `Err`, indicating failure. This allows developers to manage errors gracefully and maintain control over the flow of execution. Unrecoverable errors are handled with the `panic!` macro, which stops execution, unwinds the stack, and returns a dataless error.
 
 In Stylus contracts, error types are often explicitly defined, providing clear and structured ways to handle different failure scenarios. This structured approach promotes better error management, ensuring that contracts are secure, maintainable, and behave predictably under various conditions. Similar to Solidity and EVM, errors in Stylus will undo all changes made to the state during a transaction by reverting the transaction. Thus, there are two main types of errors in Rust Stylus contracts:
 
 - **Recoverable Errors**: The Stylus SDK provides features that make using recoverable errors in Rust Stylus contracts convenient. This type of error handling is strongly recommended for Stylus contracts.
 - **Unrecoverable Errors**: These can be defined similarly to Rust code but are not recommended for smart contracts if recoverable errors can be used instead.
-
 
 ## Learn More
 
@@ -22,7 +20,6 @@ In Stylus contracts, error types are often explicitly defined, providing clear a
 - [`#[derive(SolidityError)]`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/derive.SolidityError.html)
 - [`alloy_sol_types::SolError`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolError.html)
 - [`Error handling: Rust book`](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
-
 
 ## Recoverable Errors
 
@@ -36,13 +33,11 @@ Here's a simplified Rust Stylus contract demonstrating how to define and handle 
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 use alloy_sol_types::sol;
 use stylus_sdk::{abi::Bytes, alloy_primitives::{Address, U256}, call::RawCall, prelude::*};
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct MultiCall;
 
@@ -58,7 +53,7 @@ pub enum MultiCallErrors {
     CallFailed(CallFailed),
 }
 
-#[external]
+#[public]
 impl MultiCall {
     pub fn multicall(
         &self,
@@ -87,7 +82,7 @@ impl MultiCall {
 
 - **Using `SolidityError` Derive Macro**: The `#[derive(SolidityError)]` attribute is used for the `MultiCallErrors` enum, automatically implementing the necessary traits for error handling.
 - **Defining Errors**: Custom errors `ArraySizeNotMatch` and `CallFailed` is declared in `MultiCallErrors` enum. `CallFailed` error includes a `call_index` parameter to indicate which call failed.
-- **ArraySizeNotMatch Error Handling**: The `multicall` function returns `ArraySizeNotMatch` if the size of addresses and data vectors are not equal. 
+- **ArraySizeNotMatch Error Handling**: The `multicall` function returns `ArraySizeNotMatch` if the size of addresses and data vectors are not equal.
 - **CallFailed Error Handling**: The `multicall` function returns a `CallFailed` error with the index of the failed call if any call fails. Note that we're using match to check if the result of the call is an error or a return data. We'll describe match pattern in the further sections.
 
 ## Unrecoverable Errors
@@ -159,26 +154,24 @@ Each method demonstrates a different way to handle unrecoverable errors in the `
 
 **Note** that as mentioned above, it is strongly recommended to use custom error handling instead of unrecoverable error handling.
 
-
 ## Boilerplate
 
-### src/main.rs
+### src/lib.rs
 
-The main code can be found at the top of the page in the recoverable error example section.
+The lib.rs code can be found at the top of the page in the recoverable error example section.
 
 ### Cargo.toml
 
 ```toml
 [package]
 name = "stylus-multicall-contract"
-version = "0.1.5"
-edition = "2021"    
+version = "0.1.7"
+edition = "2021"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
-mini-alloc = "0.4.2"
-stylus-sdk = "0.5.0"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [dev-dependencies]
@@ -195,12 +188,5 @@ path = "src/main.rs"
 
 [lib]
 crate-type = ["lib", "cdylib"]
-
-[profile.release]
-codegen-units = 1
-strip = true
-lto = true
-panic = "abort"
-opt-level = "s"
 
 ```

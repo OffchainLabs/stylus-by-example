@@ -1,7 +1,6 @@
 export const metadata = {
-  title: "Vending Machine • Stylus by Example",
-  description:
-    "An example implementation of the Vending Machine in Rust using Arbitrum Stylus.",
+  title: 'Vending Machine • Stylus by Example',
+  description: 'An example implementation of the Vending Machine in Rust using Arbitrum Stylus.',
 };
 
 {/* Begin Content */}
@@ -30,13 +29,18 @@ Example implementation of the Vending Machine contract written in Rust.
 ### src/lib.rs
 
 ```rust
+//!
+//! Stylus Cupcake Example
+//!
+//! The program is ABI-equivalent with Solidity, which means you can call it from both Solidity and Rust.
+//! To do this, run `cargo stylus export-abi`.
+//!
+//! Note: this code is a template-only and has not been audited.
+//!
+
 // Allow `cargo stylus export-abi` to generate a main function if the "export-abi" feature is enabled.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-
-// Use an efficient WASM allocator for memory management.
-#[global_allocator]
-static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 use alloy_primitives::{Address, Uint};
 // Import items from the SDK. The prelude contains common traits and macros.
@@ -57,7 +61,7 @@ sol_storage! {
 }
 
 // Declare that `VendingMachine` is a contract with the following external methods.
-#[external]
+#[public]
 impl VendingMachine {
     // Give a cupcake to the specified user if they are eligible (i.e., if at least 5 seconds have passed since their last cupcake).
     pub fn give_cupcake_to(&mut self, user_address: Address) -> bool {
@@ -93,30 +97,29 @@ impl VendingMachine {
     }
 
     // Get the cupcake balance for the specified user.
-    #[view]
     pub fn get_cupcake_balance_for(&self, user_address: Address) -> Uint<256, 4> {
         // Return the user's cupcake balance from storage.
         return self.cupcake_balances.get(user_address);
     }
 }
-
 ```
 
 ### Cargo.toml
 
 ```toml
 [package]
-name = "cupcake-example"
-version = "0.1.0"
+name = "stylus_cupcake_example"
+version = "0.1.7"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.5.0" 
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
-dotenv = "0.15.0"
 
 [dev-dependencies]
 tokio = { version = "1.12.0", features = ["full"] }
@@ -135,5 +138,4 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
-
 ```

@@ -1,7 +1,6 @@
 export const metadata = {
-  title: "Constants • Stylus by Example",
-  description:
-    "How to declare constants in your Rust smart contracts using Arbitrum's Stylus SDK",
+  title: 'Constants • Stylus by Example',
+  description: "How to declare constants in your Rust smart contracts using Arbitrum's Stylus SDK",
 };
 
 {/* Begin Content */}
@@ -19,15 +18,12 @@ Since their value is hardcoded, they can save on gas cost as their value does no
 - [Rust docs - Constant items](https://doc.rust-lang.org/reference/items/constant-items.html)
 - [Solidity docs - Constant variables](https://docs.soliditylang.org/en/v0.8.19/contracts.html#constant)
 
-### src/main.rs
+### src/lib.rs
 
 ```rust
-#![no_main]
-#![no_std]
+// Only run this as a WASM if the export-abi feature is not set.
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
-
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 use alloc::vec;
 use alloc::vec::Vec;
@@ -36,21 +32,18 @@ use stylus_sdk::alloy_primitives::Address;
 use stylus_sdk::prelude::*;
 use stylus_sdk::storage::StorageAddress;
 
-// Consts must be 'static, so Rust primitives work well
-// Addresses are 20 bytes long, this one is 'checksummed'
 const OWNER: &str = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 
-#[solidity_storage]
+#[storage]
 #[entrypoint]
 pub struct Contract {
     owner: StorageAddress,
 }
 
-#[external]
+#[public]
 impl Contract {
-    // Sets the owner to the OWNER const set above
     pub fn init(&mut self) -> Result<(), Vec<u8>> {
-        // Parse the const hex &str as a local Address variable
+        // Parse the const &str as a local Address variable
         let owner_address = Address::parse_checksummed(OWNER, None).expect("Invalid address");
 
         // Save the result as the owner
@@ -58,32 +51,42 @@ impl Contract {
 
         Ok(())
     }
-
-    // Returns the current owner
     pub fn owner(&self) -> Result<Address, Vec<u8>> {
         let owner_address = self.owner.get();
 
         Ok(owner_address)
     }
 }
+
 ```
 
 ### Cargo.toml
 
 ```toml
 [package]
-name = "constants"
-version = "0.1.0"
+name = "stylus_constants_example"
+version = "0.1.7"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-# Note: Do not deploy to prod with debug flag set
-stylus-sdk = { version = "0.4.2", features = ["debug"] }
-wee_alloc = "0.4.5"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
 
 [profile.release]
 codegen-units = 1
@@ -92,5 +95,4 @@ lto = true
 panic = "abort"
 opt-level = "s"
 
-[workspace]
 ```

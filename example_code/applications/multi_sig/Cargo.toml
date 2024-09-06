@@ -1,20 +1,17 @@
 [package]
 name = "stylus-multisig-example"
-version = "0.1.5"
+version = "0.1.0"
 edition = "2021"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy", "multisig"]
-description = "Stylus multisig example"
 
 [dependencies]
-alloy-primitives = "0.3.1"
-alloy-sol-types = "0.3.1"
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
 mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.5.0", features = ["docs"] }
+stylus-sdk = "0.6.0"
 hex = "0.4.3"
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
 
 [lib]
 crate-type = ["lib", "cdylib"]
