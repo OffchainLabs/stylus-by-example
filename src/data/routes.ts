@@ -66,6 +66,12 @@ export const basicExamples = [
     description: "Compute the encoded function selector of a contract's function",
   },
   {
+    route: "/basic_examples/verify_signature",
+    title: "Verifying Signature",
+    description:
+      "An explanation of how to verify a signature signed off chain.",
+  },
+  {
     route: "/basic_examples/inheritance",
     title: "Inheritance",
     description: "Inheritance in the Stylus Rust SDK",
