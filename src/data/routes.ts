@@ -77,6 +77,16 @@ export const basicExamples = [
     description: "Inheritance in the Stylus Rust SDK",
   },
   {
+    route: "/basic_examples/import_interfaces",
+    title: "Import interfaces",
+    description: "Import external contract interfaces",
+  },
+  {
+    route: "/basic_examples/export_interface",
+    title: "Export contract interface",
+    description: "Export the Solidity ABI interface of your Rust contract",
+  },
+  {
     route: "/basic_examples/vm_affordances",
     title: "VM affordances",
     description: "Accesing VM affordances in the Stylus Rust SDK",
@@ -121,6 +131,11 @@ export const applications = [
     route: "/applications/time_lock",
     title: "Time Lock",
     description: "An example implementation of the Timelock wallet in Rust using Arbitrum Stylus.",
+  },
+  {
+    route: "/applications/multi_call",
+    title: "Multi Call",
+    description: "An example implementation of the Multi Call contract in Rust using Arbitrum Stylus",
   },
   {
     route: "/applications/english_auction",

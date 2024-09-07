@@ -1,0 +1,114 @@
+export const metadata = {
+  title: 'Export contract interface • Stylus by Example',
+  description:
+    "How to export the Solidity ABI interface of your Rust contract.",
+};
+
+{/* Begin Content */}
+
+# Export the Solidity ABI interface of your contract
+
+Stylus contracts are fully interoperable across all languages, including Solidity. The Stylus SDK provides tools for exporting a Solidity interface for your contract so that others can call it. This is usually done with the `cargo stylus` [CLI tool](https://github.com/OffchainLabs/cargo-stylus).
+
+The Stylus Rust SDK does this automatically for you via a feature flag called `export-abi` that causes the `#[public]` and `#[entrypoint]` macros to generate a `main` function that prints the Solidity ABI to the console.
+
+Let's see an example:
+
+These are the contents of a `lib.rs` file.
+
+```rust
+sol_storage! {
+    #[entrypoint]
+    pub struct Counter {
+        uint256 number;
+    }
+}
+
+#[public]
+impl Counter {
+    pub fn number(&self) -> U256 {
+        self.number.get()
+    }
+    
+    pub fn set_number(&mut self, new_number: U256) {
+        self.number.set(new_number);
+    }
+    
+    pub fn increment(&mut self) {
+        let number = self.number.get();
+        self.set_number(number + U256::from(1));
+    }
+}
+```
+
+This is the `main.rs` file.
+
+```rust
+#[cfg(feature = "export-abi")]
+fn main() {
+    counter::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
+}
+```
+
+And the relevant parts of the `Cargo.toml` file, notice that it has the `export-abi` feature flag enabled.
+
+```toml
+...
+[dependencies]
+stylus-sdk = "0.6.0"
+...
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+...
+```
+
+With this code, you can run the export-abi command
+
+```shell
+cargo stylus export-abi
+```
+
+and this is the result obtained:
+
+```solidity
+// SPDX-License-Identifier: MIT-OR-APACHE-2.0
+pragma solidity ^0.8.23;
+
+interface ICounter {
+    function number() external view returns (uint256);
+
+    function setNumber(uint256 new_number) external;
+
+    function increment() external;
+}
+```
+
+Observe that the method names change from Rust's `snake_case` to Solidity's `camelCase`. For compatibility reasons, on-chain method selectors are always `camelCase`.
+
+You can also obtain a JSON formatted ABI using the parameter `--json`. Running
+
+```shell
+cargo stylus export-abi --json
+```
+
+will result in
+
+```json
+[{"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"number","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"new_number","type":"uint256"}],"name":"setNumber","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+```
+
+Finally, note that when using argument names like `address`, the SDK will prepend an `_` when generating the Solidity ABI interface. For example:
+
+```solidity
+interface Erc20 {
+    function name() external pure returns (string memory);
+    function balanceOf(address _address) external view returns (uint256);
+}
+
+interface Weth is Erc20 {
+    function mint() external payable;
+    function burn(uint256 amount) external;
+}
+```
+
