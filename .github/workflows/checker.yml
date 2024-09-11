@@ -22,11 +22,13 @@ jobs:
           toolchain: stable
           override: true
 
-      # Step 3: Install the wasm32-unknown-unknown target
-      - name: Install wasm32-unknown-unknown target
-        run: rustup target add wasm32-unknown-unknown
+      # Step 3: Install the wasm32-unknown-unknown target and update Rust
+      - name: Install wasm32-unknown-unknown target and update Rust
+        run: |
+          rustup update stable
+          rustup target add wasm32-unknown-unknown
 
-      # Step 4: Reinstall Rust to ensure the toolchain is properly configured
+      # Step 4: Reinstall Rust toolchain (if needed) to ensure all components are correct
       - name: Reinstall Rust toolchain
         run: |
           rustup install stable
