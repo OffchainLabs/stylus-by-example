@@ -28,45 +28,42 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
 
-      # Step 4: Install the required wasm32-unknown-unknown target
-      - name: Set up Rust and install the target
-        run: |
-          rustup install stable
-          rustup default stable
-          rustup target add wasm32-unknown-unknown
-
-      # Step 5: Loop through directories to install specific toolchain versions
-      - name: Install Rust toolchain per directory
+      # Step 4: Loop through directories to install the toolchain from rust-toolchain.toml and add wasm target
+      - name: Install Rust toolchain and wasm32 target per directory
         run: |
           for dir in example_code/applications/* example_code/basic_examples/*; do
             if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
               echo "Installing Rust toolchain for directory: $dir"
               toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
-              if rustup toolchain install "$toolchain_version"; then
-                echo "Toolchain $toolchain_version installed for $dir"
-                rustup override set "$toolchain_version" --path "$dir"
-              else
-                echo "Failed to install toolchain $toolchain_version for $dir"
-                exit 1
-              fi
+              
+              # Install the toolchain specified in rust-toolchain.toml
+              rustup toolchain install "$toolchain_version"
+              
+              # Set toolchain for the directory
+              rustup override set "$toolchain_version" --path "$dir"
+              
+              # Add wasm32 target for the specified toolchain
+              rustup target add wasm32-unknown-unknown --toolchain "$toolchain_version"
+              
+              echo "Toolchain and wasm target set for $dir"
             else
               echo "No rust-toolchain.toml found for $dir, skipping."
             fi
           done
 
-      # Step 6: Install cargo-stylus
+      # Step 5: Install cargo-stylus
       - name: Install cargo-stylus
         run: cargo install cargo-stylus
 
-      # Step 7: Make checker.sh executable
+      # Step 6: Make checker.sh executable
       - name: Make checker.sh executable
         run: chmod +x ./checker.sh
 
-      # Step 8: Run the checker.sh script (it will fetch the latest SDK version)
+      # Step 7: Run the checker.sh script
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 9: Check for the existence of check_results.log and fail if missing
+      # Step 8: Check for the existence of check_results.log and fail if missing
       - name: Ensure check_results.log exists
         run: |
           if [ ! -f check_results.log ]; then
@@ -74,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      # Step 10: Check for issues in the log file
+      # Step 9: Check for issues in the log file
       - name: Check for issues in the log
         run: |
           if grep -q "FAILED" check_results.log; then
