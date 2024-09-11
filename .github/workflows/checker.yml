@@ -28,15 +28,22 @@ jobs:
           rustup update stable
           rustup target add wasm32-unknown-unknown
 
-      # Step 4: Loop through directories and install the correct Rust toolchain for each
+      # Step 4: Loop through directories inside applications and basic_examples
       - name: Install Rust toolchain per directory
         run: |
-          for dir in applications/* basic_examples/*; do
+          for dir in example_code/applications/* example_code/basic_examples/*; do
             if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
-              echo "Installing Rust toolchain for $dir"
+              echo "Installing Rust toolchain for directory: $dir"
               toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
-              rustup toolchain install "$toolchain_version"
-              rustup override set "$toolchain_version" --path "$dir"
+              if rustup toolchain install "$toolchain_version"; then
+                echo "Toolchain $toolchain_version installed for $dir"
+                rustup override set "$toolchain_version" --path "$dir"
+              else
+                echo "Failed to install toolchain $toolchain_version for $dir"
+                exit 1
+              fi
+            else
+              echo "No rust-toolchain.toml found for $dir, skipping."
             fi
           done
 
