@@ -1,6 +1,5 @@
 name: Checker Script CI
 
-# Trigger the workflow on every pull request to the main or master branch
 on:
   pull_request:
     branches:
@@ -23,15 +22,20 @@ jobs:
           toolchain: stable
           override: true
 
-      # Step 3: Give execute permission to the checker.sh script
+      # Step 3: Install cargo-stylus
+      - name: Install cargo-stylus
+        run: |
+          cargo install cargo-stylus
+
+      # Step 4: Make checker.sh executable
       - name: Make checker.sh executable
         run: chmod +x ./checker.sh
 
-      # Step 4: Run the checker.sh script (it will handle fetching the latest SDK version)
+      # Step 5: Run the checker.sh script (it will fetch the latest SDK version)
       - name: Run checker script
         run: ./checker.sh
 
-      # Optionally: Check the output log for any failed tests (extra safety check)
+      # Optionally: Check for issues in the log
       - name: Check for issues in the log
         if: success()
         run: |
