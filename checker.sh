@@ -82,8 +82,8 @@ process_directory() {
         echo -e "\033[1;31mStylus-sdk dependency not found in $folder_name\033[0m"
       fi
 
-      # Run the cargo stylus check --no-verify command
-      check_output=$(cargo stylus check --no-verify 2>&1)
+      # Run the cargo stylus check command
+      check_output=$(cargo stylus check  2>&1)
 
       # Check if the command was successful
       if [ $? -eq 0 ]; then
