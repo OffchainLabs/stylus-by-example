@@ -15,20 +15,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Rust environment (required for cargo stylus commands)
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      # Step 3: Install the wasm32-unknown-unknown target and update Rust
-      - name: Install wasm32-unknown-unknown target and update Rust
+      # Step 2: Remove any non-rustup installed Rust and Cargo versions
+      - name: Ensure only rustup manages Rust
         run: |
-          rustup update stable
+          sudo apt-get remove --purge cargo rustc || true
+          brew uninstall --force rust || true
+          sudo rm -rf /usr/local/bin/rustc /usr/local/bin/cargo || true
+
+      # Step 3: Install rustup if not present
+      - name: Install rustup
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+
+      # Step 4: Install the required wasm32-unknown-unknown target
+      - name: Set up Rust and install the target
+        run: |
+          rustup install stable
+          rustup default stable
           rustup target add wasm32-unknown-unknown
 
-      # Step 4: Loop through directories inside applications and basic_examples
+      # Step 5: Loop through directories to install specific toolchain versions
       - name: Install Rust toolchain per directory
         run: |
           for dir in example_code/applications/* example_code/basic_examples/*; do
@@ -47,19 +54,19 @@ jobs:
             fi
           done
 
-      # Step 5: Install cargo-stylus
+      # Step 6: Install cargo-stylus
       - name: Install cargo-stylus
         run: cargo install cargo-stylus
 
-      # Step 6: Make checker.sh executable
+      # Step 7: Make checker.sh executable
       - name: Make checker.sh executable
         run: chmod +x ./checker.sh
 
-      # Step 7: Run the checker.sh script (it will fetch the latest SDK version)
+      # Step 8: Run the checker.sh script (it will fetch the latest SDK version)
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 8: Check for the existence of check_results.log and fail if missing
+      # Step 9: Check for the existence of check_results.log and fail if missing
       - name: Ensure check_results.log exists
         run: |
           if [ ! -f check_results.log ]; then
@@ -67,7 +74,7 @@ jobs:
             exit 1
           fi
 
-      # Step 9: Check for issues in the log file
+      # Step 10: Check for issues in the log file
       - name: Check for issues in the log
         run: |
           if grep -q "FAILED" check_results.log; then
