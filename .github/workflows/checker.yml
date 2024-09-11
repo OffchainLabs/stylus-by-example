@@ -28,11 +28,17 @@ jobs:
           rustup update stable
           rustup target add wasm32-unknown-unknown
 
-      # Step 4: Reinstall Rust toolchain (if needed) to ensure all components are correct
-      - name: Reinstall Rust toolchain
+      # Step 4: Loop through directories and install the correct Rust toolchain for each
+      - name: Install Rust toolchain per directory
         run: |
-          rustup install stable
-          rustup default stable
+          for dir in applications/* basic_examples/*; do
+            if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
+              echo "Installing Rust toolchain for $dir"
+              toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
+              rustup toolchain install "$toolchain_version"
+              rustup override set "$toolchain_version" --path "$dir"
+            fi
+          done
 
       # Step 5: Install cargo-stylus
       - name: Install cargo-stylus
