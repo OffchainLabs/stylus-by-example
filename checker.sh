@@ -95,8 +95,8 @@ process_directory() {
         check_status="FAILED"
       fi
 
-      # Log the result of the check
-      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> ../../check_results.log
+      # Log the result of the check to /tmp/check_results.log
+      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> /tmp/check_results.log
 
       # If the check passed, run the cargo stylus export-abi command
       if [ "$check_status" == "PASSED" ]; then
@@ -132,4 +132,4 @@ process_directory "$APPLICATIONS_DIR"
 process_directory "$BASIC_EXAMPLES_DIR"
 
 # Final message
-echo -e "\n\033[1;32mAll checks and exports completed! Logs are available in 'check_results.log'.\033[0m"
+echo -e "\n\033[1;32mAll checks and exports completed! Logs are available in '/tmp/check_results.log'.\033[0m"

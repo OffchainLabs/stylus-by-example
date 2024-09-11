@@ -63,10 +63,10 @@ jobs:
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 8: Check for the existence of check_results.log and fail if missing
+      # Step 8: Check for the existence of check_results.log in /tmp and fail if missing
       - name: Ensure check_results.log exists
         run: |
-          if [ ! -f check_results.log ]; then
+          if [ ! -f /tmp/check_results.log ]; then
             echo "check_results.log not found! Failing the check."
             exit 1
           fi
@@ -74,7 +74,7 @@ jobs:
       # Step 9: Check for issues in the log file
       - name: Check for issues in the log
         run: |
-          if grep -q "FAILED" check_results.log; then
+          if grep -q "FAILED" /tmp/check_results.log; then
             echo "Checker script failed! Fix the issues before merging."
             exit 1
           else
