@@ -22,22 +22,32 @@ jobs:
           toolchain: stable
           override: true
 
-      # Step 3: Install cargo-stylus
-      - name: Install cargo-stylus
-        run: |
-          cargo install cargo-stylus
+      # Step 3: Add the wasm32-unknown-unknown target
+      - name: Install wasm32-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
 
-      # Step 4: Make checker.sh executable
+      # Step 4: Install cargo-stylus
+      - name: Install cargo-stylus
+        run: cargo install cargo-stylus
+
+      # Step 5: Make checker.sh executable
       - name: Make checker.sh executable
         run: chmod +x ./checker.sh
 
-      # Step 5: Run the checker.sh script (it will fetch the latest SDK version)
+      # Step 6: Run the checker.sh script (it will fetch the latest SDK version)
       - name: Run checker script
         run: ./checker.sh
 
-      # Optionally: Check for issues in the log
+      # Step 7: Check for the existence of check_results.log and fail if missing
+      - name: Ensure check_results.log exists
+        run: |
+          if [ ! -f check_results.log ]; then
+            echo "check_results.log not found! Failing the check."
+            exit 1
+          fi
+
+      # Step 8: Check for issues in the log file
       - name: Check for issues in the log
-        if: success()
         run: |
           if grep -q "FAILED" check_results.log; then
             echo "Checker script failed! Fix the issues before merging."
