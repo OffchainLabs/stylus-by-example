@@ -45,15 +45,16 @@ fi
 # Function to update Cargo.toml
 update_cargo_toml() {
   if [ -n "$sdk_repo" ]; then
-    # Replace with GitHub repo and branch
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
-    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    # Replace with GitHub repo and branch (adjusting for GNU or BSD sed)
+    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
   elif [ -n "$sdk_version" ]; then
-    # Replace with specific version
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
-    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    # Replace with specific version (adjusting for GNU or BSD sed)
+    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
   fi
 }
+
 
 # Function to process each directory
 process_directory() {
