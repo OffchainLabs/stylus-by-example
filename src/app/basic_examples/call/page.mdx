@@ -1,0 +1,414 @@
+export const metadata = {
+  title: "Call • Stylus by Example",
+  description:
+    "Explanation on how to call other contracts on Rust Stylus",
+};
+
+{/* Begin Content */}
+
+# **Contract Calls in Stylus**
+
+The Stylus SDK provides Solidity ABI-equivalent contract calls, allowing you to interact with contracts without needing to know their internal implementations. By defining Solidity-like interfaces using the `sol_interface!` macro, you can easily invoke contracts in Stylus, whether you are using Rust or any other supported programming language.
+
+
+For more info in `sol_interface!` macro, and how to use it on Rust Stylus contracts, please refer to [interface page](./import_interfaces). Also you can find more info on how to extract interface from Stylus contracts in [this page](./interfaces)
+
+For instance, this code defines the `IService` and `ITree` interfaces, allowing you to invoke their functions from a contract in Stylus.
+
+```rust
+sol_interface! {
+    interface IService {
+        function makePayment(address user) payable external returns (string);
+        function getConstant() pure external returns (bytes32);
+    }
+
+    interface ITree {
+        // Define more interface methods here
+    }
+}
+```
+
+# **Invoking Contracts Using the Interface**
+
+Once an interface is defined, you can call a contract's functions by using a Rust-style snake_case format. Here's how you can use the `makePayment` method from the `IService` interface:
+
+```rust
+pub fn do_call(&mut self, account: IService, user: Address) -> Result<String, Vec<u8>> {
+    account.make_payment(self, user)  // Calls the method in snake_case
+}
+```
+
+**Explanation**: The `make_payment` method in Solidity is written in CamelCase but gets converted to snake_case when used in Rust. This allows you to call the function directly via the interface without worrying about the internal details of the target contract.
+
+---
+
+# **Configuring Gas and Value for Contract Calls**
+
+You can easily adjust gas and Ether value for contract calls by configuring the `Call` object in Stylus. This is similar to how you would configure a file or other resource in Rust by specifying parameters before executing the call.
+
+```rust
+pub fn call_with_gas_value(&mut self, account: IService, user: Address) -> Result<String, Vec<u8>> {
+    let config = Call::new_in(self)
+        .gas(evm::gas_left() / 2)  // Assign half the available gas
+        .value(msg::value());      // Set the Ether value for the transaction
+
+    account.make_payment(config, user)
+}
+```
+
+**Explanation**: This function uses `Call::new_in(self)` to configure gas and value before making the call. In this case, half of the remaining gas is used, and the amount of Ether transferred in the transaction is passed through.
+
+---
+
+# **Handling Reentrancy and Managing Storage with `TopLevelStorage`**
+
+In Stylus, external contract calls can be made using:
+- **Interface-based calls**: These do not require explicit storage management and use `&self` or `&mut self` depending on the nature of the call (`pure`, `view`, or `write`).
+- **Low-level calls**: These involve `Call::new()` or `Call::new_in()` for more control over the call configuration. `Call::new()` can only be used when the contract is non-reentrant, while `Call::new_in()` is required for reentrant contracts.
+
+## Interface-Based Calls: `pure`, `view`, and `write`
+
+When making calls using a contract interface, Stylus automatically handles storage based on whether the function is `pure`, `view`, or `write`. These calls use `&self` for read-only methods (`pure` and `view`) and `&mut self` for methods that modify the state (`write`).
+
+Example:
+
+```rust
+#[public]
+impl ExampleContract {
+    pub fn call_pure(&self, methods: IMethods) -> Result<(), Vec<u8>> {
+        Ok(methods.pure_foo(self)?)  // Read-only method using `&self`
+    }
+
+    pub fn call_view(&self, methods: IMethods) -> Result<(), Vec<u8>> {
+        Ok(methods.view_foo(self)?)  // Another read-only method using `&self`
+    }
+
+    pub fn call_write(&mut self, methods: IMethods) -> Result<(), Vec<u8>> {
+        methods.view_foo(&mut *self)?;  // Re-borrow self for reading
+        Ok(methods.write_foo(self)?)    // Modify state using `&mut self`
+    }
+}
+```
+
+**Explanation**: 
+- `call_pure` and `call_view` are read-only operations and use `&self` to access the contract's state.
+- `call_write` uses `&mut self` to modify the contract's state since it requires mutable access to storage.
+
+These calls are handled automatically by Stylus through the interface, so you don't need to worry about explicit storage management or the reentrancy state of the contract.
+
+## Low-Level Calls with `Call::new_in()` and `Call::new()`
+
+When using low-level calls to interact with external contracts, Stylus provides two options:
+- **`Call::new_in()`**: Used when the reentrancy feature is enabled or when you need to pass storage explicitly for more control.
+- **`Call::new()`**: A simpler method for non-reentrant calls that do not require explicit storage management.
+
+### Using `Call::new_in()`
+
+If reentrancy is enabled, you must use `Call::new_in()`, which requires passing a reference to storage. This ensures that the contract's state is properly managed during cross-contract calls.
+
+```rust
+pub fn make_generic_call(
+    storage: &mut impl TopLevelStorage,  // Pass storage explicitly
+    account: IService,
+    user: Address,
+) -> Result<String, Vec<u8>> {
+    let config = Call::new_in(storage)  // Use explicit storage reference
+        .gas(evm::gas_left() / 2)      // Set gas limit
+        .value(msg::value());          // Set Ether value
+
+    account.make_payment(config, user)  // Execute the call with config
+}
+```
+
+**Explanation**: `Call::new_in()` is required for contracts with reentrancy enabled. You pass storage explicitly (`storage: &mut impl TopLevelStorage`), which gives more control over the call's configuration, including gas and Ether value.
+
+### Using `Call::new()` (When Reentrancy Is Disabled)
+
+If the reentrancy feature is disabled, you can use `Call::new()` to simplify contract calls. This method does not require storage to be passed explicitly, making it easier to configure the call when reentrancy is not a concern.
+**Note** that you need to be sure that in Cargo.toml file, the Stylus SDK doesn't have **reentrant** flag. 
+
+```rust
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+
+use stylus_sdk::{
+    alloy_primitives::Address,
+    call::{Call, Error},
+    evm, msg,
+    prelude::*,
+};
+
+sol_interface! {
+    interface IService {
+        function makePayment(address user) payable external returns (string);
+        function getConstant() pure external returns (bytes32);
+    }
+}
+
+#[storage]
+#[entrypoint]
+
+pub struct ExampleContract;
+
+#[public]
+impl ExampleContract {
+    pub fn do_call(account: IService, user: Address) -> Result<String, Error> {
+        let config = Call::new()
+            .gas(evm::gas_left() / 2)       // limit to half the gas left
+            .value(msg::value());           // set the callvalue
+    
+        account.make_payment(config, user) 
+    }
+}
+}
+```
+
+**Explanation**: `Call::new()` is ideal for non-reentrant contracts, allowing you to configure gas and value without needing to manage storage explicitly. This method simplifies contract calls when there's no risk of reentrant attacks.
+
+### Reentrancy Considerations
+
+- **Reentrancy Enabled**: When the contract is reentrant (i.e., it can be called recursively), you must use `Call::new_in()` to explicitly manage storage. This prevents vulnerabilities by ensuring that contract state is handled safely during cross-contract calls.
+- **Reentrancy Disabled**: If the contract is non-reentrant, you can simplify the call process by using `Call::new()`, which does not require storage to be passed. This is suitable for straightforward external calls that do not involve recursive state changes.
+
+---
+
+## **Low-Level `call` and `static_call`**
+
+In addition to using `sol_interface!`, you can make low-level calls directly using the `call` and `static_call` functions. These methods provide raw access to contract interaction, allowing you to send calldata in the form of a `Vec<u8>`.
+
+- **Low-Level `call`**:
+```rust
+pub fn execute_call(
+    &mut self,
+    contract: Address,
+    calldata: Vec<u8>,  // Raw calldata
+) -> Result<Vec<u8>, Vec<u8>> {
+    let return_data = call(
+        Call::new_in(self)  // Configure gas and value
+            .gas(evm::gas_left() / 2),  // Use half the available gas
+        contract,  // Address of the target contract
+        &calldata,  // Calldata for the function call
+    )?;
+    Ok(return_data)
+}
+```
+
+- **Low-Level `static_call`**:
+```rust
+pub fn execute_static_call(
+    &mut self,
+    contract: Address,
+    calldata: Vec<u8>,
+) -> Result<Vec<u8>, Vec<u8>> {
+    let return_data = static_call(
+        Call::new_in(self),  // Configure the static call
+        contract,  // Target contract address
+        &calldata,  // Raw calldata for the function
+    )?;
+    Ok(return_data)
+}
+```
+
+**Explanation**: These functions perform low-level contract interactions using raw calldata (`Vec<u8>`). `call` is used for regular contract interactions, while `static_call` is used for view or pure functions that do not modify state.
+
+---
+
+## **Using Unsafe `RawCall`**
+
+`RawCall` allows for more advanced, low-level control over contract interactions. It should be used with caution, especially in reentrant contracts, as it provides direct access to storage and calldata without type safety.
+
+```rust
+pub fn raw_call_example(
+    &mut self,
+    contract: Address,
+    calldata: Vec<u8>,
+) -> Result<Vec<u8>, Vec<u8>> {
+    unsafe {
+        let data = RawCall::new_delegate()
+            .gas(2100)  // Set gas to 2100
+            .limit_return_data(0, 32)  // Limit return data size to 32 bytes
+            .flush_storage_cache()  // Flush the storage cache before the call
+            .call(contract, &calldata)?;  // Execute the raw delegate call
+
+        Ok(data)  // Return the result data
+    }
+}
+```
+
+**Explanation**: This function performs an unsafe `RawCall`, allowing you to set detailed call parameters such as gas limits, return data size, and flushing the storage cache. It provides direct access to the contract interaction but should be handled carefully due to its unsafe nature.
+
+---
+### **Summary**:
+
+- **Interface-Based Calls (`pure`, `view`, `write`)**: Use `&self` for read-only operations (`pure` and `view` methods) and `&mut self` for state-modifying operations (`write` or `payable` methods). These interface-based calls do not require explicit storage management.
+- **Low-Level Calls with `Call::new_in()`**: Use `Call::new_in()` when reentrancy is enabled or when you need more control over the call's gas and value settings by explicitly passing storage to manage state during cross-contract calls.
+- **Simpler Low-Level Calls with `Call::new()`**: Use `Call::new()` for non-reentrant contracts. It simplifies contract calls by not requiring storage to be passed explicitly, making it ideal for straightforward external calls without the risk of reentrant attacks.
+- **Reentrancy Considerations**: Always use `Call::new_in()` if the contract allows reentrancy (recursively calling itself or other contracts). For non-reentrant contracts, use `Call::new()` for easier, direct contract interactions that don't involve explicit storage handling.
+- **Low-Level Direct and Unsafe Calls**: For advanced contract interaction, low-level `call`, `static_call`, and `RawCall` provide raw access to the contract's state and calldata. These should be used with caution, particularly `RawCall`, which allows unsafe delegate calls without type safety.
+
+---
+# Full Example code:
+
+### src/lib.rs
+
+```rust
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+
+use stylus_sdk::{
+    alloy_primitives::Address,
+    call::{call, static_call, Call, RawCall},
+    evm, msg,
+    prelude::*,
+};
+
+sol_interface! {
+    interface IService {
+        function makePayment(address user) payable external returns (string);
+        function getConstant() pure external returns (bytes32);
+    }
+
+    interface IMethods {
+        function pureFoo() external pure;
+        function viewFoo() external view;
+        function writeFoo() external;
+        function payableFoo() external payable;
+    }
+}
+
+#[storage]
+#[entrypoint]
+
+pub struct ExampleContract;
+
+#[public]
+impl ExampleContract {
+    // simple call to contract using interface
+    pub fn simple_call(&mut self, account: IService, user: Address) -> Result<String, Vec<u8>> {
+        // Calls the make_payment method
+        Ok(account.make_payment(self, user)?)
+    }
+    #[payable]
+    // configuring gas and value with Call
+    pub fn call_with_gas_value(
+        &mut self,
+        account: IService,
+        user: Address,
+    ) -> Result<String, Vec<u8>> {
+        let config = Call::new_in(self)
+            .gas(evm::gas_left() / 2) // Use half the remaining gas
+            .value(msg::value()); // Use the transferred value
+
+        Ok(account.make_payment(config, user)?)
+    }
+
+    pub fn call_pure(&self, methods: IMethods) -> Result<(), Vec<u8>> {
+        Ok(methods.pure_foo(self)?) // `pure` methods might lie about not being `view`
+    }
+
+    pub fn call_view(&self, methods: IMethods) -> Result<(), Vec<u8>> {
+        Ok(methods.view_foo(self)?)
+    }
+
+    pub fn call_write(&mut self, methods: IMethods) -> Result<(), Vec<u8>> {
+        methods.view_foo(&mut *self)?; // Re-borrow `self` to avoid moving it
+        Ok(methods.write_foo(self)?) // Safely use `self` again for write_foo
+    }
+
+    #[payable]
+    pub fn call_payable(&mut self, methods: IMethods) -> Result<(), Vec<u8>> {
+        methods.write_foo(Call::new_in(self))?; // these are the same
+        Ok(methods.payable_foo(self)?) // ------------------
+    }
+
+    // When writing Stylus libraries, a type might not be TopLevelStorage and therefore &self or &mut self won't work. Building a Call from a generic parameter via new_in is the usual solution.
+    pub fn make_generic_call(
+        storage: &mut impl TopLevelStorage, // This could be `&mut self`, or another type implementing `TopLevelStorage`
+        account: IService,                  // Interface for calling the target contract
+        user: Address,
+    ) -> Result<String, Vec<u8>> {
+        let config = Call::new_in(storage) // Take exclusive access to all contract storage
+            .gas(evm::gas_left() / 2) // Use half the remaining gas
+            .value(msg::value()); // Use the transferred value
+
+        Ok(account.make_payment(config, user)?) // Call using the configured parameters
+    }
+
+    // Low level Call
+    pub fn execute_call(
+        &mut self,
+        contract: Address,
+        calldata: Vec<u8>, // Calldata is supplied as a Vec<u8>
+    ) -> Result<Vec<u8>, Vec<u8>> {
+        // Perform a low-level `call`
+        let return_data = call(
+            Call::new_in(self) // Configuration for gas, value, etc.
+                .gas(evm::gas_left() / 2), // Use half the remaining gas
+            contract,  // The target contract address
+            &calldata, // Raw calldata to be sent
+        )?;
+
+        // Return the raw return data from the contract call
+        Ok(return_data)
+    }
+
+    // Low level Static Call
+    pub fn execute_static_call(
+        &mut self,
+        contract: Address,
+        calldata: Vec<u8>,
+    ) -> Result<Vec<u8>, Vec<u8>> {
+        // Perform a low-level `static_call`, which does not modify state
+        let return_data = static_call(
+            Call::new_in(self), // Configuration for the call
+            contract,           // Target contract
+            &calldata,          // Raw calldata
+        )?;
+
+        // Return the raw result data
+        Ok(return_data)
+    }
+
+    // Using Unsafe RawCall
+    pub fn raw_call_example(
+        &mut self,
+        contract: Address,
+        calldata: Vec<u8>,
+    ) -> Result<Vec<u8>, Vec<u8>> {
+        unsafe {
+            let data = RawCall::new_delegate()
+                .gas(2100) // Set gas to 2100
+                .limit_return_data(0, 32) // Limit return data to 32 bytes
+                .flush_storage_cache() // flush the storage cache before the call
+                .call(contract, &calldata)?; // Execute the call
+            Ok(data) // Return the raw result
+        }
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus-call-example"
+version = "0.1.7"
+edition = "2021"
+
+[dependencies]
+alloy-primitives = "0.7.6"
+alloy-sol-types = "0.7.6"
+stylus-sdk = { version = "0.6.0", features = ["reentrant"] }
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+```
