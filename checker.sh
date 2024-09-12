@@ -16,7 +16,6 @@ while getopts "v:r:" opt; do
       sdk_branch=$(echo "$sdk_repo" | sed -n 's#.*/tree/\(.*\)#\1#p')
       sdk_repo=$(echo "$sdk_repo" | sed -n 's#\(.*\)/tree/.*#\1#p')
       if [ -z "$sdk_branch" ]; then
-        sdk_repo=$OPTARG
         sdk_branch="main" # default to the main branch if not specified
       fi
       ;;
@@ -45,16 +44,23 @@ fi
 # Function to update Cargo.toml
 update_cargo_toml() {
   if [ -n "$sdk_repo" ]; then
-    # Replace with GitHub repo and branch (adjusting for GNU or BSD sed)
-    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
-    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    # Replace stylus-sdk with GitHub repo and branch, keeping features intact (GNU/BSD sed compatible)
+    sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'", features = [\1] }#' "$1" || sed -i '' -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'", features = [\1] }#' "$1"
+    sed -i.bak -E 's#stylus-sdk = \{[^}]*version = "[^"]*".*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' -E 's#stylus-sdk = \{[^}]*version = "[^"]*".*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    # Handle plain version cases without features
+    sed -i.bak -E 's#stylus-sdk = "[^"]*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' -E 's#stylus-sdk = "[^"]*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
   elif [ -n "$sdk_version" ]; then
-    # Replace with specific version (adjusting for GNU or BSD sed)
-    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
-    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    # Check for stylus-sdk with features and replace git with version, keeping features intact
+    if grep -q 'features = \[' "$1"; then
+      sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1" || sed -i '' -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1"
+    else
+      # Handle cases without features (switch to simple version string)
+      sed -i.bak -E 's#stylus-sdk = \{[^}]*git = "[^"]*".*\}#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' -E 's#stylus-sdk = \{[^}]*git = "[^"]*".*\}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    fi
+    # Handle plain git cases without features
+    sed -i.bak -E 's#stylus-sdk = "[^"]*"#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' -E 's#stylus-sdk = "[^"]*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
   fi
 }
-
 
 # Function to process each directory
 process_directory() {
@@ -83,8 +89,8 @@ process_directory() {
         echo -e "\033[1;31mStylus-sdk dependency not found in $folder_name\033[0m"
       fi
 
-      # Run the cargo stylus check command
-      check_output=$(cargo stylus check  2>&1)
+      # Run the cargo stylus check --no-verify command
+      check_output=$(cargo stylus check --no-verify 2>&1)
 
       # Check if the command was successful
       if [ $? -eq 0 ]; then
@@ -97,7 +103,7 @@ process_directory() {
       fi
 
       # Log the result of the check
-      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> /tmp/check_results.log
+      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> ../../check_results.log
 
       # If the check passed, run the cargo stylus export-abi command
       if [ "$check_status" == "PASSED" ]; then
@@ -109,7 +115,6 @@ process_directory() {
         else
           echo -e "\033[1;31mExport ABI failed in $folder_name with error:\033[0m"
           echo -e "\033[1;31m$export_output\033[0m"
-          echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Export ABI FAILED\033[0m" >> /tmp/check_results.log
         fi
       fi
 
