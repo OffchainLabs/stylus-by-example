@@ -51,11 +51,15 @@ update_cargo_toml() {
     sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || \
     sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
   elif [ -n "$sdk_version" ]; then
-    # Replace with specific version (adjusting for GNU or BSD sed)
-    sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1" || \
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
-    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1" || \
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    # Check for stylus-sdk with features and replace git with version, keeping features intact
+    if grep -q 'features = \[' "$1"; then
+      sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1" || \
+      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    else
+      # Handle cases without features (switch to simple version string)
+      sed -i.bak 's#stylus-sdk = {[^}]*git = "[^"]*".*\}#stylus-sdk = "'"$sdk_version"'"#' "$1" || \
+      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    fi
   fi
 }
 
