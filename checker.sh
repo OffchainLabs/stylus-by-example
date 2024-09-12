@@ -83,7 +83,7 @@ process_directory() {
       fi
 
       # Run the cargo stylus check command
-      check_output=$(cargo stylus check --no-verify 2>&1)
+      check_output=$(cargo stylus check  2>&1)
 
       # Check if the command was successful
       if [ $? -eq 0 ]; then
