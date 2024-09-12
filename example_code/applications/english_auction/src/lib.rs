@@ -5,7 +5,7 @@ extern crate alloc;
 use std::borrow::BorrowMut;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
-use stylus_sdk::{alloy_primitives::{Address, U256}, block, call::{transfer_eth, Call}, contract, evm, msg, prelude::*};
+use stylus_sdk::{alloy_primitives::{ U256}, block, call::{transfer_eth, Call}, contract, evm, msg, prelude::*};
 use alloy_sol_types::sol;
 
 // Import the IERC721 interface.
