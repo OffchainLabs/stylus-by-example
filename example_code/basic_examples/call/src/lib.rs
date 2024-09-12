@@ -24,9 +24,7 @@ sol_interface! {
 
 #[storage]
 #[entrypoint]
-
 pub struct ExampleContract;
-
 #[public]
 impl ExampleContract {
     // simple call to contract using interface
