@@ -45,16 +45,15 @@ fi
 # Function to update Cargo.toml
 update_cargo_toml() {
   if [ -n "$sdk_repo" ]; then
-    # Replace with GitHub repo and branch (adjusting for GNU or BSD sed)
-    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
-    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    # Replace with GitHub repo and branch
+    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
   elif [ -n "$sdk_version" ]; then
-    # Replace with specific version (adjusting for GNU or BSD sed)
-    sed -i.bak 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
-    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1" || sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    # Replace with specific version
+    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
   fi
 }
-
 
 # Function to process each directory
 process_directory() {
@@ -96,7 +95,7 @@ process_directory() {
         check_status="FAILED"
       fi
 
-      # Log the result of the check to /tmp/check_results.log
+      # Log the result of the check
       echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> /tmp/check_results.log
 
       # If the check passed, run the cargo stylus export-abi command
@@ -109,6 +108,7 @@ process_directory() {
         else
           echo -e "\033[1;31mExport ABI failed in $folder_name with error:\033[0m"
           echo -e "\033[1;31m$export_output\033[0m"
+          echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Export ABI FAILED\033[0m" >> /tmp/check_results.log
         fi
       fi
 

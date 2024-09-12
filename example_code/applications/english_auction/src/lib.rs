@@ -68,7 +68,7 @@ sol_storage! {
 }
 
 /// Declare that `Counter` is a contract with the following external methods.
-#[external]
+#[public]
 impl EnglishAuction {
     pub const ONE_DAY: u64 = 86400; // 1 day = 24 hours * 60 minutes * 60 seconds = 86400 seconds.
     

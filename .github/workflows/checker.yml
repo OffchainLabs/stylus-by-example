@@ -63,15 +63,15 @@ jobs:
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 8: Check for the existence of check_results.log in /tmp and fail if missing
+      # Step 8: Ensure check_results.log exists
       - name: Ensure check_results.log exists
         run: |
           if [ ! -f /tmp/check_results.log ]; then
-            echo "check_results.log not found! Failing the check."
+            echo "/tmp/check_results.log not found! Failing the check."
             exit 1
           fi
 
-      # Step 9: Check for issues in the log file
+      # Step 9: Check for issues in the log
       - name: Check for issues in the log
         run: |
           if grep -q "FAILED" /tmp/check_results.log; then
