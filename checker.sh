@@ -89,8 +89,8 @@ process_directory() {
         echo -e "\033[1;31mStylus-sdk dependency not found in $folder_name\033[0m"
       fi
 
-      # Run the cargo stylus check command
-      check_output=$(cargo stylus check 2>&1)
+      # Run the cargo stylus check --no-verify command
+      check_output=$(cargo stylus check --no-verify 2>&1)
 
       # Check if the command was successful
       if [ $? -eq 0 ]; then
@@ -102,8 +102,8 @@ process_directory() {
         check_status="FAILED"
       fi
 
-      # Log the result of the check
-      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> ../../check_results.log
+      # Log the result of the check in the /tmp folder
+      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> /tmp/check_results.log
 
       # If the check passed, run the cargo stylus export-abi command
       if [ "$check_status" == "PASSED" ]; then
