@@ -15,27 +15,47 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Remove any non-rustup installed Rust and Cargo versions
+      # Step 2: Cache cargo dependencies to avoid reinstalling every time
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      # Step 3: Cache rust toolchain and binaries (including cargo-stylus)
+      - name: Cache rust toolchain
+        uses: actions/cache@v3
+        with:
+          path: ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ hashFiles('**/rust-toolchain.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-rustup-
+
+      # Step 4: Ensure only rustup manages Rust
       - name: Ensure only rustup manages Rust
         run: |
           sudo apt-get remove --purge cargo rustc || true
           brew uninstall --force rust || true
           sudo rm -rf /usr/local/bin/rustc /usr/local/bin/cargo || true
 
-      # Step 3: Install rustup if not present
+      # Step 5: Install rustup if not present
       - name: Install rustup
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
 
-      # Step 4: Loop through directories to install the toolchain from rust-toolchain.toml and add wasm target
+      # Step 6: Loop through directories to install the toolchain from rust-toolchain.toml and add wasm target
       - name: Install Rust toolchain and wasm32 target per directory
         run: |
           for dir in example_code/applications/* example_code/basic_examples/*; do
             if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
               echo "Installing Rust toolchain for directory: $dir"
               toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
-              
+
               # Install the toolchain specified in rust-toolchain.toml
               rustup toolchain install "$toolchain_version"
               
@@ -51,30 +71,42 @@ jobs:
             fi
           done
 
-      # Step 5: Install cargo-stylus
-      - name: Install cargo-stylus
-        run: cargo install cargo-stylus
+      # Step 7: Cache cargo-stylus binary
+      - name: Cache cargo-stylus binary
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cargo-stylus
+          key: ${{ runner.os }}-cargo-stylus-${{ hashFiles('**/Cargo.toml') }}
 
-      # Step 6: Make checker.sh executable
+      # Step 8: Install cargo-stylus if not cached
+      - name: Install cargo-stylus
+        run: |
+          if [ ! -f ~/.cargo/bin/cargo-stylus ]; then
+            cargo install cargo-stylus
+          else
+            echo "cargo-stylus is cached."
+          fi
+
+      # Step 9: Make checker.sh executable
       - name: Make checker.sh executable
         run: chmod +x ./checker.sh
 
-      # Step 7: Run the checker.sh script
+      # Step 10: Run the checker.sh script
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 8: Ensure check_results.log exists
+      # Step 11: Check for the existence of check_results.log and fail if missing
       - name: Ensure check_results.log exists
         run: |
-          if [ ! -f /tmp/check_results.log ]; then
-            echo "/tmp/check_results.log not found! Failing the check."
+          if [ ! -f check_results.log ]; then
+            echo "check_results.log not found! Failing the check."
             exit 1
           fi
 
-      # Step 9: Check for issues in the log
+      # Step 12: Check for issues in the log file
       - name: Check for issues in the log
         run: |
-          if grep -q "FAILED" /tmp/check_results.log; then
+          if grep -q "FAILED" check_results.log; then
             echo "Checker script failed! Fix the issues before merging."
             exit 1
           else
