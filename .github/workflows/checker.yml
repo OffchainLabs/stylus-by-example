@@ -48,7 +48,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
 
-      # Step 6: Loop through directories to install the toolchain from rust-toolchain.toml and add wasm target
+      # Step 6: Install Rust toolchain and wasm32 target per directory
       - name: Install Rust toolchain and wasm32 target per directory
         run: |
           for dir in example_code/applications/* example_code/basic_examples/*; do
@@ -95,18 +95,18 @@ jobs:
       - name: Run checker script
         run: ./checker.sh
 
-      # Step 11: Check for the existence of check_results.log and fail if missing
-      - name: Ensure check_results.log exists
+      # Step 11: Check for the existence of /tmp/check_results.log and fail if missing
+      - name: Ensure /tmp/check_results.log exists
         run: |
-          if [ ! -f check_results.log ]; then
-            echo "check_results.log not found! Failing the check."
+          if [ ! -f /tmp/check_results.log ]; then
+            echo "/tmp/check_results.log not found! Failing the check."
             exit 1
           fi
 
-      # Step 12: Check for issues in the log file
+      # Step 12: Check for issues in the log file located in /tmp/check_results.log
       - name: Check for issues in the log
         run: |
-          if grep -q "FAILED" check_results.log; then
+          if grep -q "FAILED" /tmp/check_results.log; then
             echo "Checker script failed! Fix the issues before merging."
             exit 1
           else
