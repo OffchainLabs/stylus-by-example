@@ -112,6 +112,9 @@ process_directory() {
         else
           echo -e "Export ABI failed in $folder_name with error:"
           echo -e "$export_output"
+          # Log the export-abi failure to /tmp/check_results.log
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Export ABI FAILED" >> /tmp/check_results.log
+          check_status="FAILED"
         fi
       fi
 
