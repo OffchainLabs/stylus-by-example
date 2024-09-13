@@ -25,7 +25,7 @@ We'll be using [Cargo Stylus](https://github.com/OffchainLabs/cargo-stylus) to s
 
 ### ~/projects
 
-```bash
+```shell
 ❯ cargo stylus new counter
 Cloning into 'counter'...
 remote: Enumerating objects: 236, done.
@@ -80,7 +80,7 @@ From the CLI, with current directory set to the `counter` folder:
 
 ### ~/projects/counter
 
-```bash
+```shell
 ❯ cargo stylus deploy -e http://localhost:8547 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
 ```
 
@@ -88,33 +88,24 @@ After a minute or so, the counter project will be compiled into a single WASM fi
 
 ### ~/projects/counter
 
-```bash
-    Finished release [optimized] target(s) in 0.28s
-Reading WASM file at /Users/your_name/projects/counter/target/wasm32-unknown-unknown/release/stylus_hello_world.wasm
-Uncompressed WASM size: 32.3 KB
-Compressed WASM size to be deployed onchain: 11.5 KB
-Connecting to Stylus RPC endpoint: http://localhost:8547
-Program succeeded Stylus onchain activation checks with Stylus version: 1
-Deployer address: 0x3f1eae7d46d88f08fc2f8ed27fcb2ab183eb2d0e
-
-====DEPLOYMENT====
-Deploying program to address 0x677c7e0584b0202417762ce06e89dbc5935a7399
-Base fee: 0.100000000 gwei
-Estimated gas for deployment: 2539640 gas units
-Submitting deployment tx...
-Confirmed deployment tx 0xd07276221864ce0d7d1d18ba2602b58144b2fdd37bb9e1087343804732fd6e4b
-Gas units used 2539393, effective gas price 0.100000000 gwei
-Transaction fee: 0.000253939300000000 ETH
-
-====ACTIVATION====
-Activating program at address 0x677c7e0584b0202417762ce06e89dbc5935a7399
-Base fee: 0.100000000 gwei
-Estimated gas for activation: 14044675 gas units
-Submitting activation tx...
-Confirmed activation tx 0xc839dd989d1b0383a1e915d40ea355bc96a44cde74d3b0e81a8ea0ebcdbcabd4
-Gas units used 14044666, effective gas price 0.100000000 gwei
-Transaction fee: 0.001404466600000000 ETH
-
+```shell
+    Finished `release` profile [optimized] target(s) in 1.81s
+stripped custom section from user wasm to remove any sensitive data
+contract size: 7.3 KB
+wasm size: 21.1 KB
+File used for deployment hash: ./Cargo.lock
+File used for deployment hash: ./Cargo.toml
+File used for deployment hash: ./examples/counter.rs
+File used for deployment hash: ./rust-toolchain.toml
+File used for deployment hash: ./src/lib.rs
+File used for deployment hash: ./src/main.rs
+project metadata hash computed on deployment: "1127f72e245f7aefced1b75129da2d50e25f1911a703748299031df47408ed50"
+stripped custom section from user wasm to remove any sensitive data
+contract size: 7.3 KB
+wasm data fee: 0.000065 ETH
+deployed code at address: 0x11b57fe348584f042e436c6bf7c3c3def171de49
+deployment tx hash: 0x073042d1d3303dcf0a9f9478461764d39dfe34420e33ac1a3ba8c7dfc57f5ad9
+contract activated and ready onchain with tx hash: 0xd3db95a5d20b003ac34efd36e16da365a99a3d8debd531d97370b44f258b1526
 ```
 
 Note the `Activating program at address 0x677c..7399` statement. The address your contract gets deployed to will likely differ, so take note of that address. Select it and copy it to your clipboard, we'll be using it in the next step to call it.
@@ -123,7 +114,7 @@ We'll now use `cast`, which was installed as part of our Foundry CLI suite, to `
 
 ### ~/projects/counter
 
-```bash
+```shell
 ❯ cast call --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "number()(uint256)"
 0
 ```
@@ -138,7 +129,7 @@ The result was `0`, which is what we expect a new counter to be initialized to. 
 
 ### ~/projects/counter
 
-```bash
+```shell
 ❯ cast send --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "increment()"
 
 blockHash               0x581f5140fe891f798f4829a7bc2826fbafceaaa2670f12fd09f1cbe3633a2b2d
@@ -162,7 +153,7 @@ Let's now check to see if our counter was properly incremented by calling the `n
 
 ### ~/projects/counter
 
-```bash
+```shell
 ❯ cast call --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "number()(uint256)"
 1
 ```
@@ -173,7 +164,7 @@ To demonstrate passing arguments to `cast`, let's try setting the counter to 5 b
 
 ### ~/projects/counter
 
-```bash
+```shell
 ❯ cast send --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "setNumber(uint256)" 5
 
 blockHash               0x3100b0c4ea268081f9b9a2cf1daf0a66c33cb6d8f1c041de4e2a787293c33ab9
@@ -195,7 +186,7 @@ Note how we passed in the number `5` as the argument to `setNumber(uint256)`. `c
 
 ### ~/projects/counter
 
-```bash
+```shell
 cast call --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "number()(uint256)"
 5
 ```
