@@ -108,7 +108,8 @@ deployment tx hash: 0x073042d1d3303dcf0a9f9478461764d39dfe34420e33ac1a3ba8c7dfc5
 contract activated and ready onchain with tx hash: 0xd3db95a5d20b003ac34efd36e16da365a99a3d8debd531d97370b44f258b1526
 ```
 
-Note the `Activating program at address 0x677c..7399` statement. The address your contract gets deployed to will likely differ, so take note of that address. Select it and copy it to your clipboard, we'll be using it in the next step to call it.
+Note the `
+contract activated and ready onchain with tx hash: 0xd3db95a5d20b003ac34efd...44f258b1526 ` statement. This is the address your contract has been deployed to, so take note of that address. Select it and copy it to your clipboard, we'll be using it in the next step to call it.
 
 We'll now use `cast`, which was installed as part of our Foundry CLI suite, to `call` the contract. Later we'll `send` a transaction to the contract. The difference between `call` and `send` is that `call` costs no gas, so it can only be used to invoke read-only functions.
 
