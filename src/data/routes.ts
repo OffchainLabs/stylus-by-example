@@ -51,6 +51,11 @@ export const basicExamples = [
     description: 'Log public events to the blockchain',
   },
   {
+    route: '/basic_examples/call',
+    title: 'Call',
+    description: 'Call other contracts on Rust Stylus smart contracts',
+  },
+  {
     route: '/basic_examples/errors',
     title: 'Errors',
     description: 'Errors on Stylus Rust smart contracts',
