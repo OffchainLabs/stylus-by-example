@@ -81,7 +81,7 @@ From the CLI, with current directory set to the `counter` folder:
 ### ~/projects/counter
 
 ```shell
-❯ cargo stylus deploy -e http://localhost:8547 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
+cargo stylus deploy -e http://localhost:8547 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
 ```
 
 After a minute or so, the counter project will be compiled into a single WASM file, then that file will be compressed before being deployed and then 'activated' onchain. Your terminal should display something like this:
@@ -188,7 +188,7 @@ Note how we passed in the number `5` as the argument to `setNumber(uint256)`. `c
 ### ~/projects/counter
 
 ```shell
-cast call --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "number()(uint256)"
+❯ cast call --rpc-url 'http://localhost:8547' --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 0x677c7e0584b0202417762ce06e89dbc5935a7399 "number()(uint256)"
 5
 ```
 
