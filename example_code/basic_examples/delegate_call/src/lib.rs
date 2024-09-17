@@ -10,9 +10,7 @@ use stylus_sdk::{
 
 #[storage]
 #[entrypoint]
-
 pub struct ExampleContract;
-
 // Declare events and Solidity error types
 sol! {
     error DelegateCallFailed();
