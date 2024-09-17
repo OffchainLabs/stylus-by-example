@@ -3,7 +3,6 @@ name: Checker Script CI
 on:
   pull_request:
     branches:
-      - main
       - master
 
 jobs:
