@@ -45,13 +45,21 @@ fi
 # Function to update Cargo.toml
 update_cargo_toml() {
   if [ -n "$sdk_repo" ]; then
-    # Replace with GitHub repo and branch
+    # Replace stylus-sdk with GitHub repo and branch, keeping features intact if they exist
+    sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'", features = [\1] }#' "$1" || \
     sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || \
     sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
   elif [ -n "$sdk_version" ]; then
-    # Replace with specific version
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
-    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    # Check for stylus-sdk with features and replace git with version, keeping features intact
+    if grep -q 'features = \[' "$1"; then
+      sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1" || \
+      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    else
+      # Handle cases without features (switch to simple version string)
+      sed -i.bak 's#stylus-sdk = {[^}]*git = "[^"]*".*\}#stylus-sdk = "'"$sdk_version"'"#' "$1" || \
+      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    fi
   fi
 }
 
@@ -60,16 +68,15 @@ process_directory() {
   local base_dir=$1
   local dir_name=$(basename "$base_dir")
 
-  echo -e "\n\033[1;34m============================================\033[0m"
-  echo -e "\033[1;34mProcessing Directory: $dir_name\033[0m"
-  echo -e "\033[1;34m============================================\033[0m"
+  echo -e "\n============================================"
+  echo -e "Processing Directory: $dir_name"
+  echo -e "============================================"
 
   # Loop through each folder inside the base directory
   for dir in "$base_dir"/*/; do
-    # Check if it's a directory
     if [ -d "$dir" ]; then
       folder_name=$(basename "$dir")
-      echo -e "\n\033[1;36mEntering directory: $folder_name\033[0m"
+      echo -e "\nEntering directory: $folder_name"
 
       # Navigate into the directory
       cd "$dir" || continue
@@ -77,59 +84,57 @@ process_directory() {
       # Check and update stylus-sdk version in Cargo.toml
       if grep -q 'stylus-sdk' Cargo.toml; then
         update_cargo_toml "Cargo.toml"
-        echo -e "\033[1;32mUpdated Cargo.toml in $folder_name\033[0m"
+        echo -e "Updated Cargo.toml in $folder_name"
       else
-        echo -e "\033[1;31mStylus-sdk dependency not found in $folder_name\033[0m"
+        echo -e "Stylus-sdk dependency not found in $folder_name"
       fi
 
-      # Run the cargo stylus check --no-verify command
-      check_output=$(cargo stylus check --no-verify 2>&1)
+      # Run the cargo stylus check command
+      check_output=$(cargo stylus check 2>&1)
 
-      # Check if the command was successful
       if [ $? -eq 0 ]; then
-        echo -e "\033[1;32mCheck passed in $folder_name\033[0m"
+        echo -e "Check passed in $folder_name"
         check_status="PASSED"
       else
-        echo -e "\033[1;31mCheck failed in $folder_name with error:\033[0m"
-        echo -e "\033[1;31m$check_output\033[0m"
+        echo -e "Check failed in $folder_name with error:"
+        echo -e "$check_output"
         check_status="FAILED"
       fi
 
-      # Log the result of the check
-      echo -e "\033[1;34m[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status\033[0m" >> ../../check_results.log
+      # Log the result of the check to /tmp
+      echo "[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Check $check_status" >> /tmp/check_results.log
 
-      # If the check passed, run the cargo stylus export-abi command
+      # If check passed, run the cargo stylus export-abi command
       if [ "$check_status" == "PASSED" ]; then
-        echo -e "\033[1;33mRunning cargo stylus export-abi in $folder_name\033[0m"
         export_output=$(cargo stylus export-abi 2>&1)
-
         if [ $? -eq 0 ]; then
-          echo -e "\033[1;32mExport ABI successful in $folder_name\033[0m"
+          echo -e "Export ABI successful in $folder_name"
         else
-          echo -e "\033[1;31mExport ABI failed in $folder_name with error:\033[0m"
-          echo -e "\033[1;31m$export_output\033[0m"
+          echo -e "Export ABI failed in $folder_name with error:"
+          echo -e "$export_output"
+          # Log the export-abi failure to /tmp/check_results.log
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] $folder_name: Export ABI FAILED" >> /tmp/check_results.log
+          check_status="FAILED"
         fi
       fi
 
       # Go back to the base directory
       cd - > /dev/null
-      echo -e "\033[1;36m---------------------------------\033[0m"
+      echo -e "---------------------------------"
     fi
   done
 
-  echo -e "\033[1;34mFinished processing $dir_name\033[0m"
-  echo -e "\033[1;34m============================================\033[0m"
+  echo -e "Finished processing $dir_name"
+  echo -e "============================================"
 }
 
 # Define the base directories
 APPLICATIONS_DIR="example_code/applications"
 BASIC_EXAMPLES_DIR="example_code/basic_examples"
 
-# Process the applications directory
+# Process the directories
 process_directory "$APPLICATIONS_DIR"
-
-# Process the basic_examples directory
 process_directory "$BASIC_EXAMPLES_DIR"
 
 # Final message
-echo -e "\n\033[1;32mAll checks and exports completed! Logs are available in 'check_results.log'.\033[0m"
+echo -e "\nAll checks and exports completed! Logs are available in '/tmp/check_results.log'."
