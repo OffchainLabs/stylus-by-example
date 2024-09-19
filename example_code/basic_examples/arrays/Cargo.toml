@@ -22,7 +22,7 @@ export-abi = ["stylus-sdk/export-abi"]
 debug = ["stylus-sdk/debug"]
 
 [[bin]]
-name = "stylus-hello-world"
+name = "stylus-arrays-example"
 path = "src/main.rs"
 
 [lib]
