@@ -144,7 +144,7 @@ impl Arrays {
 
 # Full Example code:
 
-### src/main.rs
+### src/lib.rs
 ```rust
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
@@ -270,7 +270,7 @@ export-abi = ["stylus-sdk/export-abi"]
 debug = ["stylus-sdk/debug"]
 
 [[bin]]
-name = "stylus-hello-world"
+name = "stylus-arrays-example"
 path = "src/main.rs"
 
 [lib]
