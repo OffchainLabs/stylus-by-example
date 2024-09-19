@@ -1,0 +1,70 @@
+export const metadata = {
+  title: 'Interfaces • Stylus by Example',
+  description:
+    "How to export Rust contract interfaces and import external contract interfaces using the Arbitrum Stylus Rust SDK.",
+};
+
+{/* Begin Content */}
+
+# Interfaces
+
+## Exporting a Solidity interface
+
+Recall that Stylus contracts are fully interoperable across all languages, including Solidity. The Stylus SDK provides tools for exporting a Solidity interface for your contract so that others can call it. This is usually done with the `cargo stylus` [CLI tool][abi_export], but we’ll detail how to do it manually here.
+
+The SDK does this automatically for you via a feature flag called `export-abi` that causes the [`#[external]`][external] and [`#[entrypoint]`][entrypoint] macros to generate a `main` function that prints the Solidity ABI to the console.
+
+```rust
+cargo run --features export-abi --target <triple>
+```
+
+Note that because the above actually generates a `main` function that you need to run, the target can’t be `wasm32-unknown-unknown` like normal. Instead you’ll need to pass in your target triple, which `cargo stylus` figures out for you. This `main` function is also why the following commonly appears in the `main.rs` file of Stylus contracts.
+
+```rust
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+```
+
+Here’s an example output. Observe that the method names change from Rust’s `snake_case` to Solidity’s `camelCase`. For compatibility reasons, onchain method selectors are always `camelCase`. We’ll provide the ability to customize selectors very soon. Note too that you can use argument names like `address` without fear. The SDK will prepend an `_` when necessary.
+
+```solidity
+interface Erc20 {
+    function name() external pure returns (string memory);
+
+    function balanceOf(address _address) external view returns (uint256);
+}
+
+interface Weth is Erc20 {
+    function mint() external payable;
+
+    function burn(uint256 amount) external;
+}
+```
+
+### [`sol_interface!`][sol_interface]
+
+This macro defines a `struct` for each of the Solidity interfaces provided.
+
+```rust
+sol_interface! {
+    interface IService {
+        function makePayment(address user) payable returns (string);
+        function getConstant() pure returns (bytes32)
+    }
+
+    interface ITree {
+        // other interface methods
+    }
+}
+```
+
+The above will define `IService` and `ITree` for calling the methods of the two contracts.
+
+For example, `IService` will have a `make_payment` method that accepts an [`Address`][Address] and returns a [`B256`][B256].
+
+```rust
+pub fn do_call(&mut self, account: IService, user: Address) -> Result<String, Error> {
+    account.make_payment(self, user)  // note the snake case
+}
+```
+
+Observe the casing change. [`sol_interface!`][sol_interface] computes the selector based on the exact name passed in, which should almost always be `CamelCase`. For aesthetics, the rust functions will instead use `snake_case`.

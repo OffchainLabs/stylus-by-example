@@ -1,0 +1,196 @@
+export const metadata = {
+  title: "Call • Stylus by Example",
+  description:
+    "Explanation on how to use delegate call on Rust Stylus smart contracts",
+};
+
+{/* Begin Content */}
+
+# **DelegateCall**
+
+## Introduction
+
+Delegate calls are a powerful feature in smart contract development, allowing a contract to execute code from another contract while maintaining its own context. In Rust Stylus smart contracts, we have a `delegatecall` function similar to Solidity's, serving as a low-level operation akin to a regular call.
+
+When Contract A executes a `delegatecall` to Contract B, B's code runs using Contract A's storage, `msg.sender`, and `msg.value`. This means any state changes affect Contract A, and the original sender and value of the transaction are preserved.
+
+Understanding delegate calls in Rust Stylus is essential for building modular smart contracts. This document explores how delegate calls work in Rust Stylus.
+
+---
+## **Delegate Calls in Rust Stylus Smart Contracts**
+
+Delegate calls allow a contract to execute code from another contract while keeping its own context, including storage, `msg.sender`, and `msg.value`. In Rust Stylus smart contracts, delegate calls can be defined in two ways:
+
+1. Using the low-level `delegate_call` function.
+2. Using `RawCall` with the `new_delegate()` configuration.
+
+## 1. Using the Low-Level `delegate_call` Function
+
+The `delegate_call` function is a low-level operation similar to `call` and `static_call`. It is considered unsafe because it requires trusting the external contract to maintain safety. The function signature is as follows:
+
+```rust
+pub unsafe fn delegate_call(
+    context: impl MutatingCallContext,
+    to: Address,
+    data: &[u8],
+) -> Result<Vec<u8>, Error>
+```
+
+### Safety Considerations
+
+- **Trust Requirement**: The calling contract must trust the external contract to uphold safety requirements.
+- **Storage Modification**: The external contract can arbitrarily change the calling contract's storage.
+- **Ether Spending**: It may spend ether or perform other critical operations.
+- **Cache Clearing**: While this function clears any cached values, it doesn't prevent unsafe actions by the external contract.
+
+### Example Usage
+
+Here's how to use `delegate_call` in a smart contract:
+
+```rust
+pub fn low_level_delegate_call(
+    &mut self,
+    calldata: Vec<u8>,
+    target: Address,
+) -> Result<Vec<u8>, DelegateCallErrors> {
+    unsafe {
+        let result = delegate_call(self, target, &calldata)
+            .map_err(|_| DelegateCallErrors::DelegateCallFailed(DelegateCallFailed {}))?;
+        Ok(result)
+    }
+}
+```
+
+In this example:
+
+- The function `low_level_delegate_call` performs an unsafe delegate call to the `target` contract with the provided `calldata`.
+- It handles errors by mapping them to a custom `DelegateCallErrors` type.
+- The use of `unsafe` highlights the need for caution when using this function.
+
+## 2. Using `RawCall` with `new_delegate()` Configuration
+
+For scenarios requiring untyped calls to another contract, `RawCall` offers a configurable and fluent method. You can set up an unsafe delegate call by chaining optional configuration methods, similar to configuring a `File` in Rust.
+
+### Example Usage
+
+Here's how to use `RawCall` to perform a delegate call:
+
+```rust
+pub fn raw_delegate_call(
+    &mut self,
+    calldata: Vec<u8>,
+    target: Address,
+) -> Result<Vec<u8>, Vec<u8>> {
+    let data = RawCall::new_delegate() // Configure a delegate call
+        .gas(2100)                     // Supply 2100 gas
+        .limit_return_data(0, 32)      // Only read the first 32 bytes back
+        .call(target, &calldata)?;
+
+    Ok(data)
+}
+```
+
+In this example:
+
+- `RawCall::new_delegate()` initializes a new delegate call configuration.
+- The `gas(2100)` method sets the gas limit for the call.
+- `limit_return_data(0, 32)` limits the returned data to the first 32 bytes.
+- The `call` method executes the delegate call to the `target` address with the provided `calldata`.
+
+
+---
+# Full Example code:
+
+### src/lib.rs
+
+```rust
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+
+use alloy_sol_types::sol;
+use stylus_sdk::{
+    alloy_primitives::Address,
+    call::{delegate_call, RawCall},
+    prelude::*,
+};
+
+#[storage]
+#[entrypoint]
+
+pub struct ExampleContract;
+
+// Declare events and Solidity error types
+sol! {
+    error DelegateCallFailed();
+}
+
+#[derive(SolidityError)]
+pub enum DelegateCallErrors {
+    DelegateCallFailed(DelegateCallFailed),
+}
+
+#[public]
+impl ExampleContract {
+    pub fn low_level_delegate_call(
+        &mut self,
+        calldata: Vec<u8>,
+        target: Address,
+    ) -> Result<Vec<u8>, DelegateCallErrors> {
+        unsafe {
+            let result = delegate_call(self, target, &calldata)
+                .map_err(|_| DelegateCallErrors::DelegateCallFailed(DelegateCallFailed {}))?;
+
+            Ok(result)
+        }
+    }
+    pub fn raw_delegate_call(
+        &mut self,
+        calldata: Vec<u8>,
+        target: Address,
+    ) -> Result<Vec<u8>, Vec<u8>> {
+        let data = RawCall::new_delegate() // configure a delegate call
+            .gas(2100) // supply 2100 gas
+            .limit_return_data(0, 32) // only read the first 32 bytes back
+            .call(target, &calldata)?;
+
+        Ok(data)
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus_delegate_call"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+
+[dependencies]
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+sha3 = "0.10"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+```

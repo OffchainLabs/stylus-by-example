@@ -1,0 +1,68 @@
+export const metadata = {
+  title: 'Import interfaces • Stylus by Example',
+  description:
+    "How to import external contract interfaces using the Arbitrum Stylus Rust SDK.",
+};
+
+{/* Begin Content */}
+
+# Import interfaces
+
+Interfaces allow you to interact with other contracts from your Stylus contract, regardless of the language used to develop them (Solidity, Rust, ...). This page shows how to declare an Interface using the Stylus Rust SDK.
+
+## Declaring interfaces and calling other contracts
+
+To declare an interface in your Rust contract, you can use the [sol_interface!](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/macro.sol_interface.html) macro. This macro defines a `struct` for each of the Solidity ABI interfaces provided.
+
+Let's see an example:
+
+```rust
+sol_interface! {
+    interface IService {
+        function makePayment(address user) payable returns (string);
+        function getConstant() pure returns (bytes32)
+    }
+
+    interface ITree {
+        // other interface methods
+    }
+}
+```
+
+The above will define `IService` and `ITree` for calling the methods of the two contracts. Notice how Solidity syntax is used to declare the interfaces.
+
+With this example interface, for instance, we can call method `make_payment` from `IService` that accepts an `Address` and returns a `B256`.
+
+```rust
+pub fn do_call(&mut self, account: IService, user: Address) -> Result<String, Error> {
+    account.make_payment(self, user)  // note the snake case
+}
+```
+
+Observe the casing change. `sol_interface!` computes the selector based on the exact name passed in, which should almost always be `CamelCase`. For aesthetics, the rust functions will instead use `snake_case`.
+
+Let's finish this section with a different example that directly calls a method from an imported interface:
+
+```rust
+sol_interface! {
+    interface IMethods {
+        function viewFoo() external view;
+        function writeFoo() external;
+    }
+}
+
+#[public]
+impl Contract {
+    pub fn call_view(&mut self, contract_address: Address) -> Result<(), Vec<u8>> {
+        let external_contract = IMethods::new(contract_address);
+        let config = Call::new_in(self);
+        Ok(external_contract.view_foo(config)?)
+    }
+
+    pub fn call_write(&mut self, contract_address: Address) -> Result<(), Vec<u8>> {
+        let external_contract = IMethods::new(contract_address);
+        let config = Call::new_in(self);
+        Ok(external_contract.write_foo(config)?)
+    }
+}
+```

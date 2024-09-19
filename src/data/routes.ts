@@ -51,6 +51,11 @@ export const basicExamples = [
     description: 'Log public events to the blockchain',
   },
   {
+    route: '/basic_examples/call',
+    title: 'Call',
+    description: 'Call other contracts on Rust Stylus smart contracts',
+  },
+  {
     route: '/basic_examples/errors',
     title: 'Errors',
     description: 'Errors on Stylus Rust smart contracts',
@@ -66,9 +71,25 @@ export const basicExamples = [
     description: "Compute the encoded function selector of a contract's function",
   },
   {
+    route: "/basic_examples/verify_signature",
+    title: "Verifying Signature",
+    description:
+      "An explanation of how to verify a signature signed off chain.",
+  },
+  {
     route: "/basic_examples/inheritance",
     title: "Inheritance",
     description: "Inheritance in the Stylus Rust SDK",
+  },
+  {
+    route: "/basic_examples/import_interfaces",
+    title: "Import interfaces",
+    description: "Import external contract interfaces",
+  },
+  {
+    route: "/basic_examples/export_interface",
+    title: "Export contract interface",
+    description: "Export the Solidity ABI interface of your Rust contract",
   },
   {
     route: "/basic_examples/vm_affordances",
@@ -120,6 +141,11 @@ export const applications = [
     route: "/applications/time_lock",
     title: "Time Lock",
     description: "An example implementation of the Timelock wallet in Rust using Arbitrum Stylus.",
+  },
+  {
+    route: "/applications/multi_call",
+    title: "Multi Call",
+    description: "An example implementation of the Multi Call contract in Rust using Arbitrum Stylus",
   },
   {
     route: "/applications/english_auction",
