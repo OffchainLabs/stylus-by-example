@@ -19,8 +19,14 @@ sol_interface! {
 
 sol! {
     error NotStarted();
+    error NotEnded();
+    error AlreadyEnded();
     error StartGreaterThanEnd();
     error EndGreaterThanMaxDuration();
+    error SenderIsNotCreator();
+    error AlreadyClaimed();
+    error GoalNotReached();
+    error GoalReached();
 
     event Launch(
         uint256 id,
@@ -39,8 +45,14 @@ sol! {
 #[derive(SolidityError)]
 pub enum CrowdFundErrors {
     NotStarted(NotStarted),
+    NotEnded(NotEnded),
+    AlreadyEnded(AlreadyEnded),
     StartGreaterThanEnd(StartGreaterThanEnd),
     EndGreaterThanMaxDuration(EndGreaterThanMaxDuration),
+    SenderIsNotCreator(SenderIsNotCreator),
+    GoalNotReached(GoalNotReached),
+    GoalReached(GoalReached),
+
 }
 
 sol_storage! {
@@ -88,7 +100,6 @@ impl CrowdFund {
         if end_at > U256::from(block::timestamp() + 7 * Self::ONE_DAY) {
             return Err(CrowdFundErrors::EndGreaterThanMaxDuration(EndGreaterThanMaxDuration {}));
         }
-
         let number = self.count.get();
         self.count.set(number + U256::from(1));
 
