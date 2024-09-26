@@ -18,6 +18,10 @@ sol_interface! {
 }
 
 sol! {
+    error NotStarted();
+    error StartGreaterThanEnd();
+    error EndGreaterThanMaxDuration();
+
     event Launch(
         uint256 id,
         address indexed creator,
@@ -30,6 +34,13 @@ sol! {
     event Unpledge(uint256 indexed id, address indexed caller, uint256 amount);
     event Claim(uint256 id);
     event Refund(uint256 id, address indexed caller, uint256 amount);
+}
+
+#[derive(SolidityError)]
+pub enum CrowdFundErrors {
+    NotStarted(NotStarted),
+    StartGreaterThanEnd(StartGreaterThanEnd),
+    EndGreaterThanMaxDuration(EndGreaterThanMaxDuration),
 }
 
 sol_storage! {
@@ -67,10 +78,16 @@ sol_storage! {
 impl CrowdFund {
     pub const ONE_DAY: u64 = 86400; // 1 day = 24 hours * 60 minutes * 60 seconds = 86400 seconds.
 
-    pub fn launch(&mut self, goal: U256, start_at: U256, end_at: U256) {
-        assert!(start_at < U256::from(block::timestamp()));
-        assert!(end_at < start_at);
-        assert!(end_at > U256::from(block::timestamp() + 7 * Self::ONE_DAY));
+    pub fn launch(&mut self, goal: U256, start_at: U256, end_at: U256) -> Result<(), CrowdFundErrors> {
+        if start_at < U256::from(block::timestamp()) {
+            return Err(CrowdFundErrors::NotStarted(NotStarted {}));
+        }
+        if end_at < start_at{
+            return Err(CrowdFundErrors::StartGreaterThanEnd(StartGreaterThanEnd {}));
+        }
+        if end_at > U256::from(block::timestamp() + 7 * Self::ONE_DAY) {
+            return Err(CrowdFundErrors::EndGreaterThanMaxDuration(EndGreaterThanMaxDuration {}));
+        }
 
         let number = self.count.get();
         self.count.set(number + U256::from(1));
@@ -90,6 +107,7 @@ impl CrowdFund {
             start_at: start_at,
             end_at: end_at,
         });
+        Ok(())
     }
     pub fn cancel(&mut self, id: U256) {
         if let Some(mut entry) = self.campaigns.get_mut(id) {
