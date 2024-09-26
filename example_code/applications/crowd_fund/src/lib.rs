@@ -18,6 +18,7 @@ sol_interface! {
 }
 
 sol! {
+    error StartTimePassed();
     error NotStarted();
     error NotEnded();
     error AlreadyEnded();
@@ -27,7 +28,7 @@ sol! {
     error AlreadyClaimed();
     error GoalNotReached();
     error GoalReached();
-
+    
     event Launch(
         uint256 id,
         address indexed creator,
@@ -44,6 +45,7 @@ sol! {
 
 #[derive(SolidityError)]
 pub enum CrowdFundErrors {
+    StartTimePassed(StartTimePassed),
     NotStarted(NotStarted),
     NotEnded(NotEnded),
     AlreadyEnded(AlreadyEnded),
@@ -52,6 +54,7 @@ pub enum CrowdFundErrors {
     SenderIsNotCreator(SenderIsNotCreator),
     GoalNotReached(GoalNotReached),
     GoalReached(GoalReached),
+    AlreadyClaimed(AlreadyClaimed)
 
 }
 
@@ -92,7 +95,7 @@ impl CrowdFund {
 
     pub fn launch(&mut self, goal: U256, start_at: U256, end_at: U256) -> Result<(), CrowdFundErrors> {
         if start_at < U256::from(block::timestamp()) {
-            return Err(CrowdFundErrors::NotStarted(NotStarted {}));
+            return Err(CrowdFundErrors::StartTimePassed(StartTimePassed {}));
         }
         if end_at < start_at{
             return Err(CrowdFundErrors::StartGreaterThanEnd(StartGreaterThanEnd {}));
@@ -120,62 +123,70 @@ impl CrowdFund {
         });
         Ok(())
     }
-    pub fn cancel(&mut self, id: U256) {
+    pub fn cancel(&mut self, id: U256) -> Result<(), CrowdFundErrors> {
         if let Some(mut entry) = self.campaigns.get_mut(id) {
-            if entry.creator.get() == msg::sender()
-                && U256::from(block::timestamp()) > entry.start_at.get()
-            {
-                entry.creator.set(Address::ZERO);
-                entry.goal.set(U256::from(0));
-                entry.pledged.set(U256::from(0));
-                entry.start_at.set(U256::from(0));
-                entry.end_at.set(U256::from(0));
-                entry.claimed.set(false);
-                evm::log(Cancel { id: id });
+            if entry.creator.get() != msg::sender() {
+                return Err(CrowdFundErrors::SenderIsNotCreator(SenderIsNotCreator {}));
             }
+            if U256::from(block::timestamp()) < entry.start_at.get() {
+                return Err(CrowdFundErrors::NotStarted(NotStarted {}));
+            }
+            entry.creator.set(Address::ZERO);
+            entry.goal.set(U256::from(0));
+            entry.pledged.set(U256::from(0));
+            entry.start_at.set(U256::from(0));
+            entry.end_at.set(U256::from(0));
+            entry.claimed.set(false);
+            evm::log(Cancel { id: id });
         }
+        Ok(())
     }
-    pub fn pledge(&mut self, id: U256, amount: U256) {
+    pub fn pledge(&mut self, id: U256, amount: U256) -> Result<(), CrowdFundErrors> {
         if let Some(mut entry) = self.campaigns.get_mut(id) {
-            if U256::from(block::timestamp()) >= entry.start_at.get()
-                && U256::from(block::timestamp()) <= entry.end_at.get()
-            {
-                let pledged = U256::from(entry.pledged.get());
-                entry.pledged.set(pledged + amount);
-                let mut pledged_amount_info = self.pledged_amount.setter(id);
-                let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
-                let old_amount = pledged_amount_sender.get();
-                pledged_amount_sender.set(old_amount + amount);
+            if U256::from(block::timestamp()) < entry.start_at.get() {
+                return Err(CrowdFundErrors::NotStarted(NotStarted {}));
+            }
+            if U256::from(block::timestamp()) > entry.end_at.get() {
+                return Err(CrowdFundErrors::AlreadyEnded(AlreadyEnded {}));
+            }
+            let pledged = U256::from(entry.pledged.get());
+            entry.pledged.set(pledged + amount);
+            let mut pledged_amount_info = self.pledged_amount.setter(id);
+            let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
+            let old_amount = pledged_amount_sender.get();
+            pledged_amount_sender.set(old_amount + amount);
 
-                let token = IERC20::new(*self.token_address);
-                let config = Call::new_in(self);
-                token.transfer(config, contract::address(), amount).unwrap();
-            }
+            let token = IERC20::new(*self.token_address);
+            let config = Call::new_in(self);
+            token.transfer(config, contract::address(), amount).unwrap();
         }
+        Ok(())
     }
-    pub fn unpledge(&mut self, id: U256, amount: U256) {
+    pub fn unpledge(&mut self, id: U256, amount: U256) -> Result<(), CrowdFundErrors> {
         if let Some(mut entry) = self.campaigns.get_mut(id) {
-            if U256::from(block::timestamp()) <= entry.end_at.get() {
-                let pledged = U256::from(entry.pledged.get());
-                entry.pledged.set(pledged - amount);
-                let mut pledged_amount_info = self.pledged_amount.setter(id);
-                let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
-                let old_amount = pledged_amount_sender.get();
-                pledged_amount_sender.set(old_amount - amount);
-                // Token transfer
-                let token = IERC20::new(*self.token_address);
-                let config = Call::new_in(self);
-                token.transfer(config, contract::address(), amount).unwrap();
-                // Emit the log
-                evm::log(Unpledge {
-                    id: id,
-                    caller: msg::sender(),
-                    amount: amount,
-                });
+            if U256::from(block::timestamp()) > entry.end_at.get() {
+                return Err(CrowdFundErrors::AlreadyEnded(AlreadyEnded {}));
             }
+            let pledged = U256::from(entry.pledged.get());
+            entry.pledged.set(pledged - amount);
+            let mut pledged_amount_info = self.pledged_amount.setter(id);
+            let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
+            let old_amount = pledged_amount_sender.get();
+            pledged_amount_sender.set(old_amount - amount);
+            // Token transfer
+            let token = IERC20::new(*self.token_address);
+            let config = Call::new_in(self);
+            token.transfer(config, contract::address(), amount).unwrap();
+            // Emit the log
+            evm::log(Unpledge {
+                id: id,
+                caller: msg::sender(),
+                amount: amount,
+            });
         }
+        Ok(())
     }
-    pub fn claim(&mut self, id: U256) {
+    pub fn claim(&mut self, id: U256) -> Result<(), CrowdFundErrors> {
         // First mutable borrow to access campaigns and the entry
         if let Some(mut entry) = self.campaigns.get_mut(id) {
             let creator = entry.creator.get();
@@ -185,48 +196,61 @@ impl CrowdFund {
             let claimed = entry.claimed.get();
 
             // Check conditions on the entry
-            if creator == msg::sender()
-                && U256::from(block::timestamp()) > end_at
-                && pledged >= goal
-                && !claimed
-            {
-                // Mark the entry as claimed
-                entry.claimed.set(true);
-
-                // Now, perform the token transfer
-                let token_address = *self.token_address;
-                let token = IERC20::new(token_address);
-
-                let config = Call::new_in(self);
-                token.transfer(config, creator, pledged).unwrap();
-                evm::log(Claim { id: id });
+            if creator != msg::sender() {
+                return Err(CrowdFundErrors::SenderIsNotCreator(SenderIsNotCreator {}));
             }
+            if U256::from(block::timestamp()) < end_at {
+                return Err(CrowdFundErrors::NotEnded(NotEnded {}));
+            }
+            if pledged < goal {
+                return Err(CrowdFundErrors::GoalNotReached(GoalNotReached {}));
+
+            }
+            if claimed {
+                return Err(CrowdFundErrors::AlreadyClaimed(AlreadyClaimed {}));
+            }
+            // Mark the entry as claimed
+            entry.claimed.set(true);
+
+            // Now, perform the token transfer
+            let token_address = *self.token_address;
+            let token = IERC20::new(token_address);
+
+            let config = Call::new_in(self);
+            token.transfer(config, creator, pledged).unwrap();
+            evm::log(Claim { id: id });
         }
+        Ok(())
     }
 
-    pub fn refund(&mut self, id: U256) {
+    pub fn refund(&mut self, id: U256) -> Result<(), CrowdFundErrors> {
         // First mutable borrow to access campaigns and the entry
         if let Some(entry) = self.campaigns.get_mut(id) {
             let end_at = entry.end_at.get();
             let goal = entry.goal.get();
             let pledged = entry.pledged.get();
 
-            if U256::from(block::timestamp()) > end_at && pledged < goal {
-                let mut pledged_amount_info = self.pledged_amount.setter(id);
-                let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
-                let old_balance = pledged_amount_sender.get();
-                pledged_amount_sender.set(U256::from(0));
-                let token_address = *self.token_address;
-                let token = IERC20::new(token_address);
-
-                let config = Call::new_in(self);
-                token.transfer(config, msg::sender(), old_balance).unwrap();
-                evm::log(Refund {
-                    id: id,
-                    caller: msg::sender(),
-                    amount: old_balance,
-                });
+            if U256::from(block::timestamp()) <= end_at {
+                return Err(CrowdFundErrors::NotEnded(NotEnded {}));
+            } 
+            if pledged >= goal {
+                return Err(CrowdFundErrors::GoalReached(GoalReached {}));
             }
+            let mut pledged_amount_info = self.pledged_amount.setter(id);
+            let mut pledged_amount_sender = pledged_amount_info.setter(msg::sender());
+            let old_balance = pledged_amount_sender.get();
+            pledged_amount_sender.set(U256::from(0));
+            let token_address = *self.token_address;
+            let token = IERC20::new(token_address);
+
+            let config = Call::new_in(self);
+            token.transfer(config, msg::sender(), old_balance).unwrap();
+            evm::log(Refund {
+                id: id,
+                caller: msg::sender(),
+                amount: old_balance,
+            });
         }
+        Ok(())
     }
 }
