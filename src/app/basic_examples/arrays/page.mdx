@@ -1,0 +1,285 @@
+export const metadata = {
+  title: "Arrays • Stylus by Example",
+  description:
+    "A simple arrays example in stylus",
+};
+
+{/* Begin Content */}
+
+# Arrays
+Like solidity, Array can have a compile-time fixed size or a dynamic size.
+Here, we will guide you on how to use arrays in Stylus, we provide 3 examples here:
+1. Dynamic-size array
+2. Fixed-size array
+3. Custome struct element array
+
+## Dynamic-size array
+Dynamic-size array is an array that can change its size at runtime.
+
+Declare a dynamic-size array in Stylus is similar to Solidity, you can use the following code to declare a dynamic-size array:
+```rust
+sol_storage! {
+    #[entrypoint]
+    pub struct Arrays {
+        uint256[] arr;
+    }
+}
+```
+Then you can use the following code to push/get an element of the array and get the length of the array:
+```rust
+#[public]
+impl Arrays {
+    // dynamic array
+    // push an element to the dynamic array
+    pub fn push(&mut self, i: U256) {
+        self.arr.push(i);
+    }
+
+    // get the element at the index
+    pub fn get_element(&self, index: U256) -> U256 {
+        self.arr.get(index).unwrap()
+    }
+
+    // get the length of the array
+    pub fn get_arr_length(&self) -> U256 {
+        U256::from(self.arr.len())
+    }
+
+    // remove will not change the length of the array
+    pub fn remove(&mut self, index: U256) {
+        let mut last_element = self.arr.setter(index).unwrap();
+        last_element.erase()
+    }
+}
+```
+
+## Fixed-size array
+Fixed-size array is an array that has a fixed size at compile time.
+
+Declare a fixed-size array in Stylus is similar to Solidity, you can use the following code to declare a fixed-size array:
+```rust
+sol_storage! {
+    #[entrypoint]
+    pub struct Arrays {
+        uint256[3] arr2;
+    }
+}
+```
+Then you can use the following code to get an element of the array and get the length of the array:
+```rust
+#[public]
+impl Arrays {
+    // fixed length array
+    // get an element from the fixed length array
+    pub fn get_arr2_element(&self, index: U256) -> U256 {
+        self.arr2.get(index).unwrap()
+    }
+
+    // get the fixed length array size
+    pub fn get_arr2_length(&self) -> U256 {
+        U256::from(self.arr2.len())
+    }
+
+    // set an element in the fixed length array
+    pub fn set_arr2_value(&mut self, index: U256, value: U256) {
+        self.arr2.setter(index).unwrap().set(value);
+    }
+}
+```
+Note that the fixed-size array can't push new elements.
+
+## Custom struct element array
+Custom struct element array is an array that can store custom struct elements.
+
+You can use the following code to declare a custom struct element array:
+```rust
+sol_storage! {
+    #[entrypoint]
+    pub struct Arrays {
+        Info[] arr3; // struct array
+    }
+
+    pub struct Info {
+        address setter;
+        uint256 value;
+    }
+}
+```
+Then you can use the following code to push/get an element of the array and get the length of the array:
+```rust
+#[public]
+impl Arrays {
+    // struct array
+    // push an element to the struct array
+    pub fn push_arr3_info(&mut self, value: U256) {
+        let mut new_info = self.arr3.grow();
+        new_info.setter.set(msg::sender());
+        new_info.value.set(value);
+    }
+
+    // get the length of the struct array
+    pub fn get_arr3_length(&self) -> U256 {
+        U256::from(self.arr3.len())
+    }
+
+    // get the value of the struct array at the index
+    pub fn get_arr3_info(&self, index: U256) -> (Address, U256) {
+        let info = self.arr3.get(index).unwrap();
+        (info.setter.get(), info.value.get())
+    }
+
+    // Find the first index of the expected value in the array
+    pub fn find_arr3_first_expected_value(&self, expected_value: U256) -> U256 {
+        for i in 0..self.arr3.len() {
+            let (_, value) = self.get_arr3_info(U256::from(i));
+            if value == expected_value {
+                return U256::from(i);
+            }
+        }
+        // if not found, return the size of arr
+        U256::from(self.arr3.len())
+    }
+}
+```
+
+# Full example code:
+
+### src/lib.rs
+```rust
+// Allow `cargo stylus export-abi` to generate a main function.
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+
+/// Import items from the SDK. The prelude contains common traits and macros.
+use stylus_sdk::{alloy_primitives::{Address, U256}, prelude::*, msg};
+
+// Define some persistent storage using the Solidity ABI.
+// `Arrays` will be the entrypoint.
+sol_storage! {
+    #[entrypoint]
+    pub struct Arrays {
+        uint256[] arr;
+        uint256[10] arr2; // fixed length array
+        Info[] arr3; // struct array
+    }
+
+    pub struct Info {
+        address setter;
+        uint256 value;
+    }
+}
+
+/// Declare that `Arrays` is a contract with the following external methods.
+#[public]
+impl Arrays {
+    // dynamic array
+    // push an element to the dynamic array
+    pub fn push(&mut self, i: U256) {
+        self.arr.push(i);
+    }
+
+    // get the element at the index
+    pub fn get_element(&self, index: U256) -> U256 {
+        self.arr.get(index).unwrap()
+    }
+
+    // get the length of the array
+    pub fn get_arr_length(&self) -> U256 {
+        U256::from(self.arr.len())
+    }
+
+    // remove will not change the length of the array
+    pub fn remove(&mut self, index: U256) {
+        let mut last_element = self.arr.setter(index).unwrap();
+        last_element.erase()
+    }
+
+    // fixed length array
+    // get an element from the fixed length array
+    pub fn get_arr2_element(&self, index: U256) -> U256 {
+        self.arr2.get(index).unwrap()
+    }
+
+    // get the fixed length array size
+    pub fn get_arr2_length(&self) -> U256 {
+        U256::from(self.arr2.len())
+    }
+
+    // set an element in the fixed length array
+    pub fn set_arr2_value(&mut self, index: U256, value: U256) {
+        self.arr2.setter(index).unwrap().set(value);
+    }
+
+    // struct array
+    // push an element to the struct array
+    pub fn push_arr3_info(&mut self, value: U256) {
+        let mut new_info = self.arr3.grow();
+        new_info.setter.set(msg::sender());
+        new_info.value.set(value);
+    }
+
+    // get the length of the struct array
+    pub fn get_arr3_length(&self) -> U256 {
+        U256::from(self.arr3.len())
+    }
+
+    // get the value of the struct array at the index
+    pub fn get_arr3_info(&self, index: U256) -> (Address, U256) {
+        let info = self.arr3.get(index).unwrap();
+        (info.setter.get(), info.value.get())
+    }
+
+    // Find the first index of the expected value in the array
+    pub fn find_arr3_first_expected_value(&self, expected_value: U256) -> U256 {
+        for i in 0..self.arr3.len() {
+            let (_, value) = self.get_arr3_info(U256::from(i));
+            if value == expected_value {
+                return U256::from(i);
+            }
+        }
+        // if not found, return the size of arr
+        U256::from(self.arr3.len())
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus-arrays-example"
+version = "0.1.0"
+edition = "2021"
+description = "Stylus arrays example"
+
+[dependencies]
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+dotenv = "0.15.0"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[[bin]]
+name = "stylus-arrays-example"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+```

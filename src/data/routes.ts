@@ -119,6 +119,11 @@ export const basicExamples = [
     title: 'Functions',
     description: 'Learn about function parameters, return types, and visibility',
   },
+  {
+    route: '/basic_examples/arrays',
+    title: 'Arrays',
+    description: 'A simple arrays example in stylus',
+  },
 ];
 
 export const applications = [
