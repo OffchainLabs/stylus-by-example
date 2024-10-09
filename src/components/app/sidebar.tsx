@@ -48,7 +48,7 @@ export function Sidebar() {
         >
           <ChevronLeft
             className={css({
-              color: '#ffffff70',
+              color: '#808080',
               h: ICON_SIZE,
               w: ICON_SIZE,
             })}
