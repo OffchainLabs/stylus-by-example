@@ -10,8 +10,8 @@ function SidebarHeading({ children }: { children: ReactNode }) {
   return (
     <h2
       className={css({
-        fontSize: { 'base': '20px', 'md': '22px', '2xl': '22px' },
-        fontWeight: 'bold',
+        fontSize: { 'base': '16px', 'md': '16px', '2xl': '16px' },
+        fontWeight: '600',
         mb: '1',
         px: '4',
         fontFamily: 'heading',
@@ -26,7 +26,7 @@ export function Sidebar() {
   return (
     <div
       className={stack({
-        pt: '4',
+        pt: '14',
         px: '1',
         pb: '24',
         gap: '0',

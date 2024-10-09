@@ -17,27 +17,27 @@ export default function Navigation() {
       className={hstack({
         borderBottomWidth: { base: '0', md: '0' },
         borderTopWidth: { base: '1px', md: '0' },
-        py: '8px',
-        shadow: { _light: 'lg', _dark: 'none' },
+        padding: '8px 16px',
         zIndex: '10',
         bg: 'pink.100',
         borderColor: { _light: 'stone.200', _dark: 'stone.300' },
         _dark: {
-          bg: 'stone.950',
+          bg: '#242526',
           borderColor: 'black',
           borderBottomWidth: '0',
         },
       })}
     >
-      <div
+      <Link
         className={hstack({
           px: '8px',
         })}
+        href={'/'}
       >
         <Image alt="Arbitrum Stylus logo" width={32} height={32} src="/stylus_logo_mark.svg" />
         <h2
           className={css({
-            fontSize: { base: 'xl', md: '2xl' },
+            // fontSize: { base: 'lg', md: 'xl' },
             fontFamily: 'heading',
             fontWeight: 'bold',
             fontVariantCaps: 'titling-caps',
@@ -47,7 +47,7 @@ export default function Navigation() {
         >
           Stylus by Example
         </h2>
-      </div>
+      </Link>
       <div className={css({ flex: '1', display: { base: 'none', md: 'block' } })}>
         <NavigationMenu>
           <NavigationMenuList>
