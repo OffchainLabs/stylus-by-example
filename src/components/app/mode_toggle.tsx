@@ -46,7 +46,7 @@ export function ModeToggle() {
       })}
       onClick={toggleTheme}
     >
-      <MoonIcon
+      <SunIcon
         className={css({
           h: '24px',
           w: '24px',
@@ -54,7 +54,7 @@ export function ModeToggle() {
           _dark: { display: 'none' },
         })}
       />
-      <SunIcon
+      <MoonIcon
         className={css({
           h: '24px',
           w: '24px',
