@@ -19,14 +19,14 @@ export function SideNavScroll({ children }: { children: React.ReactNode }) {
           scrollbarWidth: 'thin',
           scrollbarColor: 'stone.700 stone.900',
           _scrollbar: {
-            w: '10px',
+            w: '1px',
           },
           _scrollbarThumb: {
             background: 'stone.700',
             borderRadius: '14px',
           },
           _scrollbarTrack: {
-            background: 'stone.900',
+            background: '#1b1b1d',
           },
         })}
       >
@@ -48,7 +48,7 @@ export function SideNavScroll({ children }: { children: React.ReactNode }) {
         scrollbarWidth: 'thin',
         scrollbarColor: 'stone.400 stone.200',
         _scrollbar: {
-          w: '10px',
+          w: '1px',
         },
         _scrollbarThumb: {
           background: 'stone.400',

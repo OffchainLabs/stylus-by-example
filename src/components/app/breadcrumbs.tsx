@@ -4,12 +4,11 @@ import { HStack } from '@/styled-system/jsx';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { css } from '@/styled-system/css';
-import { styled } from '@/styled-system/jsx';
 import Link from 'next/link';
-import { HomeIcon } from '@radix-ui/react-icons';
+import { HomeIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 
 const FONT_SIZE = { 'base': '14px', '2xl': '16px' };
-const ICON_SIZE = { 'base': '16px', '2xl': '18px' };
+const ICON_SIZE = { 'base': '16px', '2xl': '16px' };
 const TEXT_COLOR = {
   _dark: 'stone.400',
   _light: 'stone.500',
@@ -38,7 +37,7 @@ function HomeButton() {
             w: ICON_SIZE,
           })}
         />
-        home
+        Home
       </Link>
     </Button>
   );
@@ -60,7 +59,14 @@ export function Breadcrumbs() {
           })}
           key={`${segment}-${index}`}
         >
-          <styled.span>{`=>`}</styled.span>
+          <ChevronRightIcon
+            className={css({
+              color: SEPARATOR_COLOR,
+              h: ICON_SIZE,
+              w: ICON_SIZE,
+            })}
+          />
+
           <Button
             asChild
             variant="link"
@@ -70,10 +76,12 @@ export function Breadcrumbs() {
               fontSize: FONT_SIZE,
               h: { 'base': '20px', '2xl': '24px' },
               color: segment === LAST_SEGMENT ? ACTIVE_ROUTE_COLOR : TEXT_COLOR,
-              textDecoration: segment === LAST_SEGMENT ? 'underline' : '',
+              textTransform: 'capitalize',
             })}
           >
-            <Link href={`/${segments.slice(0, index + 1).join('/')}`}>{segment}</Link>
+            <Link href={`/${segments.slice(0, index + 1).join('/')}`}>
+              {segment.split('_').join(' ')}
+            </Link>
           </Button>
         </HStack>
       ))}

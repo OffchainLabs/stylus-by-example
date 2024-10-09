@@ -1,20 +1,19 @@
 import type { Metadata } from 'next';
 
 import { HStack, Stack } from '@/styled-system/jsx';
-import { css, cx } from '@/styled-system/css';
-import { container, flex, stack } from '@/styled-system/patterns';
+import { css } from '@/styled-system/css';
+import { container } from '@/styled-system/patterns';
 import Navigation from '@/components/app/navigation';
-import { font_mono, font_body, font_heading } from '@/styles/font';
 
-import "./globals.css";
-import { ThemeProvider } from "./theme_provider";
-import SideNav from "./side_nav";
-import { Breadcrumbs } from "@/components/app/breadcrumbs";
-import { PageScroll } from "@/components/app/page_scroll";
-import { PHProvider } from "./providers";
-import dynamic from "next/dynamic";
+import './globals.css';
+import { ThemeProvider } from './theme_provider';
+import SideNav from './side_nav';
+import { Breadcrumbs } from '@/components/app/breadcrumbs';
+import { PageScroll } from '@/components/app/page_scroll';
+import { PHProvider } from './providers';
+import dynamic from 'next/dynamic';
 
-const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
+const PostHogPageView = dynamic(() => import('./PostHogPageView'), {
   ssr: false,
 });
 
@@ -25,17 +24,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      suppressHydrationWarning
-      className={`${font_mono.variable} ${font_body.variable} ${font_heading.variable}`}
-    >
+    <html suppressHydrationWarning>
       <PHProvider>
         <body
           className={css({
-            overflow: "hidden",
-            h: "100dvh",
-            w: "100dvw",
-            fontFamily: "body",
+            overflow: 'hidden',
+            h: '100dvh',
+            w: '100dvw',
+            fontFamily: 'system-ui, Roboto, sans-serif',
           })}
         >
           <PostHogPageView />
@@ -46,22 +42,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               h="full"
               w="full"
               overflow="hidden"
-              bg="stone.50"
-              flexDir={{ base: "column-reverse", md: "column" }}
-              _dark={{ bg: "stone.800" }}
+              bg="#ffffff"
+              flexDir={{ base: 'column-reverse', md: 'column' }}
+              _dark={{ bg: '#1b1b1d' }}
             >
               <Navigation />
               <HStack
                 className={css({
-                  flexGrow: "1",
-                  overflow: "hidden",
+                  flexGrow: '1',
+                  overflow: 'hidden',
                 })}
               >
                 <SideNav />
                 <PageScroll>
                   <div
                     className={container({
-                      maxW: "5xl",
+                      maxW: '5xl',
                     })}
                   >
                     <Breadcrumbs />

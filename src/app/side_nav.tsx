@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/app/sidebar';
 import { Stack } from '@/styled-system/jsx';
 import { css } from '@/styled-system/css';
 
-const SIDEBAR_WIDTH = { 'base': '0', 'md': '256px', '2xl': '368px' };
+const SIDEBAR_WIDTH = { 'base': '0', 'md': '256px', '2xl': '300px' };
 
 export default function SideNav() {
   const { resolvedTheme } = useTheme();
@@ -20,11 +20,11 @@ export default function SideNav() {
           overflowY: 'auto',
           borderRightWidth: '1px',
           borderColor: 'stone.200',
-          background: 'stone.100',
+          background: '#ffffff',
           display: { base: 'none !important', md: 'flex !important' },
           _dark: {
-            borderColor: 'stone.950',
-            background: 'stone.900',
+            borderColor: '#444950',
+            background: '#1b1b1d',
           },
           scrollbarWidth: 'thin',
           scrollbarColor: 'stone.700 rgba(255,255,255,0)',
@@ -34,7 +34,7 @@ export default function SideNav() {
             },
           },
           _scrollbar: {
-            w: '10px',
+            w: '1px',
           },
           _scrollbarThumb: {
             background: 'stone.700',
@@ -42,7 +42,7 @@ export default function SideNav() {
             display: 'none',
           },
           _scrollbarTrack: {
-            background: 'stone.900',
+            background: '#1b1b1d',
             // display: "none",
           },
         })}
@@ -61,11 +61,11 @@ export default function SideNav() {
         overflowY: 'auto',
         borderRightWidth: '1px',
         borderColor: 'stone.200',
-        background: 'stone.100',
+        background: '#ffffff',
         display: { base: 'none !important', md: 'flex !important' },
         _dark: {
-          borderColor: 'stone.950',
-          background: 'stone.900',
+          borderColor: '#444950',
+          background: '#1b1b1d',
         },
         scrollbarWidth: 'thin',
         scrollbarColor: 'stone.400 rgba(255,255,255,0)',
@@ -75,7 +75,7 @@ export default function SideNav() {
           },
         },
         _scrollbar: {
-          w: '10px',
+          w: '1px',
         },
         _scrollbarThumb: {
           background: 'stone.400',

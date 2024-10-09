@@ -30,7 +30,7 @@ export function CodePanel({ children, language = 'rust' }: CodePanelProps) {
           style={dracula}
           customStyle={{ margin: 0 }}
           codeTagProps={{
-            style: { fontFamily: 'var(--font-mono)', fontSize: '16px' },
+            style: { fontFamily: 'var(--font-mono)', fontSize: '12px' },
           }}
           wrapLines={true}
           showLineNumbers={true}
@@ -54,7 +54,7 @@ export function CodePanel({ children, language = 'rust' }: CodePanelProps) {
           style={prism}
           customStyle={{ margin: 0 }}
           codeTagProps={{
-            style: { fontFamily: 'var(--font-mono)', fontSize: '16px' },
+            style: { fontFamily: 'var(--font-mono)', fontSize: '12px' },
           }}
           wrapLines={true}
           showLineNumbers={true}

@@ -65,7 +65,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           fontFamily: 'mono',
           mt: '5',
           mb: '2',
-          fontSize: '18px',
+          fontSize: '16px',
         })}
       >
         {children}
@@ -75,7 +75,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     p: ({ children }) => (
       <p
         className={css({
-          fontSize: '18px',
+          fontSize: '16px',
           mt: '3',
           mb: '3',
           lineHeight: '1.75',
@@ -89,7 +89,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <styled.ul
         listStyle="inside"
         fontFamily="body"
-        fontSize="18px"
+        fontSize="16px"
         ml="0"
         pl="1em"
         pr="-1em"
@@ -100,15 +100,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ),
     a: ({ children, href }) => {
       return (
-        <styled.a
-          textDecoration="underline"
-          target="_blank"
-          cursor="pointer"
-          href={href}
-          _hover={{
-            color: 'pink.400',
-          }}
-        >
+        <styled.a textDecoration="none" target="_blank" cursor="pointer" href={href}>
           {children}
         </styled.a>
       );

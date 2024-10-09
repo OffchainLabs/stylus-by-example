@@ -14,7 +14,7 @@ export function PageScroll({ children }: { children: React.ReactNode }) {
         scrollbarWidth: 'thin',
         scrollbarColor: 'stone.400 stone.200',
         _scrollbar: {
-          w: '10px',
+          w: '1px',
         },
         _scrollbarThumb: {
           background: 'stone.400',
