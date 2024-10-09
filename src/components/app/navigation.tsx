@@ -17,7 +17,7 @@ export default function Navigation() {
       className={hstack({
         borderBottomWidth: { base: '0', md: '0' },
         borderTopWidth: { base: '1px', md: '0' },
-        padding: '8px 16px',
+        padding: '12px 16px',
         zIndex: '10',
         bg: 'pink.100',
         borderColor: { _light: 'stone.200', _dark: 'stone.300' },
