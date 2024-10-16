@@ -9,10 +9,7 @@ interface SidebarLinksProps {
   routes: RouteInfo[];
 }
 
-const TEXT_COLOR = {
-  _hover: 'pink.400',
-};
-const ACTIVE_ROUTE_COLOR = { _dark: 'white', _light: 'black' };
+const ACTIVE_ROUTE_COLOR = { _dark: 'pink.400', _light: 'pink.400' };
 
 export function SidebarLinks({ routes }: SidebarLinksProps) {
   const segments = useSelectedLayoutSegments();
@@ -28,12 +25,14 @@ export function SidebarLinks({ routes }: SidebarLinksProps) {
           className={css({
             w: 'full',
             justifyContent: 'flex-start',
-            fontWeight: 'normal',
-            fontSize: { 'base': '16px', '2xl': '18px' },
+            fontWeight: route === ACTIVE_ROUTE ? '600' : '400',
+            fontSize: { 'base': '14px', '2xl': '14px' },
             paddingInline: '16px',
+            marginLeft: '20px',
             h: { 'base': '32px', '2xl': '36px' },
-            color: route === ACTIVE_ROUTE ? ACTIVE_ROUTE_COLOR : TEXT_COLOR,
-            textDecoration: route === ACTIVE_ROUTE ? 'underline' : '',
+            textDecoration: { _hover: 'none' },
+            backgroundColor: route === ACTIVE_ROUTE ? '#ffffff0d' : { _hover: '#ffffff0d' },
+            color: route === ACTIVE_ROUTE ? ACTIVE_ROUTE_COLOR : {},
           })}
         >
           <Link href={route}>{title}</Link>
