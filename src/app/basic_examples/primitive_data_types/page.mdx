@@ -15,16 +15,19 @@ In this section, we'll focus on the following types:
 - `U256`
 - `I256`
 - `Address`
-- `bool`
+- `Boolean`
+- `Bytes`
 
 More in-depth documentation about the available methods and types in the Alloy library can be found in their docs. It also helps to cross-reference with Solidity docs if you don't already have a solid understanding of those types.
 
 ## Learn More
 
-- [Alloy docs (v0.3.2)](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/index.html)
-  - [`Address`](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/struct.Address.html)
-  - [`Signed`](https://docs.rs/alloy-primitives/0.3.2/alloy_primitives/struct.Signed.html)
+- [Alloy docs (v0.7.6)](https://docs.rs/alloy-primitives/0.7.6/alloy_primitives/index.html)
+  - [`Address`](https://docs.rs/alloy-primitives/0.7.6/alloy_primitives/struct.Address.html)
+  - [`Signed`](https://docs.rs/alloy-primitives/0.7.6/alloy_primitives/struct.Signed.html)
   - [`Uint`](https://docs.rs/ruint/1.10.1/ruint/struct.Uint.html)
+- [Stylus Rust SDK](https://docs.rs/stylus-sdk/latest/stylus_sdk/index.html)
+  - [`Bytes`](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/struct.Bytes.html)
 - [Solidity docs (v0.8.19)](https://docs.soliditylang.org/en/v0.8.19/types.html)
 
 ## Integers
@@ -126,6 +129,23 @@ let response = match frightened {
 // Out: Stylus says: 'Yes!'
 console!("{response}");
 ```
+
+## Bytes
+
+The Stylus SDK provides this wrapper type around `Vec<u8>` to represent a `bytes` value in Solidity.
+
+```rust
+let vec = vec![108, 27, 56, 87];
+let b = Bytes::from(vec);
+// Out: Stylus says: '0x6c1b3857'
+console!(String::from_utf8_lossy(b.as_slice()));
+
+let b = Bytes::from(b"Hello!".to_vec());
+// Out: Stylus says: 'Hello!'
+console!(String::from_utf8_lossy(b.as_slice()));
+```
+
+Note: Return the `Bytes` type on your Rust function if you want to return the ABI `bytes memory` type.
 
 ## Boilerplate
 

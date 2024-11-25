@@ -4,6 +4,7 @@
 sdk_version=""
 sdk_repo=""
 sdk_branch=""
+rpc_url="https://sepolia-rollup.arbitrum.io/rpc"
 
 # Parse command-line arguments
 while getopts "v:r:" opt; do
@@ -90,7 +91,7 @@ process_directory() {
       fi
 
       # Run the cargo stylus check command
-      check_output=$(cargo stylus check 2>&1)
+      check_output=$(cargo stylus check -e $rpc_url 2>&1)
 
       if [ $? -eq 0 ]; then
         echo -e "Check passed in $folder_name"
