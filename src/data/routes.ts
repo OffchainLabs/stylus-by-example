@@ -46,6 +46,11 @@ export const basicExamples = [
     description: 'How to define constant values in your contract',
   },
   {
+    route: '/basic_examples/mapping',
+    title: 'Mapping',
+    description: 'Learn about the mapping data structure',
+  },
+  {
     route: '/basic_examples/events',
     title: 'Events',
     description: 'Log public events to the blockchain',
