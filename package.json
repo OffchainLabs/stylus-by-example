@@ -22,7 +22,7 @@
     "@shadow-panda/style-context": "0.7.1",
     "@types/mdx": "2.0.10",
     "lucide-react": "0.294.0",
-    "next": "14.0.3",
+    "next": "14.2.21",
     "next-themes": "0.2.1",
     "posthog-js": "^1.157.2",
     "react": "18.2.0",
