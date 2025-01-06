@@ -4,7 +4,7 @@ extern crate alloc;
 
 use stylus_sdk::alloy_primitives::{U16, U256};
 use stylus_sdk::prelude::*;
-use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256};
+use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256, StorageString};
 use stylus_sdk::{block, console, msg};
 
 #[storage]
@@ -13,6 +13,7 @@ pub struct Contract {
     initialized: StorageBool,
     owner: StorageAddress,
     max_supply: StorageU256,
+    base_uri: StorageString,
 }
 
 #[public]
@@ -32,6 +33,10 @@ impl Contract {
         self.owner.set(msg::sender());
         self.max_supply.set(U256::from(10_000));
 
+        // We set the base URI for the contract
+        // Unlike other variables, string needs to use .set_str() to set the value
+        self.base_uri.set_str("https://stylus-by-example.org/".to_string());
+
         Ok(())
     }
 
@@ -50,5 +55,10 @@ impl Contract {
         console!("Global variables: {_timestamp}, {_amount}");
 
         Ok(())
+    }
+
+    pub fn get_base_uri(&self) -> Result<String, Vec<u8>> {
+        // Unlike other variables, string needs to use .get_string() to get the value
+        Ok(self.base_uri.get_string())
     }
 }
