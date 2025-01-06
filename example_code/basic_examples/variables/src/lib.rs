@@ -40,7 +40,7 @@ impl Contract {
         Ok(())
     }
 
-    pub fn do_something() -> Result<(), Vec<u8>> {
+    pub fn do_something(&self) -> Result<(), Vec<u8>> {
         // Local variables are not saved to the blockchain
         // 16-bit Rust integer
         let _i = 456_u16;
@@ -50,15 +50,12 @@ impl Contract {
         // Here are some global variables
         let _timestamp = block::timestamp();
         let _amount = msg::value();
+        let _base_uri = self.base_uri.get_string();
 
         console!("Local variables: {_i}, {_j}");
         console!("Global variables: {_timestamp}, {_amount}");
+        console!("Base uri: {_base_uri}");
 
         Ok(())
-    }
-
-    pub fn get_base_uri(&self) -> Result<String, Vec<u8>> {
-        // Unlike other variables, string needs to use .get_string() to get the value
-        Ok(self.base_uri.get_string())
     }
 }
