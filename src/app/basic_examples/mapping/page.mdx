@@ -8,6 +8,10 @@ export const metadata = {
 
 # Mapping
 
+Mappings in Solidity are hash tables that store data as key-value pairs, where the key can be any of the built-in data types supported by Ethereum.
+
+Here we will give you the example of mapping in Stylus Rust SDK.
+
 Maps are created with the syntax `StorageMap<keyType, StorageType>` (rust syntax) or `mapping(keyType => valueType)` (solidity syntax).
 
 If you define with rust syntax, the keyType should be the type from [`alloy_primitives`](https://docs.rs/alloy-primitives/latest/alloy_primitives/), valueType can be be any type from [`StorageType`](https://docs.arbitrum.io/stylus/reference/rust-sdk-guide#storage-1).
@@ -91,19 +95,15 @@ impl Mapping {
 
 ```toml
 [package]
-name = "stylus-verify-signature"
+name = "stylus-mapping-example"
 version = "0.1.7"
 edition = "2021"
-license = "MIT OR Apache-2.0"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
 alloy-primitives = "=0.7.6"
 alloy-sol-types = "=0.7.6"
-mini-alloc = "0.4.2"
 stylus-sdk = "0.6.0"
 hex = "0.4.3"
-sha3 = "0.10.8"
 
 [dev-dependencies]
 tokio = { version = "1.12.0", features = ["full"] }
@@ -115,12 +115,6 @@ export-abi = ["stylus-sdk/export-abi"]
 
 [lib]
 crate-type = ["lib", "cdylib"]
-
-[profile.release]
-codegen-units = 1
-strip = true
-lto = true
-panic = "abort"
-opt-level = "s"
+ 
 
 ```
