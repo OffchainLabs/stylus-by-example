@@ -1,5 +1,15 @@
 import { defineConfig, defineGlobalStyles } from '@pandacss/dev';
 
+const globalStyles = defineGlobalStyles({
+  'a': {
+    color: 'rgb(56, 189, 248)', // Light blue color
+    textDecoration: 'none',
+    _hover: {
+      textDecoration: 'underline',
+    }
+  }
+});
+
 export default defineConfig({
   presets: ['@shadow-panda/preset'],
 
@@ -30,4 +40,7 @@ export default defineConfig({
 
   // The output directory for your css system
   outdir: './src/styled-system',
+
+  // Add global styles
+  globalCss: globalStyles,
 });
