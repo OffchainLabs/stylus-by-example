@@ -1,0 +1,120 @@
+export const metadata = {
+  title: "Mapping • Stylus by Example",
+  description:
+    "How to declare and use mapping using Arbitrum's Stylus SDK",
+};
+
+{/* Begin Content */}
+
+# Mapping
+
+Mappings in Solidity are hash tables that store data as key-value pairs, where the key can be any of the built-in data types supported by Ethereum.
+
+Here we will give you the example of mapping in Stylus Rust SDK.
+
+Maps are created with the syntax `StorageMap<keyType, StorageType>` (rust syntax) or `mapping(keyType => valueType)` (solidity syntax).
+
+If you define with rust syntax, the keyType should be the type from [`alloy_primitives`](https://docs.rs/alloy-primitives/latest/alloy_primitives/), valueType can be be any type from [`StorageType`](https://docs.arbitrum.io/stylus/reference/rust-sdk-guide#storage-1).
+
+If you define with solidity syntax, the keyType can be any built-in value type, bytes, string, or any contract, valueType can be any type including another mapping or an array.
+
+Mappings are not iterable.
+
+### `src/lib.rs`
+
+```rust
+// Allow `cargo stylus export-abi` to generate a main function.
+#![cfg_attr(not(feature = "export-abi"), no_main)]
+extern crate alloc;
+
+/// Import items from the SDK. The prelude contains common traits and macros.
+use stylus_sdk::{prelude::*, alloy_primitives::{Address, U256}};
+use stylus_sdk::storage::{*};
+
+#[storage]
+#[entrypoint]
+pub struct Mapping {
+    my_map: StorageMap<Address, StorageBool>,
+    my_nested_map: StorageMap<U256, StorageMap<Address, StorageBool>>,
+}
+
+// You can also define mapping storage using the Solidity syntax.
+// sol_storage! {
+//     #[entrypoint]
+//     pub struct Mapping {
+//         mapping(address => bool) my_map;
+//         mapping(uint256 => mapping(address => bool)) my_nested_map;
+//     }
+// }
+
+
+/// Declare that `Mapping` is a contract with the following external methods.
+#[public]
+impl Mapping {
+
+    // First is the simple map ========================================
+
+    pub fn get_my_map(&self, target: Address) -> bool {
+        // Mapping always returns a value.
+        // If the value was never set, it will return the default value.
+        self.my_map.get(target)
+    }
+
+    pub fn set_my_map(&mut self, target: Address, new_value: bool) {
+        // Update the value at this address
+        self.my_map.setter(target).set(new_value);
+    }
+
+    pub fn remove_my_map(&mut self, target: Address) {
+        // Reset the value to the default value.
+        self.my_map.delete(target);
+    }
+
+    // Next is the nested map ========================================
+
+    pub fn get_my_nested_map(&self, index: U256, target: Address) -> bool {
+        // Mapping always returns a value.
+        // If the value was never set, it will return the default value.
+        self.my_nested_map.get(index).get(target)
+    }
+
+    pub fn set_my_nested_map(&mut self, index: U256, target: Address, new_value: bool) {
+        // Update the value at this address
+        self.my_nested_map.setter(index).setter(target).set(new_value);
+    }
+
+    pub fn remove_my_nested_map(&mut self, index: U256, target: Address) {
+        // Reset the value to the default value.
+        self.my_nested_map.setter(index).delete(target);
+    }
+}
+
+```
+
+### `Cargo.toml`
+
+```toml
+[package]
+name = "stylus-mapping-example"
+version = "0.1.7"
+edition = "2021"
+
+[dependencies]
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+ 
+
+```

@@ -46,6 +46,16 @@ export const basicExamples = [
     description: 'How to define constant values in your contract',
   },
   {
+    route: '/basic_examples/mapping',
+    title: 'Mapping',
+    description: 'Learn about the mapping data structure',
+  },
+  {
+    route: '/basic_examples/arrays',
+    title: 'Arrays',
+    description: 'A simple arrays example in stylus',
+  },
+  {
     route: '/basic_examples/events',
     title: 'Events',
     description: 'Log public events to the blockchain',
@@ -118,11 +128,6 @@ export const basicExamples = [
     route: '/basic_examples/function',
     title: 'Functions',
     description: 'Learn about function parameters, return types, and visibility',
-  },
-  {
-    route: '/basic_examples/arrays',
-    title: 'Arrays',
-    description: 'A simple arrays example in stylus',
   },
 ];
 
