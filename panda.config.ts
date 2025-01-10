@@ -1,7 +1,7 @@
 import { defineConfig, defineGlobalStyles } from '@pandacss/dev';
 
 const globalStyles = defineGlobalStyles({
-  'a': {
+  'p a, li a, td a': {
     color: 'rgb(56, 189, 248)', // Light blue color
     textDecoration: 'none',
     _hover: {
