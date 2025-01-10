@@ -128,7 +128,7 @@ export const basicExamples = [
     route: '/basic_examples/function',
     title: 'Functions',
     description: 'Learn about function parameters, return types, and visibility',
-  }
+  },
 ];
 
 export const applications = [
