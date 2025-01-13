@@ -135,11 +135,6 @@ export const basicExamples = [
       "An explanation of how to verify a signature signed off chain.",
     
   },
-  {
-    route: '/basic_examples/function',
-    title: 'Functions',
-    description: 'Learn about function parameters, return types, and visibility',
-  },
 ];
 
 export const applications = [
