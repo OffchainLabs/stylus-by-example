@@ -94,19 +94,19 @@ export const basicExamples = [
     route: "/basic_examples/abi_encode",
     title: "ABI Encode",
     description:
-      "A simple solidity ABI encode and decode example",
+      "A simple solidity ABI encode example",
   },
   {
     route: "/basic_examples/abi_decode",
     title: "ABI Decode",
     description:
-      "A simple solidity ABI encode and decode example",
+      "A simple solidity ABI decode example",
   },
   {
     route: "/basic_examples/hashing",
     title: "Hashing with keccak256",
     description:
-      "A simple solidity ABI encode and decode example",
+      "A simple solidity keccak256 hashing example",
   },
   {
     route: "/basic_examples/inheritance",
