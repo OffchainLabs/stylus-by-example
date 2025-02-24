@@ -15,6 +15,7 @@ pub struct Data {
     my_uint: StorageU256,
     my_signed: StorageI256,
     my_fixed_bytes: StorageFixedBytes<4>,
+    my_bytes: StorageBytes,
     my_string: StorageString,
     my_vec: StorageVec<StorageU256>,
 }
@@ -40,6 +41,14 @@ impl Data {
 
     pub fn get_fixed_bytes(&self) -> FixedBytes<4> {
         self.my_fixed_bytes.get()
+    }
+
+    pub fn get_bytes(&self) -> Vec<u8> {
+        self.my_bytes.get_bytes()
+    }
+
+    pub fn get_byte_from_bytes(&self, index: U256) -> u8 {
+        self.my_bytes.get(index).unwrap()
     }
 
     pub fn get_string(&self) -> String {
@@ -69,6 +78,14 @@ impl Data {
 
     pub fn set_fixed_bytes(&mut self, value: FixedBytes<4>) {
         self.my_fixed_bytes.set(value);
+    }
+
+    pub fn set_bytes(&mut self, value: Vec<u8>) {
+        self.my_bytes.set_bytes(value);
+    }
+
+    pub fn push_byte_to_bytes(&mut self, value: u8) {
+        self.my_bytes.push(value);
     }
 
     pub fn set_string(&mut self, value: String) {

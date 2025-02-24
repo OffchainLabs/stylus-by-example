@@ -23,7 +23,9 @@ In summary, state variables in the Rust SDK have the following types:
 - `StorageMap`
 - `StorageArray`
 
-`StorageString` is essentially a wrapper around `StorageBytes`, providing convenient methods for working with UTF-8 encoded strings.  [`StorageMap`](https://stylus-by-example.org/basic_examples/mapping) and [`StorageArray`](https://stylus-by-example.org/basic_examples/arrays) will be discussed in separate sections due to their more complex nature.  This section focuses on the first seven types.
+`StorageString` is essentially a wrapper around `StorageBytes`, providing convenient methods for working with UTF-8 encoded strings.  
+
+[`StorageMap`](https://stylus-by-example.org/basic_examples/mapping) and [`StorageArray`](https://stylus-by-example.org/basic_examples/arrays) will be discussed in separate sections due to their more complex nature. So this section focuses on the first 8 types.
 
 
 ## Defining the Storage Struct
@@ -46,6 +48,7 @@ pub struct Data {
     my_uint: StorageU256,
     my_signed: StorageI256,
     my_fixed_bytes: StorageFixedBytes<4>,
+    my_bytes: StorageBytes,
     my_string: StorageString,
     my_vec: StorageVec<StorageU256>,
 }
@@ -56,19 +59,14 @@ impl Data {
 }
 ```
 
-The `#[storage]` attribute on the `Data` struct tells Stylus that the fields within this struct represent the contract's state storage. The `#[entrypoint]` attribute indicates the contract's entry point.
+The `#[storage]` attribute on the `Data` struct tells Stylus that the fields within this struct represent the contract's state storage.
 
-## Storage Types
-
-### StorageBool
+## StorageBool
 
 `StorageBool` stores a boolean value (`true` or `false`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_bool: StorageBool = StorageType::new(); // Example initialization if needed
 
     pub fn get_bool(&self) -> bool {
         self.my_bool.get()
@@ -79,15 +77,12 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
     }
 ```
 
-### StorageAddress
+## StorageAddress
 
 `StorageAddress` stores an Ethereum address (`alloy_primitives::Address`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_address: StorageAddress = StorageType::new();
 
     pub fn get_address(&self) -> Address {
         self.my_address.get()
@@ -98,15 +93,12 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
     }
 ```
 
-### StorageU256
+## StorageU256
 
 `StorageU256` stores an unsigned 256-bit integer (`alloy_primitives::U256`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_uint: StorageU256 = StorageType::new();
 
     pub fn get_uint(&self) -> U256 {
         self.my_uint.get()
@@ -119,15 +111,12 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
 
 `StorageU256` is an alias of `StorageUint`, you can also define `StorageU128` or other byte length uint.
 
-### StorageI256
+## StorageI256
 
 `StorageI256` stores a signed 256-bit integer (`alloy_primitives::I256`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_signed: StorageI256 = StorageType::new();
 
     pub fn get_signed(&self) -> I256 {
         self.my_signed.get()
@@ -140,15 +129,12 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
 
 `StorageI256` is an alias of `StorageSigned`, you can also define `StorageI128` or other byte length int.
 
-### StorageFixedBytes
+## StorageFixedBytes
 
 `StorageFixedBytes<N>` stores a fixed-size byte array of `N` bytes (`alloy_primitives::FixedBytes<N>`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_fixed_bytes: StorageFixedBytes<4> = StorageType::new();
 
     pub fn get_fixed_bytes(&self) -> FixedBytes<4> {
         self.my_fixed_bytes.get()
@@ -159,34 +145,36 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
     }
 ```
 
-### StorageBytes
+## StorageBytes
 
 `StorageBytes` stores a dynamic byte array (`Vec<u8>`).
 
 ```rust
 //... inside the #[public] impl Data block
 
-    #[storage]
-    static mut my_bytes: StorageBytes = StorageType::new();
-
     pub fn get_bytes(&self) -> Vec<u8> {
-        self.my_bytes.get()
+        self.my_bytes.get_bytes()
+    }
+
+    pub fn get_byte_from_bytes(&self, index: U256) -> u8 {
+        self.my_bytes.get(index).unwrap()
     }
 
     pub fn set_bytes(&mut self, value: Vec<u8>) {
-        self.my_bytes.set(value);
+        self.my_bytes.set_bytes(value);
+    }
+
+    pub fn push_byte_to_bytes(&mut self, value: u8) {
+        self.my_bytes.push(value);
     }
 ```
 
-### StorageString
+## StorageString
 
 `StorageString` stores a UTF-8 encoded string (`String`).
 
 ```rust
 //... inside the #[public] impl Data block
-
-    #[storage]
-    static mut my_string: StorageString = StorageType::new();
 
     pub fn get_string(&self) -> String {
         self.my_string.get_string()
@@ -197,18 +185,15 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
     }
 ```
 
-### StorageVec
+## StorageVec
 
-`StorageVec<T>` stores a dynamically sized vector (array) of type `T` (`stylus_sdk::storage::StorageVec<T>`).
+`StorageVec<T>` stores a dynamically sized vector (array) of primitive data type `T` (For example, `T` can be `alloy_primitives::U256`).
 
 ```rust
 //... inside the #[public] impl Data block
 
-    #[storage]
-    static mut my_vec: StorageVec<StorageU256> = StorageType::new();
-
     pub fn get_vec(&self, index: U256) -> U256 {
-        self.my_vec.get(index).unwrap() // Handle potential out-of-bounds access properly
+        self.my_vec.get(index).unwrap()
     }
 
     pub fn push_vec(&mut self, value: U256) {
@@ -216,5 +201,139 @@ The `#[storage]` attribute on the `Data` struct tells Stylus that the fields wit
     }
 ```
 
-This structured format makes it easier to navigate and understand the different storage types available in Stylus.  
-Each type has its own section with the relevant code snippets for getters and setters.  This organization is much clearer than grouping all the getters and setters together.  Remember to handle potential panics from `unwrap()` appropriately in your actual contract code.
+## Boilerplate
+
+### src/lib.rs
+
+```rust
+#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
+extern crate alloc;
+
+use stylus_sdk::{
+    prelude::*,
+    alloy_primitives::{I256, U256, Address, FixedBytes},
+    storage::*,
+};
+
+#[storage]
+#[entrypoint]
+pub struct Data {
+    my_bool: StorageBool,
+    my_address: StorageAddress,
+    my_uint: StorageU256,
+    my_signed: StorageI256,
+    my_fixed_bytes: StorageFixedBytes<4>,
+    my_bytes: StorageBytes,
+    my_string: StorageString,
+    my_vec: StorageVec<StorageU256>,
+}
+
+#[public]
+impl Data {
+    // Getters
+    pub fn get_bool(&self) -> bool {
+        self.my_bool.get()
+    }
+
+    pub fn get_address(&self) -> Address {
+        self.my_address.get()
+    }
+
+    pub fn get_uint(&self) -> U256 {
+        self.my_uint.get()
+    }
+
+    pub fn get_signed(&self) -> I256 {
+        self.my_signed.get()
+    }
+
+    pub fn get_fixed_bytes(&self) -> FixedBytes<4> {
+        self.my_fixed_bytes.get()
+    }
+
+    pub fn get_bytes(&self) -> Vec<u8> {
+        self.my_bytes.get_bytes()
+    }
+
+    pub fn get_byte_from_bytes(&self, index: U256) -> u8 {
+        self.my_bytes.get(index).unwrap()
+    }
+
+    pub fn get_string(&self) -> String {
+        self.my_string.get_string()
+    }
+
+    pub fn get_vec(&self, index: U256) -> U256 {
+        self.my_vec.get(index).unwrap()
+    }
+
+    // Setters 
+    pub fn set_bool(&mut self, value: bool) {
+        self.my_bool.set(value);
+    }
+
+    pub fn set_address(&mut self, value: Address) {
+        self.my_address.set(value);
+    }
+
+    pub fn set_uint(&mut self, value: U256) {
+        self.my_uint.set(value);
+    }
+
+    pub fn set_signed(&mut self, value: I256) {
+        self.my_signed.set(value);
+    }
+
+    pub fn set_fixed_bytes(&mut self, value: FixedBytes<4>) {
+        self.my_fixed_bytes.set(value);
+    }
+
+    pub fn set_bytes(&mut self, value: Vec<u8>) {
+        self.my_bytes.set_bytes(value);
+    }
+
+    pub fn push_byte_to_bytes(&mut self, value: u8) {
+        self.my_bytes.push(value);
+    }
+
+    pub fn set_string(&mut self, value: String) {
+        self.my_string.set_str(value);
+    }
+
+    pub fn push_vec(&mut self, value: U256) {
+        self.my_vec.push(value);
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus_storage_example"
+version = "0.1.7"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+
+[dependencies]
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
+
+```
