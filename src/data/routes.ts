@@ -36,7 +36,7 @@ export const basicExamples = [
     description: 'Learn about booleans, integers, and addresses',
   },
   {
-    route: '/basic_examples/primitive_data_types',
+    route: '/basic_examples/storage_data_types',
     title: 'Storage Data Types',
     description: 'Defines the basic state variables used in Arbitrum Stylus Rust smart contracts and how they can be used to store and retrieve state from the VM.',
   },
