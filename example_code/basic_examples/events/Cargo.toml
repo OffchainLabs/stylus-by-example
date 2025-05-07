@@ -6,10 +6,10 @@ license = "MIT OR Apache-2.0"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-alloy-primitives = "=0.8.14"
-alloy-sol-types = "=0.8.14"
-mini-alloc = "0.7.0"
-stylus-sdk = "0.7.0"
+alloy-primitives = "=0.8.20"
+alloy-sol-types = "=0.8.20"
+mini-alloc = "0.8.4"
+stylus-sdk = "0.8.4"
 hex = "0.4.3"
 
 [dev-dependencies]
