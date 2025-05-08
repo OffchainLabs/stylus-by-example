@@ -20,11 +20,6 @@ export const basicExamples = [
     description: 'Learn how to use the console output',
   },
   {
-    route: '/basic_examples/bytes_in_bytes_out',
-    title: 'Bytes In, Bytes Out',
-    description: 'Learn about the basic entrypoint model',
-  },
-  {
     route: '/basic_examples/first_app',
     title: 'First App',
     description:
@@ -50,6 +45,21 @@ export const basicExamples = [
     title: 'Constants',
     description: 'How to define constant values in your contract',
   },
+ {
+    route: '/basic_examples/arrays',
+    title: 'Arrays',
+    description: 'A simple arrays example in stylus',
+  },
+  {
+    route: '/basic_examples/function',
+    title: 'Functions',
+    description: 'Learn about function parameters, return types, and visibility',
+  },
+ {
+    route: '/basic_examples/bytes_in_bytes_out',
+    title: 'Bytes In, Bytes Out',
+    description: 'Learn about the basic entrypoint model',
+  },
   {
     route: '/basic_examples/mapping',
     title: 'Mapping',
@@ -66,14 +76,14 @@ export const basicExamples = [
     description: 'Log public events to the blockchain',
   },
   {
-    route: '/basic_examples/call',
-    title: 'Call',
-    description: 'Call other contracts on Rust Stylus smart contracts',
-  },
-  {
     route: '/basic_examples/errors',
     title: 'Errors',
     description: 'Errors on Stylus Rust smart contracts',
+  },
+  {
+    route: '/basic_examples/call',
+    title: 'Call',
+    description: 'Call other contracts on Rust Stylus smart contracts',
   },
   {
     route: "/basic_examples/sending_ether",
@@ -86,10 +96,22 @@ export const basicExamples = [
     description: "Compute the encoded function selector of a contract's function",
   },
   {
-    route: "/basic_examples/verify_signature",
-    title: "Verifying Signature",
+    route: "/basic_examples/abi_encode",
+    title: "ABI Encode",
     description:
-      "An explanation of how to verify a signature signed off chain.",
+      "A simple solidity ABI encode example",
+  },
+  {
+    route: "/basic_examples/abi_decode",
+    title: "ABI Decode",
+    description:
+      "A simple solidity ABI decode example",
+  },
+  {
+    route: "/basic_examples/hashing",
+    title: "Hashing with keccak256",
+    description:
+      "A simple solidity keccak256 hashing example",
   },
   {
     route: "/basic_examples/inheritance",
@@ -112,27 +134,11 @@ export const basicExamples = [
     description: "Accesing VM affordances in the Stylus Rust SDK",
   },
   {
-    route: "/basic_examples/abi_encode",
-    title: "ABI Encode",
+    route: "/basic_examples/verify_signature",
+    title: "Verifying Signature",
     description:
-      "A simple solidity ABI encode and decode example",
-  },
-  {
-    route: "/basic_examples/abi_decode",
-    title: "ABI Decode",
-    description:
-      "A simple solidity ABI encode and decode example",
-  },
-  {
-    route: "/basic_examples/hashing",
-    title: "Hashing with keccak256",
-    description:
-      "A simple solidity ABI encode and decode example",
-  },
-  {
-    route: '/basic_examples/function',
-    title: 'Functions',
-    description: 'Learn about function parameters, return types, and visibility',
+      "An explanation of how to verify a signature signed off chain.",
+    
   },
 ];
 
