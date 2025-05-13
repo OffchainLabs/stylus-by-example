@@ -130,15 +130,85 @@ mod test {
 
 Stylus’s `TestVM` provides methods to override and inspect every host function. Use the table below as a quick reference:
 
-| ***Scenario***                    | ***TestVM API***                                                         |
-| ------------------------------- | ---------------------------------------------------------------------- |
-| Override Ether attached         | `vm.set_value(U256)`                                                   |
-| Override Caller address         | `vm.set_sender(Address)`                                               |
-| Read raw storage slot           | `vm.storage_load_bytes32(slot)`                                        |
-| Write raw storage slot & commit | `unsafe { vm.storage_cache_bytes32(slot,val) }; vm.flush_cache(false)` |
-| Override block parameters       | `vm.set_block_number(n)`<br />`vm.set_block_timestamp(ts)`               |
-| Inspect emitted logs & events   | `vm.get_emitted_logs()`                                                |
-| Mock external call response     | `vm.mock_call(addr, data, Ok(res)/Err(revert))`                        |
+<table
+  style={{
+    width: "100%",
+    borderCollapse: "collapse",
+    margin: "1em 0",
+  }}
+>
+  <thead>
+    <tr style={{ backgroundColor: "#000" }}>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        Scenario
+      </th>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        TestVM API
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {[
+      ["Override Ether attached", "TestVM.set_value(U256)"],
+      ["Override Caller address", "TestVM.set_sender(Address)"],
+      ["Read raw storage slot", "TestVM.storage_load_bytes32(slot)"],
+      [
+        "Write raw storage slot & commit",
+        "unsafe { TestVM.storage_cache_bytes32(slot, val) }; TestVM.flush_cache(false)"
+      ],
+      [
+        "Override block parameters",
+        <>
+          <code>TestVM.set_block_number(n)</code><br />
+          <code>TestVM.set_block_timestamp(ts)</code>
+        </>
+      ],
+      ["Inspect emitted logs & events", "TestVM.get_emitted_logs()"],
+      [
+        "Mock external call response",
+        "TestVM.mock_call(addr, data, Ok(res)/Err(revert))"
+      ],
+    ].map(([scenario, api], i) => (
+      <tr key={i} style={{ backgroundColor: "#000" }}>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {scenario}
+        </td>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {typeof api === "string" ? <code>{api}</code> : api}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+
+
 
 **Explanation**
 These methods let you simulate any on-chain context or inspect every side-effect your contract produces.
@@ -351,15 +421,89 @@ mod custom_vm {
 
 ## 10. Cheat-Sheet & Best Practices
 
-| **What to test…**      | **TestVM API**                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `msg.value()`          | `vm.set_value(U256)`                                                                              |
-| `msg.sender()`         | `vm.set_sender(Address)`                                                                          |
-| Raw storage            | `vm.storage_load_bytes32(k)`<br />`unsafe { vm.storage_cache_bytes32(k,v) }; vm.flush_cache(false)` |
-| Block params           | `vm.set_block_number(n)`<br />`vm.set_block_timestamp(ts)`                                          |
-| Events & logs          | `vm.get_emitted_logs()`                                                                           |
-| External calls         | `vm.mock_call(addr, data, Ok/Err)`                                                                |
-| Custom instrumentation | Wrap `TestVM` in your own struct and expose helpers                                               |
+<table
+  style={{
+    width: "100%",
+    borderCollapse: "collapse",
+    margin: "1em 0",
+  }}
+>
+  <thead>
+    <tr style={{ backgroundColor: "#000" }}>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        What to test…
+      </th>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        TestVM API
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {[
+      ["msg.value()", <code>vm.set_value(U256)</code>],
+      ["msg.sender()", <code>vm.set_sender(Address)</code>],
+      [
+        "Raw storage",
+        <>
+          <code>vm.storage_load_bytes32(k)</code>
+          <br />
+          <code>
+            unsafe {'{'} vm.storage_cache_bytes32(k, v) {'}'}; vm.flush_cache(false)
+          </code>
+        </>,
+      ],
+      [
+        "Block params",
+        <>
+          <code>vm.set_block_number(n)</code>
+          <br />
+          <code>vm.set_block_timestamp(ts)</code>
+        </>,
+      ],
+      ["Events & logs", <code>vm.get_emitted_logs()</code>],
+      ["External calls", <code>vm.mock_call(addr, data, Ok/Err)</code>],
+      [
+        "Custom instrumentation",
+        <>Wrap <code>TestVM</code> in your own struct and expose helpers</>,
+      ],
+    ].map(([label, api], idx) => (
+      <tr key={idx} style={{ backgroundColor: "#000" }}>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {label}
+        </td>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {api}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
 
 * Group tests by **feature** or **behavior**
 * Keep contract logic pure; tests mock all side-effects
@@ -368,8 +512,11 @@ mod custom_vm {
 
 With these patterns, your Stylus unit suite will be **fast**, **deterministic**, and **comprehensive**—covering logic, host I/O, events, storage, and more.
 
+----
+## 11. Full Example
+This example is a simple counter contract that allows you to increment, decrement, and set a number. It also includes unit tests for the contract's functionality.
 
-### src/lib.rs
+## src/lib.rs
 
 ```rust
 #![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
@@ -816,7 +963,7 @@ mod custom_vm_tests {
     }
 }
 ```
-### Cargo.toml
+## Cargo.toml
 
 ```toml
 [package]
