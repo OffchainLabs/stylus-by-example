@@ -4268,21 +4268,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "stylus-hello-world"
-version = "0.1.11"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "mini-alloc",
- "stylus-sdk",
- "tokio",
-]
-
-[[package]]
 name = "stylus-proc"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4321,7 +4306,22 @@ dependencies = [
  "regex",
  "stylus-core",
  "stylus-proc",
- "stylus-test",
+ "stylus-test 0.8.4",
+]
+
+[[package]]
+name = "stylus-test"
+version = "0.1.11"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "dotenv",
+ "ethers",
+ "eyre",
+ "hex",
+ "mini-alloc",
+ "stylus-sdk",
+ "tokio",
 ]
 
 [[package]]

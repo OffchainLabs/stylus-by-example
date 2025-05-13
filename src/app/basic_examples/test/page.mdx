@@ -10,7 +10,6 @@ export const metadata = {
 Stylus unit tests run **entirely in Rust**, with a fully-mocked host—no EVM, no RPC, no gas.
 You can exercise pure logic, mock all host contexts, inspect side-effects, and even extend the VM to suit your needs.
 
----
 
 ## 1. HostAccess and `vm()`
 
@@ -26,70 +25,9 @@ self.vm().call(&ctx, addr, &data) // invokes a mocked external call
 
 In **production WASM** this maps to real host syscalls; in **native tests** it routes to `TestVM` or your custom host.
 
----
+## 2. Basic Unit Test
 
-## 2. Quick-Start Example
-
-Start by defining a simple counter contract with storage, timestamping, and an event:
-
-```rust
-sol_storage! {
-  #[entrypoint]
-  pub struct Counter {
-    uint256 number;
-    address owner;
-    uint256 last_updated;
-  }
-}
-sol! {
-  event CounterUpdated(address indexed user, uint256 prev_value, uint256 new_value);
-}
-```
-
-Implement basic methods that call `vm()` under the hood:
-
-```rust
-#[public]
-impl Counter {
-  pub fn number(&self) -> U256 { self.number.get() }
-
-  pub fn increment(&mut self) {
-    let prev = self.number.get();
-    self.set_number(prev + U256::ONE);
-  }
-
-  pub fn set_number(&mut self, n: U256) {
-    let prev = self.number.get();
-    self.number.set(n);
-    // record block timestamp
-    self.last_updated.set(U256::from(self.vm().block_timestamp()));
-    // emit event
-    stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
-      user: self.vm().msg_sender(),
-      prev_value: prev, new_value: n,
-    });
-  }
-
-  #[payable]
-  pub fn add_from_msg_value(&mut self) {
-    let prev = self.number.get();
-    self.set_number(prev + self.vm().msg_value());
-  }
-}
-```
-
-This gives you a contract that:
-
-* Increments / sets a number
-* Updates a timestamp
-* Emits an event with indexed parameters
-* Accepts `msg.value()` in a payable path
-
----
-
-## 3. Basic Unit Test
-
-With `stylus_sdk::testing::*` imported, write tests just like any Rust project:
+With `stylus_sdk::testing::*` imported, write tests just like any Rust project. Below is a simple test suite for a counter contract that can be found at the bottom of the page.
 
 ```rust
 #[cfg(test)]
@@ -120,13 +58,14 @@ mod test {
 
 **Explanation**
 
-* `TestVM::default()` seeds a clean in-memory VM
+* `TestVM::default()` seeds a clean in-memory VM. Use `TestVM::new()` to create a new VM instance for each test, ensuring isolation
 * `Counter::from(&vm)` wires up storage against that VM
 * Calls like `increment()` and `add_from_msg_value()` run instantly—no blockchain needed
+* `vm.set_value(...)` overrides the `msg.value()` for that test
+* `assert_eq!(...)` checks the contract state after each call to verify logic
 
----
 
-## 4. Inspecting & Mocking Host I/O
+## 3. Inspecting & Mocking Host I/O
 
 Stylus’s `TestVM` provides methods to override and inspect every host function. Use the table below as a quick reference:
 
@@ -208,16 +147,12 @@ Stylus’s `TestVM` provides methods to override and inspect every host function
 </table>
 
 
-
-
 **Explanation**
 These methods let you simulate any on-chain context or inspect every side-effect your contract produces.
 
----
+## 4. Event & Log Testing
 
-## 5. Event & Log Testing
-
-To verify events and their indexed parameters:
+To verify events and their indexed parameters you can use `get_emitted_logs()` to inspect the logs emitted by your contract. This method returns a list of `(topics, data)` pairs, where `topics` is a list of indexed parameters and `data` is the non-indexed data.
 
 ```rust
 #[test]
@@ -250,11 +185,10 @@ fn test_event_emission() {
 * Topics\[0] is always the keccak-256 of the event signature
 * Subsequent topics hold indexed parameters, ABI-encoded
 
----
 
-## 6. Mocking External Calls
+## 5. Mocking External Calls
 
-Stub out `vm().call(...)` to test cross-contract interactions:
+Use `mock_call` to test cross-contract interactions without deploying dependencies. This powerful feature lets you simulate both successful responses and reverts from external contracts, allowing you to test your integration logic in complete isolation:
 
 ```rust
 #[test]
@@ -288,11 +222,10 @@ fn test_external_call_behavior() {
 * `mock_call(...)` primes the VM to return `Ok` or `Err` for that address+input
 * Subsequent `.call(&self, target, &data)` picks up the mock
 
----
 
-## 7. Raw Storage Testing
+## 6. Raw Storage Testing
 
-Directly inspect or override any storage slot:
+Directly inspect or override any storage slot. This is useful for testing storage layout, mappings, or verifying internal state after corner-case paths:
 
 ```rust
 #[test]
@@ -321,13 +254,15 @@ fn test_storage_direct() {
 
 **Explanation**
 
-* Ideal for testing storage layout, mappings, or verifying internal state after corner-case paths.
+* `vm.storage_load_bytes32(slot)` reads the raw bytes from the VM
+* `vm.storage_cache_bytes32(slot, value)` writes to the VM cache
+* `vm.flush_cache(false)` commits the cache to the VM
 
----
 
-## 8. Block-Context Testing
 
-Simulate block-dependent logic by overriding block number/timestamp:
+## 7. Block-Context Testing
+
+Simulate block-dependent logic by overriding block number/timestamp. This is useful for testing timelocks, expiry logic, or height-based gating.
 
 ```rust
 #[test]
@@ -351,16 +286,16 @@ fn test_block_dependent_logic() {
 
 **Explanation**
 
-* Good for timelocks, expiry logic, or height-based gating.
 * `TestVMBuilder` seeds initial values; `vm.set_*` mutates them mid-test.
+* `vm.set_block_timestamp(...)` overrides the block timestamp
+* `vm.set_block_number(...)` overrides the block number
 
----
 
-## 9. Customizing the VM
+## 8. Customizing the VM
+You can extend `TestVM` to add custom instrumentation or helpers without re-implementing the entire `Host` trait. This is useful for test-specific behaviors.
 
-### 9-a. `TestVMBuilder`
-
-Pre-seed context before deploying:
+### ***8-a. `TestVMBuilder`***
+Pre-seed context before deploying. This is useful for testing against a forked chain or pre-configured state:
 
 ```rust
 let vm: TestVM = TestVMBuilder::new()
@@ -374,9 +309,9 @@ vm.set_balance(my_addr, U256::from(1_000));
 vm.set_block_number(123);
 ```
 
-### 9-b. Wrapping `TestVM`
+### ***8-b. Wrapping `TestVM`***
 
-Add new instrumentation without re-implementing `Host`:
+Add new instrumentation without re-implementing `Host`. For example, you can track how many times `mock_call` was invoked. In this example, we create a `CustomVM` struct that wraps `TestVM` and adds a counter for the number of times `mock_call` is invoked.
 
 ```rust
 #[cfg(test)]
@@ -417,9 +352,12 @@ mod custom_vm {
 * You never touch the sealed `Host` trait—simply delegate to `TestVM`.
 * Add any helper you like: call counters, argument recorders, custom fail patterns, etc.
 
----
+### ***8-c. Implementing Your Own TestVM***
 
-## 10. Cheat-Sheet & Best Practices
+You can implement your own TestVM from scratch by implementing the `Host` trait from `stylus_core::host::Host`. This approach is useful for specialized testing scenarios or if you need complete control over the test environment.
+
+
+## 9. Cheat-Sheet & Best Practices
 
 <table
   style={{
@@ -512,9 +450,22 @@ mod custom_vm {
 
 With these patterns, your Stylus unit suite will be **fast**, **deterministic**, and **comprehensive**—covering logic, host I/O, events, storage, and more.
 
-----
-## 11. Full Example
-This example is a simple counter contract that allows you to increment, decrement, and set a number. It also includes unit tests for the contract's functionality.
+## 10. Complete Test Coverage Example
+
+The contract below demonstrates a comprehensive test suite that covers all aspects of Stylus contract testing:
+
+- Basic state manipulation tests
+- Event emission verification
+- External call mocking (both success and failure cases)
+- Direct storage slot access
+- Time-dependent logic with block context manipulation
+- Access control and ownership tests
+- Edge case handling and error conditions
+- Custom test VM extensions for advanced instrumentation
+
+Each test demonstrates a different aspect of the testing framework, from simple value assertions to complex mock interactions. The example counter contract is intentionally designed with features that exercise all major testing capabilities.
+
+You can use this pattern as a template for your own comprehensive test suites, ensuring your Stylus contracts are thoroughly verified before deployment.
 
 ## src/lib.rs
 
@@ -963,11 +914,27 @@ mod custom_vm_tests {
     }
 }
 ```
+## main.rs
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
+#[cfg(not(any(test, feature = "export-abi")))]
+#[no_mangle]
+pub extern "C" fn main() {}
+
+#[cfg(feature = "export-abi")]
+fn main() {
+    stylus_test::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
+}
+```
+
+
 ## Cargo.toml
 
 ```toml
 [package]
-name = "stylus-hello-world"
+name = name = "stylus-test"
 version = "0.1.11"
 edition = "2021"
 license = "MIT OR Apache-2.0"
