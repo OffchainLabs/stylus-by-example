@@ -1,11 +1,10 @@
-```javascript
 export const metadata = {
   title: "Unit Testing • Stylus by Example",
   description:
     "How to write fast, deterministic unit tests for Stylus contracts with `stylus_sdk::testing::TestVM` and custom wrappers.",
 };
-```
 
+{/* Begin Content */}
 # Unit Testing
 
 Stylus unit tests run **entirely in Rust**, with a fully-mocked host—no EVM, no RPC, no gas.
@@ -131,13 +130,13 @@ mod test {
 
 Stylus’s `TestVM` provides methods to override and inspect every host function. Use the table below as a quick reference:
 
-| **Scenario**                    | **TestVM API**                                                         |
+| ***Scenario***                    | ***TestVM API***                                                         |
 | ------------------------------- | ---------------------------------------------------------------------- |
 | Override Ether attached         | `vm.set_value(U256)`                                                   |
 | Override Caller address         | `vm.set_sender(Address)`                                               |
 | Read raw storage slot           | `vm.storage_load_bytes32(slot)`                                        |
 | Write raw storage slot & commit | `unsafe { vm.storage_cache_bytes32(slot,val) }; vm.flush_cache(false)` |
-| Override block parameters       | `vm.set_block_number(n)`<br>`vm.set_block_timestamp(ts)`               |
+| Override block parameters       | `vm.set_block_number(n)`<br />`vm.set_block_timestamp(ts)`               |
 | Inspect emitted logs & events   | `vm.get_emitted_logs()`                                                |
 | Mock external call response     | `vm.mock_call(addr, data, Ok(res)/Err(revert))`                        |
 
@@ -356,8 +355,8 @@ mod custom_vm {
 | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | `msg.value()`          | `vm.set_value(U256)`                                                                              |
 | `msg.sender()`         | `vm.set_sender(Address)`                                                                          |
-| Raw storage            | `vm.storage_load_bytes32(k)`<br>`unsafe { vm.storage_cache_bytes32(k,v) }; vm.flush_cache(false)` |
-| Block params           | `vm.set_block_number(n)`<br>`vm.set_block_timestamp(ts)`                                          |
+| Raw storage            | `vm.storage_load_bytes32(k)`<br />`unsafe { vm.storage_cache_bytes32(k,v) }; vm.flush_cache(false)` |
+| Block params           | `vm.set_block_number(n)`<br />`vm.set_block_timestamp(ts)`                                          |
 | Events & logs          | `vm.get_emitted_logs()`                                                                           |
 | External calls         | `vm.mock_call(addr, data, Ok/Err)`                                                                |
 | Custom instrumentation | Wrap `TestVM` in your own struct and expose helpers                                               |
