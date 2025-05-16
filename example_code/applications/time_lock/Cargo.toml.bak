@@ -1,0 +1,26 @@
+[package]
+name = "stylus-timelock-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy-primitives = "0.7.5"
+alloy-sol-types = "0.7.5"
+mini-alloc = "0.4.2"
+stylus-sdk = "0.6.0"
+hex = "0.4.3"
+sha3 = "0.10.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "s"
