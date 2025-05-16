@@ -76,6 +76,11 @@ export const basicExamples = [
     description: 'Errors on Stylus Rust smart contracts',
   },
   {
+    route: '/basic_examples/test',
+    title: 'Test',
+    description: 'Test on Stylus Rust smart contracts',
+  },
+  {
     route: "/basic_examples/sending_ether",
     title: "Sending Ether",
     description: "Sending Ethers on Stylus Rust smart contracts",
