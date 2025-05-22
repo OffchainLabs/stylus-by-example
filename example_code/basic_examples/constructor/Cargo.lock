@@ -2831,17 +2831,9 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "mini-alloc"
-version = "0.8.3"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs.git?branch=main#756a30d14cb3bbf1b5e24d01377b346f21041367"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
-name = "mini-alloc"
-version = "0.8.4"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bb2aa3693a765fb59300b47151b0587b4058a73dec61f7fda974e160856e4d0"
+checksum = "1b56630dba7f5c3ac7e37caa66d2388197fc2d4742b216104cba14c16dce55bf"
 dependencies = [
  "cfg-if",
 ]
@@ -4330,8 +4322,9 @@ dependencies = [
 
 [[package]]
 name = "stylus-core"
-version = "0.8.3"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs.git?branch=main#756a30d14cb3bbf1b5e24d01377b346f21041367"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b96d0a4daa641fb5904cc3302c90b2d160f59c62aae7a19c2c6b94e28e3ab93e"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -4349,15 +4342,16 @@ dependencies = [
  "ethers",
  "eyre",
  "hex",
- "mini-alloc 0.8.4",
+ "mini-alloc",
  "stylus-sdk",
  "tokio",
 ]
 
 [[package]]
 name = "stylus-proc"
-version = "0.8.3"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs.git?branch=main#756a30d14cb3bbf1b5e24d01377b346f21041367"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c87cad1205aac3d46a3bb303ebe24976de3e88652d001a2e0e489b1e2bd6d0b9"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -4376,8 +4370,9 @@ dependencies = [
 
 [[package]]
 name = "stylus-sdk"
-version = "0.8.3"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs.git?branch=main#756a30d14cb3bbf1b5e24d01377b346f21041367"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38519923dae967837b90f00cd669b9d6df778ec1f0df849089f4dd456be96bf8"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -4387,7 +4382,7 @@ dependencies = [
  "hex",
  "keccak-const",
  "lazy_static",
- "mini-alloc 0.8.3",
+ "mini-alloc",
  "rclite",
  "regex",
  "stylus-core",
@@ -4397,8 +4392,9 @@ dependencies = [
 
 [[package]]
 name = "stylus-test"
-version = "0.8.3"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs.git?branch=main#756a30d14cb3bbf1b5e24d01377b346f21041367"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abef8a75532dab6480d83577e47f4db429e7f0330825b3e167a3c9ddb363fd1f"
 dependencies = [
  "alloy-primitives",
  "alloy-provider",
