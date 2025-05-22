@@ -1,0 +1,980 @@
+export const metadata = {
+  title: "Unit Testing • Stylus by Example",
+  description:
+    "How to write fast, deterministic unit tests for Stylus contracts with `stylus_sdk::testing::TestVM` and custom wrappers.",
+};
+
+{/* Begin Content */}
+# Unit Testing
+
+Stylus unit tests run **entirely in Rust**, with a fully-mocked host—no EVM, no RPC, no gas.
+You can exercise pure logic, mock all host contexts, inspect side-effects, and even extend the VM to suit your needs.
+
+
+## 1. HostAccess and `vm()`
+
+Every Stylus contract automatically implements the `HostAccess` trait, giving you a `.vm()` handle inside your methods.
+Use `self.vm()` instead of global helpers so your code works both in WASM and in native unit tests:
+
+```rust
+self.vm().msg_value()        // returns the mocked msg.value() in tests
+self.vm().msg_sender()       // returns the mocked msg.sender()
+self.vm().block_timestamp()  // returns the mocked block timestamp
+self.vm().call(&ctx, addr, &data) // invokes a mocked external call
+```
+
+In **production WASM** this maps to real host syscalls; in **native tests** it routes to `TestVM` or your custom host.
+
+## 2. Basic Unit Test
+
+With `stylus_sdk::testing::*` imported, write tests just like any Rust project. Below is a simple test suite for a counter contract that can be found at the bottom of the page.
+
+```rust
+#[cfg(test)]
+mod test {
+  use super::*;
+  use stylus_sdk::testing::*;
+
+  #[test]
+  fn test_counter_basic() {
+    // 1) Create a TestVM and contract
+    let vm = TestVM::default();
+    let mut c = Counter::from(&vm);
+
+    // 2) Assert initial state
+    assert_eq!(c.number(), U256::ZERO);
+
+    // 3) Call methods and assert logic
+    c.increment();
+    assert_eq!(c.number(), U256::ONE);
+
+    // 4) Mock msg.value() and test payable fn
+    vm.set_value(U256::from(5));
+    c.add_from_msg_value();
+    assert_eq!(c.number(), U256::from(6));
+  }
+}
+```
+
+**Explanation**
+
+* `TestVM::default()` seeds a clean in-memory VM, use it to create a new VM instance for each test, ensuring isolation
+* `Counter::from(&vm)` wires up storage against that VM
+* Calls like `increment()` and `add_from_msg_value()` run instantly—no blockchain needed
+* `vm.set_value(...)` overrides the `msg.value()` for that test
+* `assert_eq!(...)` checks the contract state after each call to verify logic
+
+
+## 3. Inspecting & Mocking Host I/O
+
+Stylus’s `TestVM` provides methods to override and inspect every host function. Use the table below as a quick reference:
+
+<table
+  style={{
+    width: "100%",
+    borderCollapse: "collapse",
+    margin: "1em 0",
+  }}
+>
+  <thead>
+    <tr style={{ backgroundColor: "#000" }}>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        Scenario
+      </th>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        TestVM API
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {[
+      ["Override Ether attached", "TestVM.set_value(U256)"],
+      ["Override Caller address", "TestVM.set_sender(Address)"],
+      ["Read raw storage slot", "TestVM.storage_load_bytes32(slot)"],
+      [
+        "Write raw storage slot & commit",
+        "unsafe { TestVM.storage_cache_bytes32(slot, val) }; TestVM.flush_cache(false)"
+      ],
+      [
+        "Override block parameters",
+        <>
+          <code>TestVM.set_block_number(n)</code><br />
+          <code>TestVM.set_block_timestamp(ts)</code>
+        </>
+      ],
+      ["Inspect emitted logs & events", "TestVM.get_emitted_logs()"],
+      [
+        "Mock external call response",
+        "TestVM.mock_call(addr, data, Ok(res)/Err(revert))"
+      ],
+    ].map(([scenario, api], i) => (
+      <tr key={i} style={{ backgroundColor: "#000" }}>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {scenario}
+        </td>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {typeof api === "string" ? <code>{api}</code> : api}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+
+**Explanation**
+These methods let you simulate any on-chain context or inspect every side-effect your contract produces.
+
+## 4. Event & Log Testing
+
+To verify events and their indexed parameters you can use `get_emitted_logs()` to inspect the logs emitted by your contract. This method returns a list of `(topics, data)` pairs, where `topics` is a list of indexed parameters and `data` is the non-indexed data.
+
+```rust
+#[test]
+fn test_event_emission() {
+  let vm = TestVM::new();
+  let mut c = Counter::from(&vm);
+
+  // Trigger events
+  c.increment(); // may emit multiple logs
+
+  let logs = vm.get_emitted_logs();
+  assert_eq!(logs.len(), 2);
+
+  // First topic is the event signature
+  let sig: B256 = hex!(
+    "c9d64952459b33e1dd10d284fe1e9336b8c514cbf51792a888ee7615ca3225d9"
+  ).into();
+  assert_eq!(logs[0].0[0], sig);
+
+  // Indexed address is in topic[1], last 20 bytes
+  let mut buf = [0u8;20];
+  buf.copy_from_slice(&logs[0].0[1].into()[12..]);
+  assert_eq!(Address::from(buf), vm.msg_sender());
+}
+```
+
+**Explanation**
+
+* `get_emitted_logs()` returns a list of `(topics, data)` pairs
+* Topics\[0] is always the keccak-256 of the event signature
+* Subsequent topics hold indexed parameters, ABI-encoded
+
+
+## 5. Mocking External Calls
+
+Use `mock_call` to test cross-contract interactions without deploying dependencies. This powerful feature lets you simulate both successful responses and reverts from external contracts, allowing you to test your integration logic in complete isolation:
+
+```rust
+#[test]
+fn test_external_call_behavior() {
+  let vm = TestVM::new();
+  let mut c = Counter::from(&vm);
+
+  // Only owner may call
+  let owner = vm.msg_sender();
+  c.transfer_ownership(owner).unwrap();
+
+  let target = Address::from([5u8;20]);
+  let data   = vec![1,2,3];
+  let ok_ret = vec![7,7];
+  let err_ret= vec![9,9,9];
+
+  // 1) Successful call
+  vm.mock_call(target, data.clone(), Ok(ok_ret.clone()));
+  assert_eq!(c.call_external_contract(target, data.clone()), Ok(ok_ret));
+
+  // 2) Revert call
+  vm.mock_call(target, data.clone(), Err(err_ret.clone()));
+  let err = c.call_external_contract(target, data).unwrap_err();
+  let expected = format!("Revert({:?})", err_ret).as_bytes().to_vec();
+  assert_eq!(err, expected);
+}
+```
+
+**Explanation**
+
+* `mock_call(...)` primes the VM to return `Ok` or `Err` for that address+input
+* Subsequent `.call(&self, target, &data)` picks up the mock
+
+
+## 6. Raw Storage Testing
+
+Directly inspect or override any storage slot. This is useful for testing storage layout, mappings, or verifying internal state after corner-case paths:
+
+```rust
+#[test]
+fn test_storage_direct() {
+  let vm = TestVM::new();
+  let mut c = Counter::from(&vm);
+  c.set_number(U256::from(42));
+
+  let slot = U256::ZERO;
+
+  // Read the underlying B256
+  assert_eq!(
+    vm.storage_load_bytes32(slot),
+    B256::from_slice(&U256::from(42).to_be_bytes::<32>())
+  );
+
+  // Overwrite slot
+  let new = U256::from(100);
+  unsafe { vm.storage_cache_bytes32(slot, B256::from_slice(&new.to_be_bytes::<32>())); }
+  vm.flush_cache(false);
+
+  // Verify via getter
+  assert_eq!(c.number(), new);
+}
+```
+
+**Explanation**
+
+* `vm.storage_load_bytes32(slot)` reads the raw bytes from the VM
+* `vm.storage_cache_bytes32(slot, value)` writes to the VM cache
+* `vm.flush_cache(false)` commits the cache to the VM
+
+
+
+## 7. Block-Context Testing
+
+Simulate block-dependent logic by overriding block number/timestamp. This is useful for testing timelocks, expiry logic, or height-based gating.
+
+```rust
+#[test]
+fn test_block_dependent_logic() {
+  let vm: TestVM = TestVMBuilder::new()
+    .sender(my_addr)
+    .value(U256::ZERO)
+    .build();
+
+  let mut c = Counter::from(&vm);
+
+  vm.set_block_timestamp(1_234_567_890);
+  c.increment();  
+  assert_eq!(c.last_updated(), U256::from(1_234_567_890u64));
+
+  vm.set_block_timestamp(2_000_000_000);
+  c.increment();
+  assert_eq!(c.last_updated(), U256::from(2_000_000_000u64));
+}
+```
+
+**Explanation**
+
+* `TestVMBuilder` seeds initial values; `vm.set_*` mutates them mid-test.
+* `vm.set_block_timestamp(...)` overrides the block timestamp
+* `vm.set_block_number(...)` overrides the block number
+
+
+## 8. Customizing the VM
+You can extend `TestVM` to add custom instrumentation or helpers without re-implementing the entire `Host` trait. This is useful for test-specific behaviors.
+
+### ***8-a. `TestVMBuilder`***
+Pre-seed context before deploying. This is useful for testing against a forked chain or pre-configured state:
+
+```rust
+let vm: TestVM = TestVMBuilder::new()
+  .sender(my_addr)
+  .contract_address(ct_addr)
+  .value(U256::from(10))
+  .rpc_url("http://localhost:8547")  // fork real state
+  .build();
+
+vm.set_balance(my_addr, U256::from(1_000));
+vm.set_block_number(123);
+```
+
+### ***8-b. Wrapping `TestVM`***
+
+Add new instrumentation without re-implementing `Host`. For example, you can track how many times `mock_call` was invoked. In this example, we create a `CustomVM` struct that wraps `TestVM` and adds a counter for the number of times `mock_call` is invoked.
+
+```rust
+#[cfg(test)]
+mod custom_vm {
+  use super::*;
+  use stylus_sdk::testing::TestVM;
+  use alloy_primitives::Address;
+
+  pub struct CustomVM {
+    inner: TestVM,
+    pub mock_count: usize,
+  }
+
+  impl CustomVM {
+    pub fn new() -> Self { Self { inner: TestVM::default(), mock_count: 0 } }
+    pub fn mock_call(&mut self, tgt: Address, d: Vec<u8>, r: Result<_,_>) {
+      self.mock_count += 1;
+      self.inner.mock_call(tgt, d, r);
+    }
+    pub fn inner(&self) -> &TestVM { &self.inner }
+  }
+
+  #[test]
+  fn test_mock_counter() {
+    let mut vm = CustomVM::new();
+    let mut c  = Counter::from(vm.inner());
+
+    assert_eq!(vm.mock_count, 0);
+    let addr = Address::from([5u8;20]);
+    vm.mock_call(addr, vec![1], Ok(vec![7]));
+    assert_eq!(vm.mock_count, 1);
+  }
+}
+```
+
+**Explanation**
+
+* You never touch the sealed `Host` trait—simply delegate to `TestVM`.
+* Add any helper you like: call counters, argument recorders, custom fail patterns, etc.
+
+### ***8-c. Implementing Your Own TestVM***
+
+You can implement your own TestVM from scratch by implementing the `Host` trait from `stylus_core::host::Host`. This approach is useful for specialized testing scenarios or if you need complete control over the test environment.
+
+
+## 9. Cheat-Sheet & Best Practices
+
+<table
+  style={{
+    width: "100%",
+    borderCollapse: "collapse",
+    margin: "1em 0",
+  }}
+>
+  <thead>
+    <tr style={{ backgroundColor: "#000" }}>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        What to test…
+      </th>
+      <th
+        style={{
+          padding: "0.25em",
+          border: "1px solid #333",
+          textAlign: "left",
+          color: "#fff",
+        }}
+      >
+        TestVM API
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {[
+      ["msg.value()", <code>vm.set_value(U256)</code>],
+      ["msg.sender()", <code>vm.set_sender(Address)</code>],
+      [
+        "Raw storage",
+        <>
+          <code>vm.storage_load_bytes32(k)</code>
+          <br />
+          <code>
+            unsafe {'{'} vm.storage_cache_bytes32(k, v) {'}'}; vm.flush_cache(false)
+          </code>
+        </>,
+      ],
+      [
+        "Block params",
+        <>
+          <code>vm.set_block_number(n)</code>
+          <br />
+          <code>vm.set_block_timestamp(ts)</code>
+        </>,
+      ],
+      ["Events & logs", <code>vm.get_emitted_logs()</code>],
+      ["External calls", <code>vm.mock_call(addr, data, Ok/Err)</code>],
+      [
+        "Custom instrumentation",
+        <>Wrap <code>TestVM</code> in your own struct and expose helpers</>,
+      ],
+    ].map(([label, api], idx) => (
+      <tr key={idx} style={{ backgroundColor: "#000" }}>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {label}
+        </td>
+        <td
+          style={{
+            padding: "0.25em",
+            border: "1px solid #333",
+            color: "#fff",
+          }}
+        >
+          {api}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+* Group tests by **feature** or **behavior**
+* Keep contract logic pure; tests mock all side-effects
+* Use `TestVMBuilder` for forked or pre-configured state
+* Wrap `TestVM` to instrument or extend behavior without re-implementing `Host`
+
+With these patterns, your Stylus unit suite will be **fast**, **deterministic**, and **comprehensive**—covering logic, host I/O, events, storage, and more.
+
+## 10. Complete Test Coverage Example
+
+The contract below demonstrates a comprehensive test suite that covers all aspects of Stylus contract testing:
+
+- Basic state manipulation tests
+- Event emission verification
+- External call mocking (both success and failure cases)
+- Direct storage slot access
+- Time-dependent logic with block context manipulation
+- Access control and ownership tests
+- Edge case handling and error conditions
+- Custom test VM extensions for advanced instrumentation
+
+Each test demonstrates a different aspect of the testing framework, from simple value assertions to complex mock interactions. The example counter contract is intentionally designed with features that exercise all major testing capabilities.
+
+You can use this pattern as a template for your own comprehensive test suites, ensuring your Stylus contracts are thoroughly verified before deployment.
+
+## src/lib.rs
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+extern crate alloc;
+
+/// Import items from the SDK. The prelude contains common traits and macros.
+use stylus_sdk::{alloy_primitives::{Address, U256}, prelude::*};
+use stylus_sdk::alloy_sol_types::sol;
+// Define some persistent storage using the Solidity ABI.
+// `Counter` will be the entrypoint.
+sol_storage! {
+    #[entrypoint]
+    pub struct Counter {
+        uint256 number;
+        address owner;
+        uint256 last_updated;
+    }
+}
+
+// Define events
+sol! {
+    event CounterUpdated(address indexed user, uint256 prev_value, uint256 new_value);
+    }
+
+/// Declare that `Counter` is a contract with the following external methods.
+#[public]
+impl Counter {
+    pub fn owner(&self) -> Address {
+        self.owner.get()
+    }
+    pub fn number(&self) -> U256 {
+        self.number.get()
+    }
+    pub fn last_updated(&self) -> U256 {
+        self.last_updated.get()
+    }
+    /// Sets a number in storage to a user-specified value.
+    pub fn set_number(&mut self, new_number: U256) {
+        let prev = self.number.get();
+        self.number.set(new_number);
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));        
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+    }
+    /// Sets a number in storage to a user-specified value.
+    pub fn mul_number(&mut self, new_number: U256) {
+        self.number.set(new_number * self.number.get());
+        let prev = self.number.get();
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+    }
+    /// Sets a number in storage to a user-specified value.
+    pub fn add_number(&mut self, new_number: U256) {
+        self.number.set(new_number + self.number.get());
+        let prev = self.number.get();
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+    }
+    /// Increments `number` and updates its value in storage.
+    pub fn increment(&mut self) {
+        // Increment the number in storage.
+        let prev = self.number.get();
+        self.set_number(prev + U256::from(1));
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+    }
+    /// Decrements `number` and updates its value in storage.
+    /// Returns an error if the number is already zero.
+    pub fn decrement(&mut self) -> Result<(), Vec<u8>> {       
+        let prev = self.number.get();
+        if prev == U256::ZERO {
+            return Err(b"Counter cannot go below zero".to_vec());
+        }
+        
+        self.number.set(prev - U256::from(1));
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));        
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+        
+        Ok(())
+    }
+    /// Adds the wei value from msg_value to the number in storage.
+    #[payable]
+    pub fn add_from_msg_value(&mut self) {
+        let prev = self.number.get();
+        self.set_number(prev + self.vm().msg_value());
+        // Update the last updated timestamp.
+        self.last_updated.set(U256::from(self.vm().block_timestamp()));
+        // Emit an event
+        stylus_sdk::stylus_core::log(self.vm(), CounterUpdated {
+            user: self.vm().msg_sender(),
+            prev_value: prev,
+            new_value: self.number.get(),
+        });
+    }
+    // External call example
+    pub fn call_external_contract(&mut self, target: Address, data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        if self.owner.get() != self.vm().msg_sender() {
+            return Err(b"Only owner can call this function".to_vec());
+        }
+        let return_data = self.vm().call(&self, target, &data)
+            .map_err(|err| format!("{:?}", err).as_bytes().to_vec())?;
+        Ok(return_data)
+    }
+    /// Transfers ownership of the contract to a new address.
+    pub fn transfer_ownership(&mut self, new_owner: Address) -> Result<(), Vec<u8>> {
+        if self.owner.get() == Address::ZERO {
+            self.owner.set(new_owner);
+            return Ok(());
+        }
+        // Check if the owner is already set.
+        if self.owner.get() != self.vm().msg_sender() {
+            return Err(b"Only owner can call this function".to_vec());
+        }
+        if new_owner == Address::ZERO {
+            return Err(b"Cannot transfer to zero address".to_vec());
+        }
+        self.owner.set(new_owner);
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_counter() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Counter::from(&vm);
+
+        assert_eq!(U256::ZERO, contract.number());
+
+        contract.increment();
+        assert_eq!(U256::from(1), contract.number());
+
+        contract.add_number(U256::from(3));
+        assert_eq!(U256::from(4), contract.number());
+
+        contract.mul_number(U256::from(2));
+        assert_eq!(U256::from(8), contract.number());
+
+        contract.set_number(U256::from(100));
+        assert_eq!(U256::from(100), contract.number());
+
+        // Override the msg value for future contract method invocations.
+        vm.set_value(U256::from(2));
+
+        contract.add_from_msg_value();
+        assert_eq!(U256::from(102), contract.number());
+    }
+
+    #[test]
+    fn test_decrement() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
+        let mut contract = Counter::from(&vm);
+        
+        contract.set_number(U256::from(5));        
+        // Decrement should succeed
+        assert!(contract.decrement().is_ok());
+        assert_eq!(contract.number(), U256::from(4));
+        
+        // Multiple decrements
+        assert!(contract.decrement().is_ok());
+        assert_eq!(contract.number(), U256::from(3));
+        
+        // Set to zero and try to decrement again
+        contract.set_number(U256::ZERO);
+        assert!(contract.decrement().is_err());
+    }
+
+    #[test]
+    fn test_logs() {
+        use stylus_sdk::testing::*;
+        use alloy_primitives::hex;
+        use stylus_sdk::alloy_primitives::B256;
+        let vm = TestVM::new();
+        let sender = vm.msg_sender();
+        let mut contract = Counter::from(&vm);
+        // Perform an action that emits an event
+        contract.increment();
+        
+        // Get the emitted logs
+        let logs = vm.get_emitted_logs();
+        assert_eq!(logs.len(), 2);
+        
+        // Check the event topic (first topic is the event signature)
+        // Precalculated the event signature for the event CounterUpdated(address indexed user, uint256 prev_value, uint256 new_value);
+        let event_signature: B256 = hex!("c9d64952459b33e1dd10d284fe1e9336b8c514cbf51792a888ee7615ca3225d9").into();
+        assert_eq!(logs[0].0[0], event_signature);
+        // Check that the indexed user address is in the topics
+        let user_topic = logs[0].0[1];
+        let user_bytes: [u8; 32] = user_topic.into();
+        
+        // The indexed address is padded to 32 bytes, extract the last 20 bytes
+        let mut user_address = [0u8; 20];
+        user_address.copy_from_slice(&user_bytes[12..32]);
+        assert_eq!(Address::from(user_address), sender);
+    }
+    #[test]
+    fn test_external_call() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
+        let mut contract = Counter::from(&vm);
+        let sender = vm.msg_sender();
+        assert!(contract.transfer_ownership(sender).is_ok());
+        // 2) Prepare inputs
+        let target = Address::from([0x05; 20]);
+        let call_data = vec![1, 2, 3, 4];
+        let success_ret = vec![5, 6, 7, 8];
+        let error_ret   = vec![9, 9, 9];
+
+        // 3) Mock a successful external call
+        vm.mock_call(target, call_data.clone(), Ok(success_ret.clone()));
+        let got = contract.call_external_contract(target, call_data.clone());
+        assert_eq!(got, Ok(success_ret));
+    
+        // 4) Mock a reverting external call
+        vm.mock_call(target, call_data.clone(), Err(error_ret.clone()));
+        let err = contract
+            .call_external_contract(target, call_data.clone())
+            .unwrap_err();
+        let expected = format!("Revert({:?})", error_ret).as_bytes().to_vec();
+        assert_eq!(err, expected);
+    }
+
+    #[test]
+    fn test_storage_direct_access() {
+        use stylus_sdk::testing::*;
+        use stylus_sdk::alloy_primitives::{U256, B256};
+    
+        // 1) Create the VM and your Counter instance
+        let vm = TestVM::new();
+        let mut contract = Counter::from(&vm);
+    
+        // 2) Initialize slot 0 to 42 via your setter
+        contract.set_number(U256::from(42u64));
+
+        // 2) Storage slot for `count` is the first field → slot 0
+        let slot = U256::ZERO;
+    
+        // 3) Read it directly — should reflect the constructor value (42)
+        let raw = vm.storage_load_bytes32(slot);
+        assert_eq!(
+            raw,
+            B256::from_slice(&U256::from(42u64).to_be_bytes::<32>())
+        );
+    
+        // 4) Overwrite the slot in the cache, then flush it
+        let new_val = U256::from(100u64);
+        unsafe {
+            vm.storage_cache_bytes32(
+                slot,
+                B256::from_slice(&new_val.to_be_bytes::<32>()),
+            );
+        }
+        vm.flush_cache(false);
+    
+        // 5) Now your getter should see the updated value
+        assert_eq!(contract.number(), new_val);
+    }
+    
+    #[test]
+    fn test_block_data() {
+        use stylus_sdk::testing::*;
+        use alloy_primitives::{Address, U256};
+        
+        let vm: TestVM = TestVMBuilder::new()
+        .sender(Address::from([1u8; 20]))
+        .contract_address(Address::from([2u8; 20]))
+        .value(U256::from(10))
+        .build();
+
+        let mut contract = Counter::from(&vm);
+
+        // 2) Set initial block timestamp & number on the VM
+        vm.set_block_timestamp(1_234_567_890);
+        vm.set_block_number(100);        
+        // Increment to trigger timestamp update
+        contract.increment();
+        
+        // 4) First increment: just call it, then check `last_updated`
+        contract.increment();
+        assert_eq!(
+            contract.last_updated(),
+            U256::from(1_234_567_890u64),
+            "after first increment, timestamp should be the initial VM timestamp"
+        );
+        
+        // Update block number and timestamp
+        vm.set_block_timestamp(2000000000);
+        vm.set_block_number(200);
+        
+        // 6) Second increment: call again, then check updated timestamp
+        contract.increment();
+        assert_eq!(
+            contract.last_updated(),
+            U256::from(2_000_000_000u64),
+            "after second increment, timestamp should reflect VM update"
+        );
+    }    
+    #[test]
+    fn test_ownership() {
+        use stylus_sdk::testing::*;
+        // 1) Create the VM and the contract instance
+        let vm = TestVM::new();
+        let sender = vm.msg_sender();
+        let mut contract = Counter::from(&vm);
+        let target = Address::from([0x05; 20]);
+        let call_data = vec![1, 2, 3, 4];
+        let success_ret = vec![5, 6, 7, 8];
+        let error_ret   = vec![9, 9, 9];
+        // 2) Set the contract owner to the sender
+        assert!(contract.transfer_ownership(sender).is_ok());
+        
+        // Change sender to non-owner
+        let non_owner = Address::from([3u8; 20]);
+        vm.set_sender(non_owner);
+
+        // Check if non-owner can call external call function before changing ownership
+        vm.mock_call(target, call_data.clone(), Err(error_ret.clone()));
+        assert!(contract.call_external_contract(target, call_data.clone()).is_err());
+        
+        // Non-owner should not be able to transfer ownership
+        assert!(contract.transfer_ownership(non_owner).is_err());
+        
+        // Change back to owner
+        vm.set_sender(sender);
+        
+        // Owner should be able to transfer ownership
+        assert!(contract.transfer_ownership(non_owner).is_ok());
+        assert_eq!(contract.owner(), non_owner);
+        // Check if non-owner can call external call function after changing ownership
+        vm.set_sender(non_owner);
+        vm.mock_call(target, call_data.clone(), Ok(success_ret.clone()));
+        let got = contract.call_external_contract(target, call_data.clone());
+        assert_eq!(got, Ok(success_ret));
+    }
+}
+
+//Writing your Own Custom TestVM
+// A TestVM is a simple struct implemented in the stylus-test crate that implements the Host trait from stylus_core::host::Host. Anyone can implement the trait and allow for rich testing experiences for Stylus contracts. The TestVM is not the only way to unit test your projects, as you can extend or implement your own.
+
+// Here’s a “general-purpose” extension to TestVM that ix just a way to track how many times someone has called into mock_call, so you can assert on how many external calls you set up:
+// This is a simple example, but you can imagine more complex scenarios where you might want to track how many times a function was called, or what the arguments were, etc. You can also use this to set up more complex test cases where you need to mock multiple calls with different arguments.
+// This is a simple example, but you can imagine more complex scenarios where you might want to track how many times a function was called, or what the arguments were, etc. You can also use this to set up more complex test cases where you need to mock multiple calls with different arguments.
+
+#[cfg(test)]
+mod custom_vm_tests {
+    use super::*;
+    use stylus_sdk::testing::TestVM;
+    use alloy_primitives::{Address};
+
+    /// A thin wrapper around TestVM that counts how many times
+    /// `mock_call` has been invoked.
+    pub struct CustomVM {
+        inner: TestVM,
+        mock_call_count: usize,
+    }
+
+    impl CustomVM {
+        /// Start with the default TestVM
+        pub fn new() -> Self {
+            Self { inner: TestVM::default(), mock_call_count: 0 }
+        }
+        /// **Wrapped** mock_call: increments our counter, then delegates.
+        pub fn mock_call(
+            &mut self,
+            target: Address,
+            data: Vec<u8>,
+            ret: Result<Vec<u8>, Vec<u8>>,
+        ) {
+            self.mock_call_count += 1;
+            self.inner.mock_call(target, data, ret);
+        }
+
+        /// New helper: how many mocks have been defined so far?
+        pub fn mock_call_count(&self) -> usize {
+            self.mock_call_count
+        }
+
+        /// Expose the raw TestVM when you need it for `Counter::from(&…)`
+        pub fn inner(&self) -> &TestVM {
+            &self.inner
+        }
+    }
+
+    #[test]
+    fn test_tracking_number_of_mocks() {
+        // 1) Build our custom VM wrapper
+        let mut vm = CustomVM::new();
+
+        // 2) Deploy a Counter (or any contract) against the inner TestVM
+        let mut contract = Counter::from(vm.inner());
+
+        // 3) Before any mocks, count should be zero
+        assert_eq!(vm.mock_call_count(), 0);
+
+        // 4) Define two mock calls
+        let addr = Address::from([0x05; 20]);
+        let data = vec![1, 2, 3];
+        vm.mock_call(addr, data.clone(), Ok(vec![0xAA]));
+        vm.mock_call(addr, data, Err(vec![0xBB]));
+
+        // 5) Now our helper sees exactly two mocks
+        assert_eq!(vm.mock_call_count(), 2);
+
+        // 6) And of course external calls still work through inner:
+        let _ = contract.call_external_contract(addr, vec![1, 2, 3]);
+        let _ = contract.call_external_contract(addr, vec![1, 2, 3]);
+
+        // 7) But the number of *defined* mocks remains the same
+        assert_eq!(vm.mock_call_count(), 2);
+    }
+}
+```
+## main.rs
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
+#[cfg(not(any(test, feature = "export-abi")))]
+#[no_mangle]
+pub extern "C" fn main() {}
+
+#[cfg(feature = "export-abi")]
+fn main() {
+    stylus_test::print_abi("MIT-OR-APACHE-2.0", "pragma solidity ^0.8.23;");
+}
+```
+
+
+## Cargo.toml
+
+```toml
+[package]
+name = name = "stylus-test"
+version = "0.1.11"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/OffchainLabs/stylus-hello-world"
+repository = "https://github.com/OffchainLabs/stylus-hello-world"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus hello world example"
+
+[dependencies]
+alloy-primitives = "=0.8.20"
+alloy-sol-types = "=0.8.20"
+mini-alloc = "0.8.4"
+stylus-sdk = "0.8.4"
+hex = "0.4.3"
+dotenv = "0.15.0"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+stylus-sdk = { version = "0.8.4", features = ["stylus-test"] }
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[[bin]]
+name = "stylus-hello-world"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+
+# If you need to reduce the binary size, it is advisable to try other
+# optimization levels, such as "s" and "z"
+opt-level = 3
+```
