@@ -402,8 +402,7 @@ mod test {
 //Writing your Own Custom TestVM
 // A TestVM is a simple struct implemented in the stylus-test crate that implements the Host trait from stylus_core::host::Host. Anyone can implement the trait and allow for rich testing experiences for Stylus contracts. The TestVM is not the only way to unit test your projects, as you can extend or implement your own.
 
-// Here’s a “general-purpose” extension to TestVM that ix just a way to track how many times someone has called into mock_call, so you can assert on how many external calls you set up:
-// This is a simple example, but you can imagine more complex scenarios where you might want to track how many times a function was called, or what the arguments were, etc. You can also use this to set up more complex test cases where you need to mock multiple calls with different arguments.
+// Here’s a “general-purpose” extension to TestVM that is just a way to track how many times someone has called into mock_call, so you can assert on how many external calls you set up:
 // This is a simple example, but you can imagine more complex scenarios where you might want to track how many times a function was called, or what the arguments were, etc. You can also use this to set up more complex test cases where you need to mock multiple calls with different arguments.
 
 #[cfg(test)]

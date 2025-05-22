@@ -58,7 +58,7 @@ mod test {
 
 **Explanation**
 
-* `TestVM::default()` seeds a clean in-memory VM. Use `TestVM::new()` to create a new VM instance for each test, ensuring isolation
+* `TestVM::default()` seeds a clean in-memory VM, use it to create a new VM instance for each test, ensuring isolation
 * `Counter::from(&vm)` wires up storage against that VM
 * Calls like `increment()` and `add_from_msg_value()` run instantly—no blockchain needed
 * `vm.set_value(...)` overrides the `msg.value()` for that test
