@@ -51,6 +51,11 @@ export const basicExamples = [
     description: 'How to define constant values in your contract',
   },
   {
+    route: '/basic_examples/constructor',
+    title: 'Constructor',
+    description: 'Learn about the constructor and how to initialize your contract',
+  },
+  {
     route: '/basic_examples/mapping',
     title: 'Mapping',
     description: 'Learn about the mapping data structure',
