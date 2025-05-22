@@ -26,6 +26,5 @@ impl Counter {
     /// Sets a number in storage to a user-specified value.
     pub fn set_number(&mut self, new_number: U256) {
         self.number.set(new_number);
-    
     }
 }
