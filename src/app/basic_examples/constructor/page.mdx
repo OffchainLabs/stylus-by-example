@@ -1,16 +1,16 @@
 export const metadata = {
-  title: "Constructors • Stylus by Example",
-  description:
-    "How to define, deploy, and verify constructors in Rust Stylus contracts.",
+title: "Constructors • Stylus by Example",
+description:
+"How to define, deploy, and verify constructors in Rust Stylus contracts.",
 };
 
 # **Stylus Constructors**
 
-Starting in **SDK 0.9.0** Stylus supports **constructors**—an atomic way to _deploy → activate → initialize_ a contract in a **single transaction**.  Without a constructor the contract’s storage might be touched before your init logic runs, which can lead to subtle bugs. This page explains:
+Starting in **SDK 0.9.0** Stylus supports **constructors**—an atomic way to *deploy → activate → initialize* a contract in a **single transaction**. Without a constructor the contract’s storage might be touched before your init logic runs, which can lead to subtle bugs. This page explains:
 
-- How to declare a constructor in Rust Stylus.  
-- How `cargo stylus` packages constructor arguments and calls the on-chain **StylusDeployer**.  
-- A full, runnable example you can clone today.
+* How to declare a constructor in Rust Stylus.
+* How `cargo stylus` packages constructor arguments and calls the on-chain **StylusDeployer**.
+* A full, runnable example you can clone today.
 
 ## **1.  Declaring a Constructor**
 
@@ -62,29 +62,25 @@ A constructor is just a normal external function annotated with `#[constructor]`
       <td><strong>Exactly 0 or 1 constructor</strong> per contract</td>
       <td>Mimics Solidity and avoids ambiguity</td>
     </tr>
-
     <tr>
       <td>
         Function <strong>must be annotated with <code>#[constructor]</code></strong><br />
-        (name can be anything&ensp;→&ensp;external signature is always
+        (name can be anything → external signature is always
         <code>constructor()</code>)
       </td>
       <td>
         Guarantees the deployer calls the correct init method; the SDK throws an
-        error if a function named&nbsp;<code>constructor</code> lacks the macro
+        error if a function named <code>constructor</code> lacks the macro
       </td>
     </tr>
-
     <tr>
       <td>Function <strong>must take <code>&amp;mut self</code></strong></td>
       <td>Writes to storage during deployment</td>
     </tr>
-
     <tr>
       <td>Returns <code>()</code> or <code>Result&lt;(), Vec&lt;u8&gt;&gt;</code></td>
       <td>Reverting aborts deployment</td>
     </tr>
-
     <tr>
       <td>SDK writes sentinel at <code>keccak256("stylus_constructor")</code></td>
       <td>Guarantees the constructor can never run twice</td>
@@ -92,13 +88,45 @@ A constructor is just a normal external function annotated with `#[constructor]`
   </tbody>
 </table>
 
-
 If your contract **inherits** another contract that defines a constructor you **must** call the parent’s constructor manually—Stylus will not inject it for you.
-
 
 ## **2.   Deploying with `cargo stylus`**
 
 Stylus constructors are deployed through the on-chain **StylusDeployer** contract. `cargo stylus deploy` hides the details:
+
+### **2.1 Pre-deployment Setup: CREATE2 Factory & StylusDeployer**
+
+Behind the scenes, `cargo stylus deploy` uses a **CREATE2 factory** to upload your Wasm bytecode deterministically and the **StylusDeployer** to fund and call your constructor. On Arbitrum One, Arbitrum Nova, and the Nitro Dev Node these two contracts are already deployed at the same hardcoded addresses that Cargo Stylus expects. If you’re on a custom chain or local network without them, deploy them first:
+
+```bash
+# 1. Deploy CREATE2 factory (for deterministic bytecode upload)
+echo "Deploying the CREATE2 factory"
+cast send --rpc-url $RPC --private-key $KEY_PATH --value "1 ether" \
+     0x3fab184622dc19b6109349b94811493bf2a45362
+cast publish --rpc-url $RPC \
+  0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222
+
+# Verify factory deployment
+if [ "$(cast code -r $RPC $CREATE2_FACTORY)" == "0x" ]; then
+  echo "Failed to deploy CREATE2 factory"
+  exit 1
+fi
+
+# 2. Deploy StylusDeployer (handles constructor calls & funding)
+deployer_code=$(cat ./stylus-deployer-bytecode.txt)
+deployer_address=$(cast create2 --salt $SALT --init-code $deployer_code)
+cast send --private-key $KEY_PATH --rpc-url $RPC \
+    $CREATE2_FACTORY "$SALT$deployer_code"
+
+# Verify deployer deployment
+if [ "$(cast code -r $RPC $deployer_address)" == "0x" ]; then
+  echo "Failed to deploy StylusDeployer"
+  exit 1
+fi
+echo "StylusDeployer deployed at address: $deployer_address"
+```
+
+Once both contracts are live, you can use `cargo stylus deploy` exactly as shown below.
 
 ```bash
 # dev-node ---------------------------------------------------
@@ -118,15 +146,15 @@ cargo stylus deploy \
   --no-verify \
   -e $RPC \
   --private-key-path $KEY_PATH \
-  --experimental-constructor-args 0xdeadbeef
+  --constructor-args 0xdeadbeef
 ```
 
 `cargo stylus`:
 
-- Uploads the Wasm byte-code with **CREATE2** (salt = hash of the code).  
-- Sends enough ETH to activate the contract.  
-- Encodes your constructor args (`0xdeadbeef` above) and calls the constructor.  
-- Emits the deployed address.
+* Uploads the Wasm byte-code with **CREATE2** (salt = hash of the code).
+* Sends enough ETH to activate the contract.
+* Encodes your constructor args (`0xdeadbeef` above) and calls the constructor.
+* Emits the deployed address.
 
 ### Verifying the result
 
@@ -183,4 +211,3 @@ edition = "2021"
 stylus-sdk = { version = "0.9.0", features = ["export-abi"] }
 alloy-primitives = "0.7.6"
 ```
-
