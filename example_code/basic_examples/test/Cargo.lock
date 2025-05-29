@@ -4421,22 +4421,7 @@ dependencies = [
  "regex",
  "stylus-core",
  "stylus-proc",
- "stylus-test 0.9.0",
-]
-
-[[package]]
-name = "stylus-test"
-version = "0.1.11"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "mini-alloc",
- "stylus-sdk",
- "tokio",
+ "stylus-test",
 ]
 
 [[package]]
@@ -4451,6 +4436,21 @@ dependencies = [
  "stylus-core",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "stylus-test-example"
+version = "0.1.11"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "dotenv",
+ "ethers",
+ "eyre",
+ "hex",
+ "mini-alloc",
+ "stylus-sdk",
+ "tokio",
 ]
 
 [[package]]
