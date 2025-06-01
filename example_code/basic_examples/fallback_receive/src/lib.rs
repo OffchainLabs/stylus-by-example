@@ -1,102 +1,245 @@
-#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+#![cfg_attr(not(feature = "export-abi"), no_std)]
 extern crate alloc;
 
 use stylus_sdk::alloy_sol_types::sol;
-/// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{
-    alloy_primitives::{U256},
+    alloy_primitives::{U256, Address, FixedBytes},
     ArbResult,
     prelude::*,
 };
-// Define some persistent storage using the Solidity ABI.
-// `Counter` will be the entrypoint.
+use alloc::vec;
+use crate::alloc::string::ToString;
+use crate::vec::Vec;
+// Define persistent storage
 sol_storage! {
     #[entrypoint]
-    pub struct Counter {
-        uint256 number;
+    pub struct PaymentTracker {
+        uint256 total_received;
+        uint256 fallback_calls;
+        uint256 receive_calls;
+        mapping(address => uint256) balances;
     }
 }
 
-// Define events
+// Define events for better tracking
 sol! {
-event CounterUpdated(uint256 prev_value, uint256 new_value);
+    event EtherReceived(address indexed sender, uint256 amount, string method);
+    event FallbackTriggered(address indexed sender, uint256 amount, bytes data);
+    event UnknownFunctionCalled(address indexed sender, bytes4 selector);
 }
 
-/// Declare that `Counter` is a contract with the following external methods.
 #[public]
-impl Counter {
-    pub fn number(&self) -> U256 {
-        self.number.get()
+impl PaymentTracker {
+    // Regular function to check balance
+    pub fn get_balance(&mut self, account: Address) {
+        self.balances.setter(account).set(U256::from(1));
+        self.total_received.get();        
     }
-    /// Sets a number in storage to a user-specified value.
-    pub fn set_number(&mut self, new_number: U256) {
-        let prev = self.number.get();
-        self.number.set(new_number);
-        // Emit an event
-        stylus_sdk::stylus_core::log(
-            self.vm(),
-            CounterUpdated {
-                prev_value: prev,
-                new_value: self.number.get(),
-            },
-        );
+    
+    // Regular function to get statistics
+    pub fn get_stats(&self) -> (U256, U256, U256) {
+        (
+            self.total_received.get(),
+            self.receive_calls.get(),
+            self.fallback_calls.get()
+        )
     }
 
-    #[fallback]
-    fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
-        let len = calldata.len();
-        // Increment the number in storage.
-        let prev = self.number.get();
-        self.set_number(prev + U256::from(len));
-        // Emit an event
-        stylus_sdk::stylus_core::log(
-            self.vm(),
-            CounterUpdated {
-                prev_value: prev,
-                new_value: self.number.get(),
-            },
-        );
-        Ok(vec![])
-    }
-
+    /// Receive function - handles plain Ether transfers
+    /// This is called when someone sends Ether without any data
+    /// Example: contract.send(1 ether) or contract.transfer(1 ether)
     #[receive]
     #[payable]
-    fn receive(&mut self) -> Result<(), Vec<u8>> {
-        let prev = self.number.get();   
-        self.set_number(prev + self.vm().msg_value());     
-        // Emit an event
+    pub fn receive(&mut self) -> Result<(), Vec<u8>> {
+        let sender = self.vm().msg_sender();
+        let amount = self.vm().msg_value();
+        
+        // Update tracking variables
+        self.total_received.set(self.total_received.get() + amount);
+        self.receive_calls.set(self.receive_calls.get() + U256::from(1));
+        
+        // Update sender's balance using setter method
+        let current_balance = self.balances.get(sender);
+        self.balances.setter(sender).set(current_balance + amount);
+        
+        // Log the event
         stylus_sdk::stylus_core::log(
             self.vm(),
-            CounterUpdated {
-                prev_value: prev,
-                new_value: self.number.get(),
+            EtherReceived {
+                sender,
+                amount,
+                method: "receive".to_string(),
             },
         );
+        
         Ok(())
+    }
+
+    /// Fallback function - handles unmatched function calls
+    /// This is called when:
+    /// 1. A function call doesn't match any existing function signature
+    /// 2. Plain Ether transfer when no receive function exists
+    #[fallback]
+    #[payable]
+    pub fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
+        let sender = self.vm().msg_sender();
+        let amount = self.vm().msg_value();
+        
+        // Update tracking
+        self.fallback_calls.set(self.fallback_calls.get() + U256::from(1));
+        
+        if amount > U256::ZERO {
+            // If Ether was sent, track it
+            self.total_received.set(self.total_received.get() + amount);
+            let current_balance = self.balances.get(sender);
+            self.balances.setter(sender).set(current_balance + amount);
+            
+            stylus_sdk::stylus_core::log(
+                self.vm(),
+                EtherReceived {
+                    sender,
+                    amount,
+                    method: "fallback".to_string(),
+                },
+            );
+        }
+        
+        // Log the fallback trigger with calldata - convert to bytes properly
+        stylus_sdk::stylus_core::log(
+            self.vm(),
+            FallbackTriggered {
+                sender,
+                amount,
+                data: calldata.to_vec().into(),
+            },
+        );
+        
+        // If calldata has at least 4 bytes, extract the function selector
+        if calldata.len() >= 4 {
+            let selector = [calldata[0], calldata[1], calldata[2], calldata[3]];
+            stylus_sdk::stylus_core::log(
+                self.vm(),
+                UnknownFunctionCalled {
+                    sender,
+                    selector: FixedBytes(selector),
+                },
+            );
+        }
+        
+        // Return empty bytes (successful execution)
+        Ok(vec![])
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use stylus_sdk::testing::*;
+    use stylus_sdk::alloy_primitives::{B256, keccak256};
 
     #[test]
-    fn test_counter() {
-        use stylus_sdk::testing::*;
+    fn test_receive_function() {
         let vm = TestVM::default();
-        let mut contract = Counter::from(&vm);
-
-        assert_eq!(U256::ZERO, contract.number());
-
-        contract.set_number(U256::from(100));
-        assert_eq!(U256::from(100), contract.number());
+        let mut contract = PaymentTracker::from(&vm);
         
+        // Test that contract is created successfully and initial values are correct
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(0));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(0));
         // Override the msg value for future contract method invocations.
         vm.set_value(U256::from(2));
-        let _ =contract.receive();
-        assert_eq!(U256::from(102), contract.number());
+        let _ = contract.receive();
+        // Check that the receive function updates stats correctly
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(2));
+        assert_eq!(receive_calls, U256::from(1));
+        assert_eq!(fallback_calls, U256::from(0));
+        // Check that the balance is updated
+        let balance = contract.balances.get(vm.msg_sender());
+        assert_eq!(balance, U256::from(2));
+    }
 
-        let _ =contract.fallback(&[0x01, 0x02, 0x03]);
-        assert_eq!(U256::from(105), contract.number());        
+    #[test]    
+    fn test_fallback_function() {
+        let vm = TestVM::default();
+        let mut contract = PaymentTracker::from(&vm);
+        
+        // Test that contract is created successfully and initial values are correct
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(0));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(0));
+        // Call the fallback function with some data
+        let calldata = vec![0x01, 0x02, 0x03, 0x04];
+        let _ = contract.fallback(&calldata);
+        // Check that the fallback function updates stats correctly
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(0));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(1));
+        // Check that the balance is updated
+        let balance = contract.balances.get(vm.msg_sender());
+        assert_eq!(balance, U256::from(0));
+
+        // Check that the fallback triggered event was logged
+        let logs = vm.get_emitted_logs();
+        assert_eq!(logs.len(), 2);
+
+        // Check that the first log is the FallbackTriggered event
+        let event_signature = B256::from(keccak256(
+            "FallbackTriggered(address,uint256,bytes)".as_bytes()
+        ));
+        assert_eq!(logs[0].0[0], event_signature);
+        // Check that the second log is the UnknownFunctionCalled event
+        let unknown_signature = B256::from(keccak256(
+            "UnknownFunctionCalled(address,bytes4)".as_bytes()
+        ));
+        assert_eq!(logs[1].0[0], unknown_signature);
+       
+    }
+
+    #[test]    
+    fn test_fallback_function_with_value() {
+        let vm = TestVM::default();
+        let mut contract = PaymentTracker::from(&vm);
+        
+        // Test that contract is created successfully and initial values are correct
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(0));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(0));
+
+        vm.set_value(U256::from(2));
+        let calldata = vec![0x01, 0x02, 0x03, 0x04];
+        // Call the fallback function with calldata and value
+        let _ = contract.fallback(&calldata);
+        // Check that the fallback function updates stats correctly
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(2));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(1));
+        // Check that the balance is updated
+        let balance = contract.balances.get(vm.msg_sender());
+        assert_eq!(balance, U256::from(2));
+        // Check that the fallback triggered event was logged
+        let logs = vm.get_emitted_logs();
+        assert_eq!(logs.len(), 3);
+        // Check that the first log is the FallbackTriggered event
+        let event_signature = B256::from(keccak256(
+            "EtherReceived(address,uint256,string)".as_bytes()
+        ));
+        assert_eq!(logs[0].0[0], event_signature);
+        // Check that the second log is the EtherReceived event
+        let ether_received_signature = B256::from(keccak256(
+            "FallbackTriggered(address,uint256,bytes)".as_bytes()
+        ));
+        assert_eq!(logs[1].0[0], ether_received_signature);
+        // Check that the third log is the UnknownFunctionCalled event
+        let unknown_signature = B256::from(keccak256(
+            "UnknownFunctionCalled(address,bytes4)".as_bytes()
+        ));
+        assert_eq!(logs[2].0[0], unknown_signature);
     }
 }
+
