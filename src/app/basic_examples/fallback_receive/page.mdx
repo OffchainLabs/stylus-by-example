@@ -1,0 +1,350 @@
+export const metadata = {
+  title: "Fallback and Receive- Stylus by Example",
+  description:
+    "Learn how to use the Fallback and Receive functions in Stylus smart contracts.",
+};
+
+{/* Begin Content */}
+# Fallback and Receive Functions in Stylus
+
+In Stylus smart contracts, `fallback` and `receive` functions are special functions that handle incoming transactions when no other function matches the call signature. These functions are crucial for creating flexible contracts that can handle various types of interactions, including direct Ether transfers and unknown function calls.
+
+## Understanding the Difference
+
+### Receive Function
+The `receive` function is specifically designed to handle **plain Ether transfers** - transactions that send Ether to your contract without any calldata.
+
+**Key characteristics:**
+- Called when a transaction has **no calldata** (empty data field)
+- Always `payable` (can receive Ether)
+- Takes no inputs and returns no outputs
+- Optional - if not defined, plain Ether transfers will trigger the fallback function
+- Has higher priority than fallback when both are defined
+
+### Fallback Function
+The `fallback` function is a catch-all handler for transactions that don't match any existing function signature.
+
+**Key characteristics:**
+- Called when no function signature matches the transaction's calldata
+- Also called for plain Ether transfers if no `receive` function is defined
+- Can be `payable` or non-payable
+- Can access the calldata that was sent with the transaction
+- If not defined, unmatched calls will revert
+
+## Function Call Priority
+
+When a transaction is sent to your contract, Stylus follows this decision tree:
+
+1. **Has calldata?**
+   - No → Call `receive()` (if defined), otherwise call `fallback()`
+   - Yes → Try to match a function signature
+2. **Function signature matches?**
+   - Yes → Call the matching function
+   - No → Call `fallback()` (if defined), otherwise revert
+
+## Complete Example with Detailed Explanations
+
+Here's a comprehensive example that demonstrates both functions:
+
+### src/lib.rs
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+extern crate alloc;
+
+use stylus_sdk::alloy_sol_types::sol;
+use stylus_sdk::{
+    alloy_primitives::{U256, Address},
+    ArbResult,
+    prelude::*,
+};
+
+// Define persistent storage
+sol_storage! {
+    #[entrypoint]
+    pub struct PaymentTracker {
+        uint256 total_received;
+        uint256 fallback_calls;
+        uint256 receive_calls;
+        mapping(address => uint256) balances;
+    }
+}
+
+// Define events for better tracking
+sol! {
+    event EtherReceived(address indexed sender, uint256 amount, string method);
+    event FallbackTriggered(address indexed sender, uint256 amount, bytes data);
+    event UnknownFunctionCalled(address indexed sender, bytes4 selector);
+}
+
+#[public]
+impl PaymentTracker {
+    // Regular function to check balance
+    pub fn get_balance(&self, account: Address) -> U256 {
+        self.balances.get(account)
+    }
+    
+    // Regular function to get statistics
+    pub fn get_stats(&self) -> (U256, U256, U256) {
+        (
+            self.total_received.get(),
+            self.receive_calls.get(),
+            self.fallback_calls.get()
+        )
+    }
+
+    /// Receive function - handles plain Ether transfers
+    /// This is called when someone sends Ether without any data
+    /// Example: contract.send(1 ether) or contract.transfer(1 ether)
+    #[receive]
+    #[payable]
+    fn receive(&mut self) -> Result<(), Vec<u8>> {
+        let sender = self.vm().msg_sender();
+        let amount = self.vm().msg_value();
+        
+        // Update tracking variables
+        self.total_received.set(self.total_received.get() + amount);
+        self.receive_calls.set(self.receive_calls.get() + U256::from(1));
+        
+        // Update sender's balance
+        let current_balance = self.balances.get(sender);
+        self.balances.set(sender, current_balance + amount);
+        
+        // Log the event
+        stylus_sdk::stylus_core::log(
+            self.vm(),
+            EtherReceived {
+                sender,
+                amount,
+                method: "receive".to_string(),
+            },
+        );
+        
+        Ok(())
+    }
+
+    /// Fallback function - handles unmatched function calls
+    /// This is called when:
+    /// 1. A function call doesn't match any existing function signature
+    /// 2. Plain Ether transfer when no receive function exists
+    #[fallback]
+    #[payable]  // Remove this if you don't want to accept Ether in fallback
+    fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
+        let sender = self.vm().msg_sender();
+        let amount = self.vm().msg_value();
+        
+        // Update tracking
+        self.fallback_calls.set(self.fallback_calls.get() + U256::from(1));
+        
+        if amount > U256::ZERO {
+            // If Ether was sent, track it
+            self.total_received.set(self.total_received.get() + amount);
+            let current_balance = self.balances.get(sender);
+            self.balances.set(sender, current_balance + amount);
+            
+            stylus_sdk::stylus_core::log(
+                self.vm(),
+                EtherReceived {
+                    sender,
+                    amount,
+                    method: "fallback".to_string(),
+                },
+            );
+        }
+        
+        // Log the fallback trigger with calldata
+        stylus_sdk::stylus_core::log(
+            self.vm(),
+            FallbackTriggered {
+                sender,
+                amount,
+                data: calldata.to_vec(),
+            },
+        );
+        
+        // If calldata has at least 4 bytes, extract the function selector
+        if calldata.len() >= 4 {
+            let selector = [calldata[0], calldata[1], calldata[2], calldata[3]];
+            stylus_sdk::stylus_core::log(
+                self.vm(),
+                UnknownFunctionCalled {
+                    sender,
+                    selector,
+                },
+            );
+        }
+        
+        // Return empty bytes (successful execution)
+        Ok(vec![])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stylus_sdk::testing::*;
+
+    #[test]
+    fn test_receive_function() {
+        let vm = TestVM::default();
+        let mut contract = PaymentTracker::from(&vm);
+        
+        // Set up test conditions
+        vm.set_value(U256::from(100)); // 100 wei
+        
+        // Call receive function
+        let result = contract.receive();
+        assert!(result.is_ok());
+        
+        // Check that stats were updated
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(100));
+        assert_eq!(receive_calls, U256::from(1));
+        assert_eq!(fallback_calls, U256::from(0));
+    }
+    
+    #[test]
+    fn test_fallback_function() {
+        let vm = TestVM::default();
+        let mut contract = PaymentTracker::from(&vm);
+        
+        // Set up test conditions
+        vm.set_value(U256::from(50)); // 50 wei
+        
+        // Call fallback with some data
+        let calldata = vec![0x12, 0x34, 0x56, 0x78]; // Unknown function selector
+        let result = contract.fallback(&calldata);
+        assert!(result.is_ok());
+        
+        // Check that stats were updated
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(50));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(1));
+    }
+    
+    #[test]
+    fn test_fallback_without_value() {
+        let vm = TestVM::default();
+        let mut contract = PaymentTracker::from(&vm);
+        
+        // Don't set any value (0 wei)
+        let calldata = vec![0xaa, 0xbb, 0xcc, 0xdd];
+        let result = contract.fallback(&calldata);
+        assert!(result.is_ok());
+        
+        // Check that fallback was called but no Ether was received
+        let (total, receive_calls, fallback_calls) = contract.get_stats();
+        assert_eq!(total, U256::from(0));
+        assert_eq!(receive_calls, U256::from(0));
+        assert_eq!(fallback_calls, U256::from(1));
+    }
+}
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "stylus-fallback-receive"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = "0.4.2"
+hex = "0.4.3"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[[bin]]
+name = "stylus-fallback-receive"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["cdylib"]
+```
+
+### src/main.rs
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
+#[cfg(not(any(test, feature = "export-abi")))]
+#[no_mangle]
+pub extern "C" fn main() {}
+
+#[cfg(feature = "export-abi")]
+fn main() {
+    stylus_fallback_receive::print_abi_from_args();
+}
+```
+
+## Common Use Cases
+
+### 1. Payment Processor
+```rust
+#[receive]
+#[payable]
+fn receive(&mut self) -> Result<(), Vec<u8>> {
+    // Handle direct payments
+    let sender = self.vm().msg_sender();
+    let amount = self.vm().msg_value();
+    
+    // Process the payment
+    self.process_payment(sender, amount);
+    Ok(())
+}
+```
+
+### 2. Proxy Contract
+```rust
+#[fallback]
+#[payable]
+fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
+    // Forward call to implementation contract
+    let implementation = self.implementation.get();
+    // ... delegate call logic
+    Ok(vec![])
+}
+```
+
+### 3. Function Routing
+```rust
+#[fallback]
+fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
+    if calldata.len() >= 4 {
+        let selector = &calldata[0..4];
+        match selector {
+            [0x12, 0x34, 0x56, 0x78] => self.handle_custom_function(&calldata[4..]),
+            _ => return Err(vec![]), // Revert for unknown functions
+        }
+    }
+    Ok(vec![])
+}
+```
+
+## Important Considerations
+
+### Gas Costs
+- Fallback and receive functions should be kept simple to avoid out-of-gas errors
+- Complex logic might fail when called with limited gas (e.g., from `transfer()` or `send()`)
+
+### Security
+- Always validate inputs in fallback functions
+- Be careful with reentrancy when handling Ether
+- Consider whether fallback should be payable based on your contract's needs
+
+### Error Handling
+- Returning `Err(vec![])` from fallback will revert the transaction
+- Returning `Ok(vec![])` indicates successful execution
+- The `receive` function should return `Ok(())` for success or `Err(vec![])` for failure
+
+### Best Practices
+1. **Keep it simple**: Fallback and receive functions should have minimal logic
+2. **Log events**: Help users understand what happened when these functions are called
+3. **Handle edge cases**: Consider what happens with zero-value calls or empty calldata
+4. **Gas efficiency**: These functions may be called with limited gas, so optimize accordingly
+5. **Clear documentation**: Document the expected behavior for users of your contract
+
+This comprehensive approach ensures your contract can handle various interaction patterns while maintaining security and providing clear feedback to users.
