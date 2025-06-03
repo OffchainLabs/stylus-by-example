@@ -3,6 +3,7 @@ extern crate alloc;
 
 use stylus_sdk::alloy_sol_types::sol;
 use stylus_sdk::{
+    stylus_core::log,
     alloy_primitives::{U256, Address, FixedBytes},
     ArbResult,
     prelude::*,
@@ -32,7 +33,7 @@ sol! {
 impl PaymentTracker {
     // Regular function to check balance
     pub fn get_balance(&mut self, account: Address) {
-        self.balances.setter(account).get()
+        self.balances.setter(account).get();
     }
     
     // Regular function to get statistics
@@ -62,7 +63,7 @@ impl PaymentTracker {
         self.balances.setter(sender).set(current_balance + amount);
         
         // Log the event
-        stylus_sdk::stylus_core::log(
+        log(
             self.vm(),
             EtherReceived {
                 sender,
@@ -104,7 +105,7 @@ impl PaymentTracker {
         }
         
         // Log the fallback trigger with calldata - convert to bytes properly
-        stylus_sdk::stylus_core::log(
+        log(
             self.vm(),
             FallbackTriggered {
                 sender,
@@ -116,7 +117,7 @@ impl PaymentTracker {
         // If calldata has at least 4 bytes, extract the function selector
         if calldata.len() >= 4 {
             let selector = [calldata[0], calldata[1], calldata[2], calldata[3]];
-            stylus_sdk::stylus_core::log(
+            log(
                 self.vm(),
                 UnknownFunctionCalled {
                     sender,
@@ -241,4 +242,3 @@ mod test {
         assert_eq!(logs[2].0[0], unknown_signature);
     }
 }
-

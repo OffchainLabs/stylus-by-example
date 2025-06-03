@@ -4451,7 +4451,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stylus_fallback_test"
+name = "stylus_fallback_receive"
 version = "0.1.11"
 dependencies = [
  "alloy-primitives",
