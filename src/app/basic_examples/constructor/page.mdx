@@ -1,0 +1,277 @@
+export const metadata = {
+title: "Constructors • Stylus by Example",
+description:
+"How to define, deploy, and verify constructors in Rust Stylus contracts.",
+};
+
+# **Stylus Constructors**
+
+Starting in **SDK 0.9.0** Stylus supports **constructors**—an atomic way to *deploy → activate → initialize* a contract in a **single transaction**. Without a constructor the contract’s storage might be touched before your init logic runs, which can lead to subtle bugs. This page explains:
+
+* How to declare a constructor in Rust Stylus.
+* How `cargo stylus` packages constructor arguments and calls the on-chain **StylusDeployer**.
+* A full, runnable example you can clone today.
+
+## **1.  Declaring a Constructor**
+
+A constructor is just a normal external function annotated with `#[constructor]`. Constructor can be defined as below similar to Solidity:
+
+```rust
+    pub fn constructor(&mut self, initial_number: U256) {
+        // Use tx_origin instead of msg_sender because we use a factory contract in deployment.
+        let owner = self.vm().tx_origin();
+        self.owner.set(owner);
+        self.number.set(initial_number);
+    }
+```
+
+### **Rules & guarantees**
+
+<style jsx>{`
+  .rules-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: inherit;
+  }
+
+  .rules-table th,
+  .rules-table td {
+    border: 1px solid #d0d7de;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .rules-table th {
+    background:rgb(82, 93, 104);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  /* make top grid line single-width */
+  .rules-table thead tr:first-child th {
+    border-top: 0;
+  }
+`}</style>
+
+<table className="rules-table">
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Why it exists</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Exactly 0 or 1 constructor</strong> per contract</td>
+      <td>Mimics Solidity and avoids ambiguity</td>
+    </tr>
+    <tr>
+      <td>
+        Function <strong>must be annotated with <code>#[constructor]</code></strong><br />
+        (name can be anything → external signature is always
+        <code>constructor()</code>)
+      </td>
+      <td>
+        Guarantees the deployer calls the correct init method; the SDK throws an
+        error if a function named <code>constructor</code> lacks the macro
+      </td>
+    </tr>
+    <tr>
+      <td>Function <strong>must take <code>&amp;mut self</code></strong></td>
+      <td>Writes to storage during deployment</td>
+    </tr>
+    <tr>
+      <td>Returns <code>()</code> or <code>Result&lt;(), Vec&lt;u8&gt;&gt;</code></td>
+      <td>Reverting aborts deployment</td>
+    </tr>
+    <tr>
+      <td>Use <code>tx_origin()</code> instead of <code>msg_sender()</code> to access deployer address in constructor</td>
+      <td>A factory contract and StylusDeployer are used in the deployment process, so <code>msg_sender()</code> would return the intermediate contract address</td>
+    </tr>
+    <tr>
+      <td>SDK writes sentinel at <code>keccak256("stylus_constructor")</code></td>
+      <td>Guarantees the constructor can never run twice</td>
+    </tr>
+  </tbody>
+</table>
+
+If your contract **inherits** another contract that defines a constructor you **must** call the parent’s constructor manually—Stylus will not inject it for you.
+
+## **2.   Deploying with `cargo stylus`**
+
+Stylus constructors are deployed through the on-chain **StylusDeployer** contract. `cargo stylus deploy` hides the details:
+
+### **2.1 Pre-deployment Setup: CREATE2 Factory & StylusDeployer**
+
+Behind the scenes, `cargo stylus deploy` uses a **CREATE2 factory** to upload your Wasm bytecode deterministically and the **StylusDeployer** to fund and call your constructor. On Arbitrum One, Arbitrum Nova, and the Nitro Dev Node these two contracts are already deployed at the same hardcoded addresses that Cargo Stylus expects. If you’re on a custom chain or local network without them, deploy them first:
+
+```bash
+# 1. Deploy CREATE2 factory (for deterministic bytecode upload)
+echo "Deploying the CREATE2 factory"
+cast send --rpc-url $RPC --private-key $KEY_PATH --value "1 ether" \
+     0x3fab184622dc19b6109349b94811493bf2a45362
+cast publish --rpc-url $RPC \
+  0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222
+
+# Verify factory deployment
+if [ "$(cast code -r $RPC $CREATE2_FACTORY)" == "0x" ]; then
+  echo "Failed to deploy CREATE2 factory"
+  exit 1
+fi
+
+# 2. Deploy StylusDeployer (handles constructor calls & funding)
+deployer_code=$(cat ./stylus-deployer-bytecode.txt)
+deployer_address=$(cast create2 --salt $SALT --init-code $deployer_code)
+cast send --private-key $KEY_PATH --rpc-url $RPC \
+    $CREATE2_FACTORY "$SALT$deployer_code"
+
+# Verify deployer deployment
+if [ "$(cast code -r $RPC $deployer_address)" == "0x" ]; then
+  echo "Failed to deploy StylusDeployer"
+  exit 1
+fi
+echo "StylusDeployer deployed at address: $deployer_address"
+```
+
+Once both contracts are live, you can use `cargo stylus deploy` exactly as shown below.
+
+```bash
+# dev-node ---------------------------------------------------
+git clone https://github.com/OffchainLabs/nitro-devnode.git
+cd nitro-devnode && ./run-dev-node.sh
+
+# example repo ----------------------------------------------
+git clone -b gligneul/constructors \
+  https://github.com/OffchainLabs/stylus-hello-world.git
+cd stylus-hello-world
+
+export RPC=http://localhost:8547
+export KEY_PATH=$HOME/.key.devnode.txt   # contains the dev-node private key
+
+cargo stylus check -e $RPC               # optional static checks
+cargo stylus deploy \
+  --no-verify \
+  -e $RPC \
+  --private-key-path $KEY_PATH \
+  --constructor-args 0xdeadbeef
+```
+
+`cargo stylus`:
+
+* Uploads the Wasm byte-code with **CREATE2** (salt = hash of the code).
+* Sends enough ETH to activate the contract.
+* Encodes your constructor args (`0xdeadbeef` above) and calls the constructor.
+* Emits the deployed address.
+
+### Verifying the result
+
+```bash
+cast call -r $RPC <DEPLOYED_ADDRESS> 'number()'
+# 0x…deadbeef ✅
+```
+
+---
+
+## **3.  Full Example**
+
+**`src/lib.rs`**
+
+```rust
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
+extern crate alloc;
+
+use alloy_primitives::{Address, U256};
+use alloy_sol_types::sol;
+use stylus_sdk::prelude::*;
+
+sol! {
+    error Unauthorized();
+}
+
+sol_storage! {
+    #[entrypoint]
+    pub struct Contract {
+        address owner;
+        uint256 number;
+    }
+}
+
+#[derive(SolidityError)]
+pub enum ContractErrors {
+    Unauthorized(Unauthorized),
+}
+
+#[public]
+impl Contract {
+    /// The constructor sets the owner as the EOA that deployed the contract.
+    #[constructor]
+    #[payable]
+    pub fn constructor(&mut self, initial_number: U256) {
+        // Use tx_origin instead of msg_sender because we use a factory contract in deployment.
+        let owner = self.vm().tx_origin();
+        self.owner.set(owner);
+        self.number.set(initial_number);
+    }
+
+    /// Only the owner can set the number in the contract.
+    pub fn set_number(&mut self, number: U256) -> Result<(), ContractErrors> {
+        if self.owner.get() != self.vm().msg_sender() {
+            return Err(ContractErrors::Unauthorized(Unauthorized {}));
+        }
+        self.number.set(number);
+        Ok(())
+    }
+
+    pub fn number(&self) -> U256 {
+        self.number.get()
+    }
+
+    pub fn owner(&self) -> Address {
+        self.owner.get()
+    }
+}
+```
+
+**`Cargo.toml`**
+
+```toml
+[package]
+name = "stylus_constructor_example"
+version = "0.1.11"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/OffchainLabs/stylus-hello-world"
+repository = "https://github.com/OffchainLabs/stylus-hello-world"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus hello world example"
+[dependencies]
+alloy-primitives = "=0.8.20"
+alloy-sol-types = "=0.8.20"
+mini-alloc = "0.9.0"
+stylus-sdk = "0.9.0"
+hex = "0.4.3"
+dotenv = "0.15.0"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+[[bin]]
+name = "stylus-hello-world"
+path = "src/main.rs"
+[lib]
+crate-type = ["lib", "cdylib"]
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+# If you need to reduce the binary size, it is advisable to try other
+# optimization levels, such as "s" and "z"
+opt-level = 3
+```
