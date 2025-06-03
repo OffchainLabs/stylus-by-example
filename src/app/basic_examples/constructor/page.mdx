@@ -17,9 +17,11 @@ Starting in **SDK 0.9.0** Stylus supports **constructors**—an atomic way to *d
 A constructor is just a normal external function annotated with `#[constructor]`. Constructor can be defined as below similar to Solidity:
 
 ```rust
-    #[constructor]
-    pub fn constructor(&mut self, count: U256) {
-        self.number.set(count);
+    pub fn constructor(&mut self, initial_number: U256) {
+        // Use tx_origin instead of msg_sender because we use a factory contract in deployment.
+        let owner = self.vm().tx_origin();
+        self.owner.set(owner);
+        self.number.set(initial_number);
     }
 ```
 
@@ -80,6 +82,10 @@ A constructor is just a normal external function annotated with `#[constructor]`
     <tr>
       <td>Returns <code>()</code> or <code>Result&lt;(), Vec&lt;u8&gt;&gt;</code></td>
       <td>Reverting aborts deployment</td>
+    </tr>
+    <tr>
+      <td>Use <code>tx_origin()</code> instead of <code>msg_sender()</code> to access deployer address in constructor</td>
+      <td>A factory contract and StylusDeployer are used in the deployment process, so <code>msg_sender()</code> would return the intermediate contract address</td>
     </tr>
     <tr>
       <td>SDK writes sentinel at <code>keccak256("stylus_constructor")</code></td>
@@ -170,31 +176,58 @@ cast call -r $RPC <DEPLOYED_ADDRESS> 'number()'
 **`src/lib.rs`**
 
 ```rust
-#![cfg_attr(not(feature = "export-abi"), no_main)]
+#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
 extern crate alloc;
 
-use stylus_sdk::{alloy_primitives::U256, prelude::*};
+use alloy_primitives::{Address, U256};
+use alloy_sol_types::sol;
+use stylus_sdk::prelude::*;
+
+sol! {
+    error Unauthorized();
+}
 
 sol_storage! {
     #[entrypoint]
-    pub struct Counter {
+    pub struct Contract {
+        address owner;
         uint256 number;
     }
 }
 
+#[derive(SolidityError)]
+pub enum ContractErrors {
+    Unauthorized(Unauthorized),
+}
+
 #[public]
-impl Counter {
+impl Contract {
+    /// The constructor sets the owner as the EOA that deployed the contract.
     #[constructor]
-    pub fn constructor(&mut self, new_number: U256) {
-        self.number.set(new_number);
+    #[payable]
+    pub fn constructor(&mut self, initial_number: U256) {
+        // Use tx_origin instead of msg_sender because we use a factory contract in deployment.
+        let owner = self.vm().tx_origin();
+        self.owner.set(owner);
+        self.number.set(initial_number);
+    }
+
+    /// Only the owner can set the number in the contract.
+    pub fn set_number(&mut self, number: U256) -> Result<(), ContractErrors> {
+        if self.owner.get() != self.vm().msg_sender() {
+            return Err(ContractErrors::Unauthorized(Unauthorized {}));
+        }
+        self.number.set(number);
+        Ok(())
     }
 
     pub fn number(&self) -> U256 {
         self.number.get()
     }
 
-    pub fn set_number(&mut self, new_number: U256) {
-        self.number.set(new_number);
+    pub fn owner(&self) -> Address {
+        self.owner.get()
     }
 }
 ```
@@ -203,11 +236,42 @@ impl Counter {
 
 ```toml
 [package]
-name = "stylus-constructor-example"
-version = "0.1.0"
+name = "stylus_constructor_example"
+version = "0.1.11"
 edition = "2021"
-
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/OffchainLabs/stylus-hello-world"
+repository = "https://github.com/OffchainLabs/stylus-hello-world"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus hello world example"
 [dependencies]
-stylus-sdk = { version = "0.9.0", features = ["export-abi"] }
-alloy-primitives = "0.7.6"
+alloy-primitives = "=0.8.20"
+alloy-sol-types = "=0.8.20"
+mini-alloc = "0.9.0"
+stylus-sdk = "0.9.0"
+hex = "0.4.3"
+dotenv = "0.15.0"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+[[bin]]
+name = "stylus-hello-world"
+path = "src/main.rs"
+[lib]
+crate-type = ["lib", "cdylib"]
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+# If you need to reduce the binary size, it is advisable to try other
+# optimization levels, such as "s" and "z"
+opt-level = 3
 ```

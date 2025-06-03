@@ -1,30 +1,54 @@
 #![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
+
 extern crate alloc;
-/// Import items from the SDK. The prelude contains common traits and macros.
-use stylus_sdk::{alloy_primitives::U256, prelude::*};
-// Define some persistent storage using the Solidity ABI.
-// `Counter` will be the entrypoint.
+
+use alloy_primitives::{Address, U256};
+use alloy_sol_types::sol;
+use stylus_sdk::prelude::*;
+
+sol! {
+    error Unauthorized();
+}
+
 sol_storage! {
     #[entrypoint]
-    pub struct Counter {
+    pub struct Contract {
+        address owner;
         uint256 number;
     }
 }
-/// Declare that `Counter` is a contract with the following external methods.
+
+#[derive(SolidityError)]
+pub enum ContractErrors {
+    Unauthorized(Unauthorized),
+}
+
 #[public]
-impl Counter {
-    /// Initializes the contract with a constructor parameter.
+impl Contract {
+    /// The constructor sets the owner as the EOA that deployed the contract.
     #[constructor]
-    pub fn constructor(&mut self, new_number: U256) {
-        self.number.set(new_number)
+    #[payable]
+    pub fn constructor(&mut self, initial_number: U256) {
+        // Use tx_origin instead of msg_sender because we use a factory contract in deployment.
+        let owner = self.vm().tx_origin();
+        self.owner.set(owner);
+        self.number.set(initial_number);
     }
 
-    /// Gets the number from storage.
+    /// Only the owner can set the number in the contract.
+    pub fn set_number(&mut self, number: U256) -> Result<(), ContractErrors> {
+        if self.owner.get() != self.vm().msg_sender() {
+            return Err(ContractErrors::Unauthorized(Unauthorized {}));
+        }
+        self.number.set(number);
+        Ok(())
+    }
+
     pub fn number(&self) -> U256 {
         self.number.get()
     }
-    /// Sets a number in storage to a user-specified value.
-    pub fn set_number(&mut self, new_number: U256) {
-        self.number.set(new_number);
+
+    pub fn owner(&self) -> Address {
+        self.owner.get()
     }
 }
