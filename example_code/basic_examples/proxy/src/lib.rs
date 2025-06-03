@@ -62,7 +62,19 @@ impl Proxy {
             return Err(ProxyErrors::Unauthorized(Unauthorized {}));
 
         }
-        let _ = self.set_implementation(new_implementation);
+        // Check if the new implementation address is valid
+        if new_implementation.is_zero() {
+            return Err(ProxyErrors::InvalidImplementation(InvalidImplementation {}));
+        }
+        // Set the new implementation address
+        self.logic_contract.set(new_implementation);
+        
+        stylus_sdk::stylus_core::log(
+            self.vm(),
+            Upgraded {
+            implementation: new_implementation,
+        });
+
         Ok(())
     }
     
@@ -85,13 +97,9 @@ impl Proxy {
         Ok(())
     }
 
-    /// Delegate call to implementation
-    pub fn delegate(&mut self, calldata: Vec<u8>) -> Result<Vec<u8>, ProxyErrors> {
+    #[fallback]
+    fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
         let implementation = self.logic_contract.get();
-        
-        if implementation.is_zero() {
-            return Err(ProxyErrors::InvalidImplementation(InvalidImplementation {}));
-        }
         
         // Perform delegatecall
         unsafe {
@@ -101,29 +109,6 @@ impl Proxy {
             Ok(result)
         }
     }
-
-    /// Internal function to set implementation
-    fn set_implementation(&mut self, new_implementation: Address) -> Result<(), ProxyErrors> {
-        if new_implementation.is_zero() {
-            return Err(ProxyErrors::InvalidImplementation(InvalidImplementation {}));
-        }
-
-        self.logic_contract.set(new_implementation);
-        
-        stylus_sdk::stylus_core::log(
-            self.vm(),
-            Upgraded {
-            implementation: new_implementation,
-        });
-
-        Ok(())
-    }
-
-    #[fallback]
-    fn fallback(&mut self, calldata: &[u8]) -> ArbResult {
-        let result= self.delegate(calldata.to_vec())?;
-        Ok(result)
-    }
 }
 #[cfg(test)]
 mod tests {
@@ -132,11 +117,61 @@ mod tests {
 
     #[test]
     fn test_proxy_initialization() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
         let logic = address!("0x1234567890123456789012345678901234567890");
-        let admin = address!("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd");
-        let mut proxy = Proxy::default(); //constructor
+        let admin = vm.msg_sender();
+        let mut contract = Proxy::from(&vm);
+        contract.constructor(logic, admin);
+        assert_eq!(contract.implementation().unwrap(), logic);
+        assert_eq!(contract.admin().unwrap(), admin);
+    }
+    
+    #[test]
+    fn test_proxy_fallback() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
+        let mut contract = Proxy::from(&vm);
+        let logic = address!("0x1234567890123456789012345678901234567890");
+        let admin = vm.msg_sender();
+        contract.constructor(logic, admin);
+        let success_ret = vec![5, 6, 7, 8];
 
-        assert_eq!(proxy.implementation().unwrap(), logic);
-        assert_eq!(proxy.admin().unwrap(), admin);
+        // Fallback call
+        let data = vec![0x01, 0x02, 0x03]; // Example calldata
+
+        vm.mock_delegate_call(logic, data.clone(), Ok(success_ret.clone()));
+        let result = contract.fallback(&data.clone());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), success_ret);
+    }
+
+    #[test]
+    fn test_proxy_upgrade() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
+        let mut contract = Proxy::from(&vm);
+        let logic = address!("0x1234567890123456789012345678901234567890");
+        let new_logic = address!("0x0987654321098765432109876543210987654321");
+        let admin = vm.msg_sender();
+        contract.constructor(logic, admin);
+        
+        // Upgrade implementation
+        let _ = contract.upgrade_to(new_logic);
+        assert_eq!(contract.implementation().unwrap(), new_logic);
+    }
+    #[test]
+    fn test_proxy_change_admin() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::new();
+        let mut contract = Proxy::from(&vm);
+        let logic = address!("0x1234567890123456789012345678901234567890");
+        let admin = vm.msg_sender();
+        contract.constructor(logic, admin);
+        
+        // Change admin
+        let new_admin = address!("0x0987654321098765432109876543210987654321");
+        let _ = contract.change_admin(new_admin);
+        assert_eq!(contract.admin().unwrap(), new_admin);
     }
 }

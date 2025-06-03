@@ -144,6 +144,11 @@ export const basicExamples = [
     title: 'Functions',
     description: 'Learn about function parameters, return types, and visibility',
   },
+    {
+    route: '/basic_examples/proxy',
+    title: 'Proxy',
+    description: 'Learn how to use the proxy pattern in Stylus Rust smart contracts',
+  },
 ];
 
 export const applications = [
