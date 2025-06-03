@@ -58,18 +58,31 @@ fi
 
 # update_cargo_toml remains unchanged
 update_cargo_toml() {
+  local file="$1"
+  
   if [ -n "$sdk_repo" ]; then
-    sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'", features = [\1] }#' "$1" || \
-    sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
-    sed -i.bak 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1" || \
-    sed -i '' 's#stylus-sdk = ".*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$1"
+    # Update for git repo - handle features case
+    sed -i -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'", features = [\1] }#' "$file"
+    
+    # Update for git repo - handle simple version case
+    sed -i 's#stylus-sdk = "[^"]*"#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$file"
+    
+    # Update existing git entries
+    sed -i 's#stylus-sdk = {[^}]*git = "[^"]*"[^}]*}#stylus-sdk = { git = "'"$sdk_repo"'", branch = "'"$sdk_branch"'" }#' "$file"
+    
   elif [ -n "$sdk_version" ]; then
-    if grep -q 'features = \[' "$1"; then
-      sed -i.bak -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$1" || \
-      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+    if grep -q 'features = \[' "$file"; then
+      # Handle git to version with features
+      sed -i -E 's#stylus-sdk = \{[[:space:]]*git = "[^"]*"[[:space:]]*,[[:space:]]*branch = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$file"
+      
+      # Handle version to version with features
+      sed -i -E 's#stylus-sdk = \{[[:space:]]*version = "[^"]*"[[:space:]]*,[[:space:]]*features = \[([^]]*)\][[:space:]]*\}#stylus-sdk = { version = "'"$sdk_version"'", features = [\1] }#' "$file"
     else
-      sed -i.bak 's#stylus-sdk = {[^}]*git = "[^"]*".*\}#stylus-sdk = "'"$sdk_version"'"#' "$1" || \
-      sed -i '' 's#stylus-sdk = {[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$1"
+      # Handle simple cases - git to version
+      sed -i 's#stylus-sdk = {[^}]*git = "[^"]*"[^}]*}#stylus-sdk = "'"$sdk_version"'"#' "$file"
+      
+      # Handle simple cases - version to version
+      sed -i 's#stylus-sdk = "[^"]*"#stylus-sdk = "'"$sdk_version"'"#' "$file"
     fi
   fi
 }
@@ -94,6 +107,8 @@ process_directory() {
         if [ "$NO_UPDATE" = false ]; then
           update_cargo_toml "Cargo.toml"
           echo -e "Updated Cargo.toml in $folder_name"
+          # Clean up any backup files that might have been created
+          find . -name "*.bak" -type f -delete
         else
           echo -e "Skipping SDK bump in $folder_name"
         fi
