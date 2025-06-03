@@ -32,8 +32,7 @@ sol! {
 impl PaymentTracker {
     // Regular function to check balance
     pub fn get_balance(&mut self, account: Address) {
-        self.balances.setter(account).set(U256::from(1));
-        self.total_received.get();        
+        self.balances.setter(account).get()
     }
     
     // Regular function to get statistics
