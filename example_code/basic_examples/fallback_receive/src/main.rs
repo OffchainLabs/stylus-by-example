@@ -6,5 +6,5 @@ pub extern "C" fn main() {}
 
 #[cfg(feature = "export-abi")]
 fn main() {
-    stylus_fallback_test::print_from_args();
+    stylus_fallback_receive::print_from_args();
 }
