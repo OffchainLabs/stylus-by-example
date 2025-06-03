@@ -95,6 +95,11 @@ export const basicExamples = [
     title: "Function selector",
     description: "Compute the encoded function selector of a contract's function",
   },
+    {
+    route: "/basic_examples/fallback_receive",
+    title: "Fallback and Receive",
+    description: "Learn about the fallback and receive functions in Stylus Rust smart contracts",
+  },
   {
     route: "/basic_examples/verify_signature",
     title: "Verifying Signature",
