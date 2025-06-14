@@ -1,0 +1,51 @@
+name: Update External Examples
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Update submodules
+        run: git submodule update --remote --merge
+          
+      - name: Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🤖 Auto-update external examples from stylus-sdk-rs"
+          title: "Auto-update external examples"
+          body: |
+            ## 🤖 Automated Submodule Update
+            
+            This PR updates the external examples from the latest changes in stylus-sdk-rs.
+            
+            ### Changes:
+            - Updated submodule to latest commit
+            - New examples or bug fixes may be included
+            
+            Please review the changes before merging.
+          branch: auto-update-examples
+          delete-branch: true
