@@ -76,6 +76,11 @@ export const basicExamples = [
     description: 'Call other contracts on Rust Stylus smart contracts',
   },
   {
+    route: '/basic_examples/delegate_call',
+    title: 'Delegate Call',
+    description: 'Delegate call to other contracts on Rust Stylus smart contracts',
+  },
+  {
     route: '/basic_examples/errors',
     title: 'Errors',
     description: 'Errors on Stylus Rust smart contracts',
