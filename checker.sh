@@ -153,10 +153,10 @@ process_directory() {
 }
 
 # Directories to process
-APPLICATIONS_DIR="example_code/applications"
-BASIC_EXAMPLES_DIR="example_code/basic_examples"
+INTERNAL_DIR="example_code/internal"
+EXTRRNAL_DIR="example_code/external"
 
-process_directory "$APPLICATIONS_DIR"
-process_directory "$BASIC_EXAMPLES_DIR"
+process_directory "$INTERNAL_DIR"
+process_directory "$EXTRRNAL_DIR"
 
 echo -e "\nAll checks and exports completed! Logs are available in '/tmp/check_results.log'."
