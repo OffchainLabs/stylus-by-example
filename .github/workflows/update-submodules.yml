@@ -2,7 +2,7 @@ name: Update External Examples
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Daily at midnight UTC
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,6 +20,21 @@ jobs:
 
       - name: Update submodules
         run: git submodule update --remote --merge
+
+      - name: Fix Cargo.toml files
+        run: |
+          echo "Fixing Cargo.toml files..."
+          find -L example_code/external -name "Cargo.toml" -type f | while read -r file; do
+            echo "Processing: $file"
+            
+            # Replace path dependencies with version dependencies (updated to latest versions)
+            sed -i \
+              -e 's/stylus-sdk = { path = "[^"]*" }/stylus-sdk = "0.9.0"/g' \
+              -e 's/stylus-sdk = { path = "[^"]*", features = \([^}]*\) }/stylus-sdk = { version = "0.9.0", features = \1 }/g' \
+              -e 's/stylus-tools = { path = "[^"]*" }/stylus-tools = "0.2.0"/g' \
+              -e 's/stylus-tools = { path = "[^"]*", features = \([^}]*\) }/stylus-tools = { version = "0.2.0", features = \1 }/g' \
+              "$file"
+          done
           
       - name: Check for changes
         id: verify-changed-files
@@ -35,17 +50,18 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🤖 Auto-update external examples from stylus-sdk-rs"
+          commit-message: "🤖 Auto-update external examples and fix Cargo.toml dependencies"
           title: "Auto-update external examples"
           body: |
             ## 🤖 Automated Submodule Update
             
-            This PR updates the external examples from the latest changes in stylus-sdk-rs.
+            This PR updates the external examples from stylus-sdk-rs and fixes Cargo.toml dependencies.
             
             ### Changes:
             - Updated submodule to latest commit
+            - Fixed path dependencies in Cargo.toml files to use published versions
             - New examples or bug fixes may be included
             
-            Please review the changes before merging.
+            **Please review the changes before merging.**
           branch: auto-update-examples
           delete-branch: true
