@@ -154,9 +154,9 @@ process_directory() {
 
 # Directories to process
 INTERNAL_DIR="example_code/internal"
-EXTRRNAL_DIR="example_code/external"
+EXTERNAL_DIR="example_code/external"
 
 process_directory "$INTERNAL_DIR"
-process_directory "$EXTRRNAL_DIR"
+process_directory "$EXTERNAL_DIR"
 
 echo -e "\nAll checks and exports completed! Logs are available in '/tmp/check_results.log'."

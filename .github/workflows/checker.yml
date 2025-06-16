@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Rust toolchain and wasm32 target per directory
         run: |
-          for dir in example_code/applications/* example_code/basic_examples/*; do
+          for dir in example_code/internal/* example_code/external/*; do
             if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
               toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
               rustup toolchain install "$toolchain_version"
