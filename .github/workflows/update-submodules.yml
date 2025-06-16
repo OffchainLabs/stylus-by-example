@@ -21,13 +21,25 @@ jobs:
       - name: Update submodules
         run: git submodule update --remote --merge
 
-      - name: Fix Cargo.toml files
+      - name: Sync external examples
         run: |
-          echo "Fixing Cargo.toml files..."
-          find -L example_code/external -name "Cargo.toml" -type f | while read -r file; do
+          echo "🔄 Syncing external examples from submodule..."
+          
+          SUBMODULE_PATH=".submodules/stylus-sdk-rs/examples"
+          EXTERNAL_PATH="example_code/external"
+          
+          # Remove existing external directory
+          rm -rf "$EXTERNAL_PATH"
+          mkdir -p "$EXTERNAL_PATH"
+          
+          # Copy all examples from submodule
+          cp -r "$SUBMODULE_PATH"/* "$EXTERNAL_PATH/"
+          
+          # Fix all Cargo.toml files
+          find "$EXTERNAL_PATH" -name "Cargo.toml" -type f | while read -r file; do
             echo "Processing: $file"
             
-            # Replace path dependencies with version dependencies (updated to latest versions)
+            # Apply fixes (Linux sed syntax)
             sed -i \
               -e 's/stylus-sdk = { path = "[^"]*" }/stylus-sdk = "0.9.0"/g' \
               -e 's/stylus-sdk = { path = "[^"]*", features = \([^}]*\) }/stylus-sdk = { version = "0.9.0", features = \1 }/g' \
@@ -50,17 +62,17 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🤖 Auto-update external examples and fix Cargo.toml dependencies"
+          commit-message: "🤖 Auto-update external examples with fixed dependencies"
           title: "Auto-update external examples"
           body: |
-            ## 🤖 Automated Submodule Update
+            ## 🤖 Automated External Examples Update
             
-            This PR updates the external examples from stylus-sdk-rs and fixes Cargo.toml dependencies.
+            This PR updates the external examples by copying the latest from stylus-sdk-rs and fixing dependencies.
             
             ### Changes:
-            - Updated submodule to latest commit
-            - Fixed path dependencies in Cargo.toml files to use published versions
-            - New examples or bug fixes may be included
+            - 📋 Copied latest examples from stylus-sdk-rs submodule
+            - 🔧 Fixed path dependencies to use published crate versions
+            - ✨ New examples or bug fixes may be included
             
             **Please review the changes before merging.**
           branch: auto-update-examples
