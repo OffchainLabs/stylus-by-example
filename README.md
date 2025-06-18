@@ -40,7 +40,7 @@ If you're contributing to this project and want the absolute latest examples:
 
 ```bash
 # Optional: Get bleeding-edge examples (they auto-update daily anyway)
-./scripts/sync-external-examples.sh
+./sync-external-examples.sh
 ```
 
 For testing changes to the documentation system or FileCodeBlock components.
@@ -80,7 +80,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 When contributing to this project:
 
 1. **Regular contributions**: Just clone and start coding - examples are already up-to-date
-2. **Testing with latest examples**: Run `./scripts/sync-external-examples.sh` if needed
+2. **Testing with latest examples**: Run `./sync-external-examples.sh` if needed
 3. **Adding new examples**: Add them to `example_code/internal/` 
 4. **Updating external examples**: They update automatically, but you can manually sync for testing
 
