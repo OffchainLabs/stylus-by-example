@@ -12,7 +12,7 @@ Events allow for data to be logged publicly to the blockchain. Log entries provi
 ## Learn More
 
 - [Solidity docs: Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
-- [`stylus_sdk::evm::log`](https://docs.rs/stylus-sdk/latest/stylus_sdk/evm/fn.log.html)
+- [`stylus_sdk::stylus_core::log`](https://docs.rs/stylus-core/0.9.0/stylus_core/fn.log.html)
 - [`alloy_sol_types::SolEvent`](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
 
 ## Log
@@ -153,15 +153,15 @@ pub struct Events {}
 
 #[public]
 impl Events {
-fn user_main(_input: Vec<u8>) -> ArbResult {
+fn user_main(&self, _input: Vec<u8>) -> ArbResult {
     // emits a 'Log' event, defined above in the sol! macro
-    evm::log(Log {
+    log(self.vm(), Log {
         sender: Address::from([0x11; 20]),
         message: "Hello world!".to_string(),
     });
 
     // no data, but event will still log to the chain
-    evm::log(AnotherLog {});
+    log(self.vm(), AnotherLog {});
 
     // set up local variables
     let user = Address::from([0x22; 20]);
@@ -177,7 +177,7 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
     data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
 
     // unwrap() here 'consumes' the Result
-    evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
+    self.vm().raw_log(topics.as_slice(), data.as_ref()).unwrap();
 
     Ok(Vec::new())
 }
@@ -195,10 +195,10 @@ license = "MIT OR Apache-2.0"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 
 [dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
+alloy-primitives = "=0.8.20"
+alloy-sol-types = "=0.8.20"
 mini-alloc = "0.4.2"
-stylus-sdk = "0.6.0"
+stylus-sdk = "0.9.0"
 hex = "0.4.3"
 
 [dev-dependencies]
