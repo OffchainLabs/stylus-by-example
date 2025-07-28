@@ -11,9 +11,9 @@ Events allow for data to be logged publicly to the blockchain. Log entries provi
 
 ## Learn More
 
-- [Solidity docs: Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
+- [Solidity docs: Events](https://docs.soliditylang.org/en/stable/abi-spec.html#events)
 - [`stylus_sdk::stylus_core::log`](https://docs.rs/stylus-core/0.9.0/stylus_core/fn.log.html)
-- [`alloy_sol_types::SolEvent`](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
+- [`alloy_sol_types::SolEvent`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/trait.SolEvent.html)
 
 ## Log
 
@@ -55,7 +55,7 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
 
 The `evm::raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
 
-**NOTE**: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
+**NOTE**: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/stable/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
 
 ### Raw Log Usage
 
