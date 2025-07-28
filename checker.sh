@@ -103,6 +103,9 @@ process_directory() {
       echo -e "\nEntering directory: $folder_name"
       cd "$dir" || continue
 
+      # Clean the project before running checks to free up disk space
+      cargo clean
+
       if grep -q 'stylus-sdk' Cargo.toml; then
         if [ "$NO_UPDATE" = false ]; then
           update_cargo_toml "Cargo.toml"
