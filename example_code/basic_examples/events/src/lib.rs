@@ -22,15 +22,18 @@ pub struct Events {}
 
 #[public]
 impl Events {
-    fn user_main(_input: Vec<u8>) -> ArbResult {
+    fn user_main(&self, _input: Vec<u8>) -> ArbResult {
         // emits a 'Log' event, defined above in the sol! macro
-        evm::log(Log {
-            sender: Address::from([0x11; 20]),
-            message: "Hello world!".to_string(),
-        });
+        stylus_core::log(
+            self.vm(),
+            Log {
+                sender: Address::from([0x11; 20]),
+                message: "Hello world!".to_string(),
+            },
+        );
 
         // no data, but event will still log to the chain
-        evm::log(AnotherLog {});
+        stylus_core::log(self.vm(), AnotherLog {});
 
         // set up local variables
         let user = Address::from([0x22; 20]);

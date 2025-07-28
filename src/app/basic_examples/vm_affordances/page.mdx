@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "VM affordances • Stylus by Example",
-  description:
-    "How to access VM affordances using the Arbitrum Stylus Rust SDK.",
+   title: "VM affordances • Stylus by Example",
+   description:
+      "How to access VM affordances using the Arbitrum Stylus Rust SDK.",
 };
 
 {/* Begin Content */}
@@ -93,7 +93,7 @@ use stylus_sdk::{evm};
 
 let gas_left = evm::gas_left();
 let ink_left = evm::ink_left();
-evm::log(...);
+stylus_core::log(self.vm(),...);
 evm::pay_for_memory_grow();
 evm::raw_log(...);
 ```
@@ -106,9 +106,9 @@ sol! {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-fn foo() {
+fn foo(&self) {
    ...
-   evm::log(Transfer {
+   stylus_core::log(self.vm(),Transfer {
       from: Address::ZERO,
       to: address,
       value,

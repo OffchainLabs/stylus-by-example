@@ -17,11 +17,13 @@ Events allow for data to be logged publicly to the blockchain. Log entries provi
 
 ## Log
 
-Using the `evm::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes any type that implements Alloy `SolEvent` trait. It's not recommended to attempt to implement this trait on your own. Instead, make use of the provided `sol!` macro to declare your Events and their schema using Solidity-style syntax to declare the parameter types. Alloy will create ABI-compatible Rust types which you can instantiate and pass to the `evm::log` function.
+Using the `stylus_core::log` function in the Stylus SDK is the preferred way to log events. It ensures that an event will be logged in a Solidity ABI-compatible format. The `log` function takes any type that implements Alloy `SolEvent` trait. It's not recommended to attempt to implement this trait on your own. Instead, make use of the provided `sol!` macro to declare your Events and their schema using Solidity-style syntax to declare the parameter types. Alloy will create ABI-compatible Rust types which you can instantiate and pass to the `stylus_core::log` function.
 
 ### Log Usage
 
 ```rust
+use stylus_sdk::stylus_core;
+
 // sol! macro event declaration
 // Up to 3 parameters can be indexed.
 // Indexed parameters helps you filter the logs efficiently
@@ -36,15 +38,15 @@ pub struct Events {}
 
 #[public]
 impl Events {
-fn user_main(_input: Vec<u8>) -> ArbResult {
+fn user_main(_input: Vec<u8>, &self) -> ArbResult {
     // emits a 'Log' event, defined above in the sol! macro
-    evm::log(Log {
+    stylus_core::log(self.vm(), Log {
         sender: Address::from([0x11; 20]),
         message: "Hello world!".to_string(),
     });
 
     // no data, but 'AnotherLog' event will still emit to the chain
-    evm::log(AnotherLog {});
+    stylus_core::log(AnotherLog {});
 
     Ok(vec![])
 }
@@ -53,7 +55,7 @@ fn user_main(_input: Vec<u8>) -> ArbResult {
 
 ## Raw Log
 
-The `evm::raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
+The `self.vm().raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to **four raw 32-byte indexed topics** are published along with any arbitrary bytes appended as data.
 
 **NOTE**: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/stable/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
 
@@ -74,7 +76,7 @@ let mut data: Vec<u8> = vec![];
 data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
 
 // unwrap() here 'consumes' the Result
-evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
+self.vm().raw_log(topics.as_slice(), data.as_ref()).unwrap();
 ```
 
 ## Result
@@ -137,7 +139,7 @@ use alloc::vec::Vec;
 use alloc::{string::ToString, vec};
 
 use stylus_sdk::alloy_primitives::U256;
-use stylus_sdk::{alloy_primitives::Address, alloy_sol_types::sol, evm, prelude::*, ArbResult};
+use stylus_sdk::{alloy_primitives::Address, alloy_sol_types::sol, stylus_core, prelude::*, ArbResult};
 
 // sol! macro event declaration
 // Up to 3 parameters can be indexed.
@@ -155,13 +157,13 @@ pub struct Events {}
 impl Events {
 fn user_main(&self, _input: Vec<u8>) -> ArbResult {
     // emits a 'Log' event, defined above in the sol! macro
-    log(self.vm(), Log {
+    stylus_core::log(self.vm(), Log {
         sender: Address::from([0x11; 20]),
         message: "Hello world!".to_string(),
     });
 
     // no data, but event will still log to the chain
-    log(self.vm(), AnotherLog {});
+    stylus_core::log(self.vm(), AnotherLog {});
 
     // set up local variables
     let user = Address::from([0x22; 20]);
@@ -188,26 +190,36 @@ fn user_main(&self, _input: Vec<u8>) -> ArbResult {
 
 ```toml
 [package]
-name = "stylus_events_example"
-version = "0.1.7"
+name = "stylus_event_example"
+version = "0.1.11"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus event example"
 
 [dependencies]
 alloy-primitives = "=0.8.20"
 alloy-sol-types = "=0.8.20"
-mini-alloc = "0.4.2"
 stylus-sdk = "0.9.0"
-hex = "0.4.3"
+hex = { version = "0.4", default-features = false }
 
 [dev-dependencies]
+alloy-primitives = { version = "=0.8.20", features = ["sha3-keccak"] }
 tokio = { version = "1.12.0", features = ["full"] }
 ethers = "2.0"
 eyre = "0.6.8"
+stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
+dotenv = "0.15.0"
 
 [features]
+default = ["mini-alloc"]
 export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+mini-alloc = ["stylus-sdk/mini-alloc"]
+
+[[bin]]
+name = "stylus_event_example"
+path = "src/main.rs"
 
 [lib]
 crate-type = ["lib", "cdylib"]
@@ -217,5 +229,8 @@ codegen-units = 1
 strip = true
 lto = true
 panic = "abort"
-opt-level = "s"
+
+# If you need to reduce the binary size, it is advisable to try other
+# optimization levels, such as "s" and "z"
+opt-level = 3
 ```

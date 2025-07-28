@@ -161,7 +161,7 @@ impl TimeLock  {
         let mut queue_id = self.queued.setter(tx_id);
         queue_id.set(true);
         // Log the Queue event
-        evm::log(Queue {
+        stylus_core::log(self.vm(),Queue {
             txId: tx_id.into(),
             target,
             value: value,
@@ -227,7 +227,7 @@ impl TimeLock  {
         match call(Call::new_in(self).value(value), target, &calldata) {
             // Log the transaction execution if successful
             Ok(_) => {
-                evm::log(Execute {
+                stylus_core::log(self.vm(),Execute {
                     txId: tx_id.into(),
                     target,
                     value: value,
@@ -269,7 +269,7 @@ impl TimeLock  {
         queue_id.set(false);
 
         // Log the transaction cancellation
-        evm::log(Cancel {
+        stylus_core::log(self.vm(),Cancel {
             txId: tx_id.into(),
         });
 

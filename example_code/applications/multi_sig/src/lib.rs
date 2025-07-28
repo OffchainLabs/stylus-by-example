@@ -87,7 +87,7 @@ impl MultiSig {
     pub fn deposit(&mut self) {
         let sender = msg::sender();
         let amount = msg::value();
-        evm::log(
+        stylus_core::log(self.vm(),
             Deposit{
                 sender: sender, 
                 amount: amount, 
@@ -113,7 +113,7 @@ impl MultiSig {
         new_tx.num_confirmations.set(U256::from(0));
 
         // Emit the `SubmitTransaction` event.
-        evm::log(SubmitTransaction {
+        stylus_core::log(self.vm(),SubmitTransaction {
             owner: msg::sender(),
             txIndex: tx_index,
             to: to,
@@ -191,7 +191,7 @@ impl MultiSig {
             match call(Call::new_in(self).value(entry_value), entry_to, &entry_data) {
                 // If the transaction is successful, emit the `ExecuteTransaction` event.
                 Ok(_) => {
-                    evm::log(ExecuteTransaction {
+                    stylus_core::log(self.vm(),ExecuteTransaction {
                         owner: msg::sender(),
                         txIndex: U256::from(tx_index),
                     });
@@ -239,7 +239,7 @@ impl MultiSig {
             confirmed_by_address.set(true);
 
             // Emit the `ConfirmTransaction` event.
-            evm::log(ConfirmTransaction {
+            stylus_core::log(self.vm(),ConfirmTransaction {
                 owner: msg::sender(),
                 txIndex: U256::from(tx_index),
             });
@@ -277,7 +277,7 @@ impl MultiSig {
             confirmed_by_address.set(false);
 
             //  Emit the `RevokeConfirmation` event.
-            evm::log(RevokeConfirmation {
+            stylus_core::log(self.vm(),RevokeConfirmation {
                 owner: msg::sender(),
                 txIndex: U256::from(tx_index),
             });

@@ -132,7 +132,7 @@ impl<T: Erc20Params> Erc20<T> {
         to_balance.set(new_to_balance);
 
         // Emitting the transfer event
-        evm::log(Transfer { from, to, value });
+        stylus_core::log(self.vm(),Transfer { from, to, value });
         Ok(())
     }
 
@@ -147,7 +147,7 @@ impl<T: Erc20Params> Erc20<T> {
         self.total_supply.set(self.total_supply.get() + value);
 
         // Emitting the transfer event
-        evm::log(Transfer {
+        stylus_core::log(self.vm(),Transfer {
             from: Address::ZERO,
             to: address,
             value,
@@ -174,7 +174,7 @@ impl<T: Erc20Params> Erc20<T> {
         self.total_supply.set(self.total_supply.get() - value);
 
         // Emitting the transfer event
-        evm::log(Transfer {
+        stylus_core::log(self.vm(),Transfer {
             from: address,
             to: Address::ZERO,
             value,
@@ -252,7 +252,7 @@ impl<T: Erc20Params> Erc20<T> {
     /// Approves the spenditure of `value` tokens of msg::sender() to `spender`
     pub fn approve(&mut self, spender: Address, value: U256) -> bool {
         self.allowances.setter(msg::sender()).insert(spender, value);
-        evm::log(Approval {
+        stylus_core::log(self.vm(),Approval {
             owner: msg::sender(),
             spender,
             value,

@@ -236,7 +236,7 @@ impl EnglishAuction {
                 // Set the end time of the auction to 7 days from now.
                 self.end_at.set(U256::from(block::timestamp() + 7 * Self::ONE_DAY));
                 // Log the start event.
-                evm::log(Start {});
+                stylus_core::log(self.vm(),Start {});
                 Ok(())
             },
             // If the transfer fails, return an error.
@@ -280,7 +280,7 @@ impl EnglishAuction {
         self.highest_bid.set(msg::value());
 
         // Update the bid of the current bidder.
-        evm::log(Bid {
+        stylus_core::log(self.vm(),Bid {
             sender: msg::sender(),
             amount: msg::value(),
         });
@@ -297,7 +297,7 @@ impl EnglishAuction {
         let _ = transfer_eth(msg::sender(), bal);
 
         // Log the withdraw event.
-        evm::log(Withdraw {
+        stylus_core::log(self.vm(),Withdraw {
             bidder: msg::sender(),
             amount: bal,
         });
@@ -347,7 +347,7 @@ impl EnglishAuction {
         }
 
         // Log the end event.
-        evm::log(End {
+        stylus_core::log(self.vm(),End {
             winner: highest_bidder,
             amount: highest_bid,
         });
