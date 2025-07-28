@@ -97,6 +97,8 @@ process_directory() {
   echo -e "Processing Directory: $dir_name"
   echo -e "============================================"
 
+  df -h # Check disk space at the start of directory processing
+
   for dir in "$base_dir"/*/; do
     if [ -d "$dir" ]; then
       folder_name=$(basename "$dir")
@@ -104,7 +106,12 @@ process_directory() {
       cd "$dir" || continue
 
       # Clean the project before running checks to free up disk space
+      echo "Disk space before clean:"
+      df -h .
+      rm -rf target/ # More aggressive cleaning
       cargo clean
+      echo "Disk space after clean:"
+      df -h .
 
       if grep -q 'stylus-sdk' Cargo.toml; then
         if [ "$NO_UPDATE" = false ]; then
@@ -121,6 +128,9 @@ process_directory() {
 
       # Run checks
       check_output=$(cargo stylus check -e $rpc_url 2>&1)
+      echo "Disk space after check:"
+      df -h .
+
       if [ $? -eq 0 ]; then
         echo -e "Check passed in $folder_name"
         check_status="PASSED"
@@ -135,6 +145,8 @@ process_directory() {
 
       if [ "$check_status" == "PASSED" ]; then
         export_output=$(cargo stylus export-abi 2>&1)
+        echo "Disk space after export-abi:"
+        df -h .
         if [ $? -eq 0 ]; then
           echo -e "Export ABI successful in $folder_name"
         else
