@@ -1,0 +1,45 @@
+name: Update External Examples from SDK
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
+  workflow_dispatch:   # Allows manual trigger
+
+jobs:
+  update-examples:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install jq & curl
+        run: sudo apt-get update && sudo apt-get install -y jq curl
+
+      - name: Make update script executable
+        run: chmod +x ./update-external-examples.sh
+
+      - name: Run update script
+        run: ./update-external-examples.sh
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: auto-update external examples from stylus-sdk-rs"
+          branch: "chore/update-external-examples"
+          title: "chore: Auto-update external examples from stylus-sdk-rs"
+          body: |
+            This PR automatically updates the `example_code/external` directory with the latest examples
+            from the `stylus-sdk-rs` repository and bumps `stylus-sdk` and `stylus-tools` dependencies to their latest versions.
+          labels: |
+            chore
+            dependencies
+          assignees: ""
+          reviewers: ""
+          # Allows the workflow to run even if no changes are detected
+          # but for this specific workflow, we only want a PR if changes occur
+          # so we remove the comment-if-no-changes option. 
