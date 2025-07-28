@@ -58,20 +58,43 @@ find "$EXAMPLES_PATH" -name "Cargo.toml" -type f -print0 | while IFS= read -r -d
   sed -i '' -E "/^[[:space:]]*integration-tests[[:space:]]*=[[:space:]]*\[.*stylus-tools.*\]/d" "$file"
 done
 
-# --- Update Cargo.lock files ---
-echo "Updating Cargo.lock files by running cargo build in each example..."
-find "$EXAMPLES_PATH" -name "Cargo.toml" -type f -print0 | while IFS= read -r -d '' file; do
-  dir=$(dirname "$file")
-  echo "Running cargo build in $dir"
+# --- Build all examples to generate Cargo.lock files ---
+echo "\n🔨 Building all examples to generate Cargo.lock files..."
+echo "=================================================="
+
+BUILD_SUCCESS=0
+BUILD_FAILURE=0
+
+# Find all directories that contain a Cargo.toml (i.e., are Rust projects)
+find "$EXAMPLES_PATH" -name "Cargo.toml" -type f -print0 | while IFS= read -r -d '' cargo_toml_file; do
+  PROJECT_DIR=$(dirname "$cargo_toml_file")
+  PROJECT_NAME=$(basename "$PROJECT_DIR")
   
-  # Change to the directory and run cargo build
-  if (cd "$dir" && cargo build --quiet); then
-    echo "✓ Successfully built $dir"
+  echo "\nBuilding $PROJECT_NAME in $PROJECT_DIR..."
+
+  # Clean the project before building to ensure fresh dependencies and save space
+  (cd "$PROJECT_DIR" && cargo clean)
+
+  if (cd "$PROJECT_DIR" && cargo build --release); then
+    echo "✅ Successfully built $PROJECT_NAME"
+    ((BUILD_SUCCESS++))
   else
-    echo "⚠ Warning: cargo build failed in $dir"
-    # Continue with other examples even if one fails
+    echo "❌ Failed to build $PROJECT_NAME"
+    ((BUILD_FAILURE++))
   fi
 done
+
+echo "\n=================================================="
+echo "Build Summary:"
+echo "Successful builds: $BUILD_SUCCESS"
+echo "Failed builds: $BUILD_FAILURE"
+
+if [ "$BUILD_FAILURE" -gt 0 ]; then
+  echo "Some examples failed to build. Exiting with error."
+  exit 1
+else
+  echo "All examples built successfully!"
+fi
 
 # --- Clean up temp files ---
 rm -rf "$TMP_DIR"
