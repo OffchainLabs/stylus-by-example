@@ -14,7 +14,7 @@ In Rust, **local variables** are just ordinary variables you assign with `let` o
 
 Unlike Solidity, Rust was not built inherently with the blockchain in mind. It is a general purpose programming language. We therefore define specific _storage_ types to explicitly denote values intended to be stored permanently as part of the contract's state. **State variables** cost the same to store as their Solidity equivalents.
 
-**Global variables** in Solidity, such as `msg.sender` and `block.timestamp`, are available as function calls pulled in from the `stylus_sdk` with their Rust equivalents being `msg::sender()` and `block::timestamp()`, respectively. These variables provide information about the blockchain or the active transaction.
+**Global variables** in Solidity, such as `msg.sender` and `block.timestamp`, are available as function calls pulled in from the `stylus_core` in the `stylus_sdk` with their Rust equivalents being `self.vm().msg_sender()` and `self.vm().block_timestamp()`, respectively. These variables provide information about the blockchain or the active transaction.
 
 ## Learn more
 
@@ -34,7 +34,7 @@ extern crate alloc;
 use stylus_sdk::alloy_primitives::{U16, U256};
 use stylus_sdk::prelude::*;
 use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256};
-use stylus_sdk::{block, console, msg};
+use stylus_sdk::{block, console};
 
 #[storage]
 #[entrypoint]
@@ -57,8 +57,9 @@ impl Contract {
         self.initialized.set(true);
 
         // We set the contract owner to the caller,
-        // which we get from the global msg module
-        self.owner.set(msg::sender());
+        // which we get from the inbuilt Stylus contracts
+        let new_owner = self.vm().msg_sender();
+        self.owner.set(new_owner);
         self.max_supply.set(U256::from(10_000));
 
         Ok(())
@@ -72,8 +73,8 @@ impl Contract {
         let _j = U16::from(123);
 
         // Here are some global variables
-        let _timestamp = block::timestamp();
-        let _amount = msg::value();
+        let _timestamp = self.vm().block_timestamp();
+        let _amount = self.vm().msg_value();
 
         console!("Local variables: {_i}, {_j}");
         console!("Global variables: {_timestamp}, {_amount}");
