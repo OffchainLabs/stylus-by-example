@@ -108,7 +108,7 @@ process_directory() {
       # Clean the project before running checks to free up disk space
       echo "Disk space before clean:"
       df -h .
-      rm -rf target/ # More aggressive cleaning
+      rm -rf target # More aggressive cleaning
       cargo clean
       echo "Disk space after clean:"
       df -h .
@@ -157,6 +157,9 @@ process_directory() {
           check_status="FAILED"
         fi
       fi
+
+      # Clean up ABI and binary files after export
+      rm -f "*.abi" "*.bin"
 
       cd - > /dev/null || exit
       echo -e "---------------------------------"
