@@ -5,11 +5,10 @@
   "scripts": {
     "prepare": "panda codegen",
     "dev": "next dev",
-    "build": "npm run copy-examples && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prettier": "prettier --write .",
-    "copy-examples": "cp -R example_code public/example_code"
+    "prettier": "prettier --write ."
   },
   "dependencies": {
     "@mdx-js/loader": "3.0.0",
@@ -32,7 +31,7 @@
   },
   "devDependencies": {
     "@offchainlabs/prettier-config": "0.2.1",
-    "@pandacss/dev": "0.22.0",
+    "@pandacss/dev": "0.15.5",
     "@shadow-panda/preset": "0.7.1",
     "@types/node": "20.10.4",
     "@types/react": "18.2.45",
