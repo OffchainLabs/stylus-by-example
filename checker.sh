@@ -158,8 +158,10 @@ process_directory() {
         fi
       fi
 
-      # Clean up ABI and binary files after export
+      # Clean up ABI, binary files, and target directory after each example
       rm -f "*.abi" "*.bin"
+      rm -rf target
+      cargo clean
 
       cd - > /dev/null || exit
       echo -e "---------------------------------"
