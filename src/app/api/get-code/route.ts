@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return new Response('Access denied', { status: 403 });
     }
 
-    const filePath = path.join(process.cwd(), safePath);
+    const filePath = path.join(process.cwd(), "public", safePath);
     console.log('Full file path:', filePath);
     console.log('File exists:', fs.existsSync(filePath));
     
