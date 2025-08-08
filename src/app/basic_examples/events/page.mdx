@@ -14,7 +14,7 @@ Events allow for data to be logged publicly to the blockchain. Log entries provi
 ## Learn More
 
 - [Solidity docs: Events](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events)
-- [`stylus_sdk::evm::log`](https://docs.rs/stylus-sdk/latest/stylus_sdk/evm/fn.log.html)
+- [`stylus_sdk::stylus_core::log`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/fn.log.html)
 - [`alloy_sol_types::SolEvent`](https://docs.rs/alloy-sol-types/0.3.1/alloy_sol_types/trait.SolEvent.html)
 
 ## Log
@@ -38,24 +38,26 @@ pub struct Events {}
 
 #[public]
 impl Events {
-fn user_main(_input: Vec<u8>) -> ArbResult {
-    // emits a 'Log' event, defined above in the sol! macro
-    evm::log(Log {
-        sender: Address::from([0x11; 20]),
-        message: "Hello world!".to_string(),
-    });
+  fn user_main(&self, _input: Vec<u8>) -> ArbResult {
+      // emits a 'Log' event, defined above in the sol! macro
+      evm::log(
+          self.vm(),
+          Log {
+              sender: Address::from([0x11; 20]),
+              message: "Hello world!".to_string(),
+          },
+      );
 
-    // no data, but 'AnotherLog' event will still emit to the chain
-    evm::log(AnotherLog {});
-
-    Ok(vec![])
-}
+      // no data, but event will still log to the chain
+      evm::log(self.vm(), AnotherLog {});
+      Ok(vec![])
+  }
 }
 ```
 
 ## Raw Log
 
-The `evm::raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
+The `self.vm().raw_log` affordance offers the ability to send anonymous events that do not necessarily conform to the Solidity ABI. Instead, up to four raw 32-byte indexed topics are published along with any arbitrary bytes appended as data.
 
 **NOTE**: It's still possible to achieve Solidity ABI compatibility using this construct. To do so you'll have to manually compute the ABI signature for the event, [following the equation set in the Solidity docs](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events). The result of that should be assigned to `TOPIC_0`, the first topic in the slice passed to `raw_log`.
 
@@ -76,7 +78,7 @@ let mut data: Vec<u8> = vec![];
 data.extend_from_slice(balance.to_be_bytes::<32>().to_vec().as_slice());
 
 // unwrap() here 'consumes' the Result
-evm::raw_log(topics.as_slice(), data.as_ref()).unwrap();
+self.vm().raw_log(topics.as_slice(), data.as_ref()).unwrap();
 ```
 
 ## Result
