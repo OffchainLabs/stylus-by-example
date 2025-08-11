@@ -7,48 +7,66 @@ export const metadata = {
 };
 
 {/* Begin Content */}
+
 # Fallback and Receive Functions in Stylus
 
-In Stylus smart contracts, `fallback` and `receive` functions are special functions that handle incoming transactions when no other function matches the call signature. These functions are crucial for creating flexible contracts that can handle various types of interactions, including direct Ether transfers and unknown function calls.
+In Stylus smart contracts, **fallback** and **receive** functions are special handlers for incoming transactions when no other function matches the call signature. They’re essential for flexible contracts that can handle direct Ether transfers and unknown function calls.
 
 ## Understanding the Difference
 
-### Receive Function
-The `receive` function is specifically designed to handle **plain Ether transfers** - transactions that send Ether to your contract without any calldata.
+### **Receive Function**
+
+Specifically handles **plain Ether transfers**—transactions that send Ether with **no calldata**.
 
 **Key characteristics:**
-- Called when a transaction has **no calldata** (empty data field)
-- Takes no inputs and returns no outputs
-- Optional - if not defined, plain Ether transfers will trigger the fallback function
-- Has higher priority than fallback when both are defined
 
-### Fallback Function
-The `fallback` function is a catch-all handler for transactions that don't match any existing function signature.
+* Called when a transaction has **no calldata** (empty data field)
+* Takes **no inputs** and returns **no outputs**
+* **Optional** — if missing, plain Ether transfers will trigger the `fallback`
+* Has **higher priority** than `fallback` when both exist
+
+### **Fallback Function**
+
+Catch-all handler for transactions that don’t match any function signature.
 
 **Key characteristics:**
-- Called when no function signature matches the transaction's calldata
-- Also called for plain Ether transfers if no `receive` function is defined
-- Can be `payable` or non-payable
-- Can access the calldata that was sent with the transaction
-- If not defined, unmatched calls will revert
+
+* Called when **no function** matches the calldata
+* Also called for **plain Ether transfers** if `receive` is not defined
+* May be **payable** or **non-payable**
+* Can **access calldata** that was sent
+* If not defined, unmatched calls **revert**
 
 ## Function Call Priority
 
-When a transaction is sent to your contract, Stylus follows this decision tree:
+When a transaction targets your contract, Stylus follows this decision tree:
 
-1. **Has calldata?**
-   - No → Call `receive()` (if defined), otherwise call `fallback()`
-   - Yes → Try to match a function signature
-2. **Function signature matches?**
-   - Yes → Call the matching function
-   - No → Call `fallback()` (if defined), otherwise revert
+- **Has calldata?**
+
+   * **No** → Call `receive()` (if defined), otherwise call `fallback()`
+   * **Yes** → Try to match a function signature
+- **Signature matches?**
+
+   * **Yes** → Call the matching function
+   * **No** → Call `fallback()` (if defined), otherwise revert
+
+---
 
 ## Complete Working Example
 
-Here's a comprehensive example that demonstrates both functions with full testing. The tests demonstrate how to verify that the correct events are emitted. In the ```receive``` function, we track the total Ether received, the number of times the receive function is called, and emits events on the receive function. 
-The `receive` function updates the sender's balance and logs the event with the method name "receive".
+This example demonstrates both functions and includes tests that verify:
 
-The `fallback` function tracks the total Ether received, the number of times it is called on fallback method, and emits events for both Ether transfers and unknown function calls. It also updates the sender's balance and logs the calldata if available. In the testing part we test if each part of receive and fallback functions are working correctly, including the event emissions and balance updates.
+* Event emission order and payloads
+* Tracking of total Ether received
+* Counting how many times `receive`/`fallback` are invoked
+* Per-sender balance updates
+* Logging of the **function selector** (`bytes4`) when calldata is present
+
+**Notes:**
+
+* `bytes4` selector is logged as `FixedBytes<4>`; we derive it from the first 4 bytes of calldata.
+* When value is sent to `fallback`, the example emits **three** logs (in order): `EtherReceived` → `FallbackTriggered` → `UnknownFunctionCalled`.
+* When no value is sent, `fallback` emits **two** logs: `FallbackTriggered` → `UnknownFunctionCalled`.
 
 
 <FileCodeBlock 
