@@ -42,66 +42,91 @@ Here's a simplified Rust Stylus contract demonstrating how to define and handle 
 - **ArraySizeNotMatch Error Handling**: The `multicall` function returns `ArraySizeNotMatch` if the size of addresses and data vectors are not equal.
 - **CallFailed Error Handling**: The `multicall` function returns a `CallFailed` error with the index of the failed call if any call fails. Note that we're using match to check if the result of the call is an error or a return data. We'll describe match pattern in the further sections.
 
+## Variations for Recoverable Handling
+**Using ? with map_err (propagate a typed error)**:
+
+```rust
+let bytes = unsafe {
+    RawCall::new(self.vm())
+        .call(*addr, &calldata)
+        .map_err(|_| MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) }))?
+};
+```
+
+Using match (same as the example above), choose whichever style reads best in your codebase.
+
+
 ## Unrecoverable Errors
 
 Here are various ways to handle such errors in the `multicall` function, which calls multiple addresses and panics in different scenarios:
 
-### Using `panic!`
+### **Using `panic!`**
 
 Directly panics if the call fails, including the index of the failed call.
 
 ```rust
-        for i in 0..addr_len {
-            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
-            let data = match result {
-                Ok(data) => data,
-                Err(_data) => panic!("Call to address {:?} failed at index {}", addresses[i], i),
-            };
-            results.push(data.into());
+for (i, (addr, calldata)) in addresses.iter().zip(data.iter()).enumerate() {
+    let ret = unsafe { RawCall::new(self.vm()).call(*addr, &calldata) };
+    let bytes = match ret {
+        Ok(ok) => ok,
+        Err(_e) => panic!("call failed at index {}", i),
+    };
+    results.push(bytes.into());
 }
 ```
 
 Handling Call Failure with `panic!`: The function panics if any call fails and the transaction will be reverted without any data.
 
-### Using `unwrap`
+### **Using `unwrap`**
 
 Uses `unwrap` to handle the result, panicking if the call fails.
 
 ```rust
-        for i in 0..addr_len {
-            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice()).unwrap();
-            results.push(result.into());
+for (i, (addr, calldata)) in addresses.iter().zip(data.iter()).enumerate() {
+    let bytes = unsafe { RawCall::new(self.vm()).call(*addr, &calldata) }
+        .unwrap(); // panics on failure
+    results.push(bytes.into());
 }
 ```
 
 Handling Call Failure with `unwrap`: The function uses `unwrap` to panic if any call fails, including the index of the failed call.
 
-### Using `match`
+### **Using `match`**
 
 Uses a `match` statement to handle the result of `call`, panicking if the call fails.
 
 ```rust
-        for i in 0..addr_len {
-            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
-            let data = match result {
-                Ok(data) => data,
-                Err(_data) => return Err(MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) })),
-            };
-            results.push(data.into());
+for (i, (addr, calldata)) in addresses.iter().zip(data.iter()).enumerate() {
+    // Unsafe, bytes-in/bytes-out raw call; supply the VM handle
+    let result = unsafe { RawCall::new(self.vm()).call(*addr, &calldata) };
+
+    let bytes = match result {
+        Ok(ret) => ret,
+        Err(_e) => {
+            return Err(MultiCallErrors::CallFailed(CallFailed {
+                call_index: U256::from(i),
+            }))
+        }
+    };
+
+    results.push(bytes.into());
 }
 ```
 
 Handling Call Failure with `match`: The function uses a `match` statement to handle the result of `call`, returning error if any call fails.
 
-### Using the `?` Operator
+### **Using the `?` Operator**
 
 Uses the `?` operator to propagate the error if the call fails, including the index of the failed call.
 
 ```rust
-        for i in 0..addr_len {
-            let result = RawCall::new().call(addresses[i], data[i].to_vec().as_slice())
-                .map_err(|_| MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) }))?;
-            results.push(result.into());
+for (i, (addr, calldata)) in addresses.iter().zip(data.iter()).enumerate() {
+    let bytes = unsafe {
+        RawCall::new(self.vm())
+            .call(*addr, &calldata)
+            .map_err(|_| MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) }))?
+    };
+    results.push(bytes.into());
 }
 ```
 
