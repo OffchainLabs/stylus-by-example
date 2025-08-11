@@ -7,75 +7,54 @@ export const metadata = {
 };
 
 {/* Begin Content */}
-
-# **DelegateCall**
+# DelegateCall
 
 ## Introduction
 
-Delegate calls are a powerful feature in smart contract development, allowing a contract to execute code from another contract while maintaining its own context. In Rust Stylus smart contracts, we have a `delegatecall` function similar to Solidity's, serving as a low-level operation akin to a regular call.
+A **delegate call** lets a contract execute code from another contract **while keeping its own context**. That means storage, `msg.sender`, and `msg.value` all remain those of the **calling** contract—so state changes affect the caller, and the original sender/value are preserved.
 
-When Contract A executes a `delegatecall` to Contract B, B's code runs using Contract A's storage, `msg.sender`, and `msg.value`. This means any state changes affect Contract A, and the original sender and value of the transaction are preserved.
+In Stylus, you can delegate-call in two ways:
 
-Understanding delegate calls in Rust Stylus is essential for building modular smart contracts. This document explores how delegate calls work in Rust Stylus.
+* **Low-level `delegate_call` function** — unsafe, bytes-in/bytes-out.
+* **`RawCall` with `new_delegate()`** — unsafe, fluent builder for advanced control.
+
+> ⚠️ **Safety**: Delegate calls are powerful and dangerous. The callee can arbitrarily mutate your storage or spend ETH. Even though caches are cleared for safety, this does **not** prevent harmful behavior; use only with trusted code.
 
 ---
-## **Delegate Calls in Rust Stylus Smart Contracts**
 
-Delegate calls allow a contract to execute code from another contract while keeping its own context, including storage, `msg.sender`, and `msg.value`. In Rust Stylus smart contracts, delegate calls can be defined in two ways:
+## Delegate calls in Stylus
 
-1. Using the low-level `delegate_call` function.
-2. Using `RawCall` with the `new_delegate()` configuration.
+### 1) Using the low-level `delegate_call` function
 
-## 1. Using the Low-Level `delegate_call` Function
-
-The `delegate_call` function is a low-level operation similar to `call` and `static_call`. It is considered unsafe because it requires trusting the external contract to maintain safety. The function signature is as follows:
+`delegate_call` is a low-level, **unsafe** operation (similar to `call`/`static_call`) that requires you to supply the VM handle and a **mutating** call context. You pass the target address and raw calldata, receive raw return bytes, and handle errors yourself.
 
 ```rust
-pub unsafe fn delegate_call(
-    context: impl MutatingCallContext,
-    to: Address,
-    data: &[u8],
-) -> Result<Vec<u8>, Error>
-```
-
-### Safety Considerations
-
-- **Trust Requirement**: The calling contract must trust the external contract to uphold safety requirements.
-- **Storage Modification**: The external contract can arbitrarily change the calling contract's storage.
-- **Ether Spending**: It may spend ether or perform other critical operations.
-- **Cache Clearing**: While this function clears any cached values, it doesn't prevent unsafe actions by the external contract.
-
-### Example Usage
-
-Here's how to use `delegate_call` in a smart contract:
-
-```rust
+// low-level delegate call (unsafe)
 pub fn low_level_delegate_call(
     &mut self,
-    calldata: Vec<u8>,
+    calldata: Bytes,
     target: Address,
 ) -> Result<Vec<u8>, DelegateCallErrors> {
     unsafe {
-        let result = delegate_call(self, target, &calldata)
+        // Build a mutating context; delegate calls always mutate the caller’s storage
+        let config = Call::new_mutating(self);
+
+        // Perform the delegate call: VM handle + config + target + calldata
+        let result = delegate_call(self.vm(), config, target, &calldata)
             .map_err(|_| DelegateCallErrors::DelegateCallFailed(DelegateCallFailed {}))?;
+
         Ok(result)
     }
 }
 ```
 
-In this example:
+**Why unsafe?** You’re executing untrusted code in **your** storage context; the callee can change anything. Although caches are cleared, that doesn’t stop malicious behavior.
 
-- The function `low_level_delegate_call` performs an unsafe delegate call to the `target` contract with the provided `calldata`.
-- It handles errors by mapping them to a custom `DelegateCallErrors` type.
-- The use of `unsafe` highlights the need for caution when using this function.
+---
 
-## 2. Using `RawCall` with `new_delegate()` Configuration
+### 2) Using `RawCall` with `new_delegate()`
 
-For scenarios requiring untyped calls to another contract, `RawCall` offers a configurable and fluent method. You can set up an unsafe delegate call by chaining optional configuration methods, similar to configuring a `File` in Rust.
-
-### Example Usage
-
-Here's how to use `RawCall` to perform a delegate call:
+`RawCall` provides a fluent, bytes-in/bytes-out builder for unsafe calls. Use it when you need granular control (gas limits, return-data windows, cache flushing).
 
 ```rust
 pub fn raw_delegate_call(
@@ -83,22 +62,27 @@ pub fn raw_delegate_call(
     calldata: Vec<u8>,
     target: Address,
 ) -> Result<Vec<u8>, Vec<u8>> {
-    let data = RawCall::new_delegate() // Configure a delegate call
-        .gas(2100)                     // Supply 2100 gas
-        .limit_return_data(0, 32)      // Only read the first 32 bytes back
-        .call(target, &calldata)?;
-
+    let data = unsafe {
+        RawCall::new_delegate(self.vm())   // configure a delegate call bound to this VM
+            .gas(2100)                     // supply 2100 gas
+            .limit_return_data(0, 32)      // only read the first 32 bytes back
+            .flush_storage_cache()         // flush storage cache before the call
+            .call(target, &calldata)?      // execute
+    };
     Ok(data)
 }
 ```
 
-In this example:
+> `RawCall` exposes helpers like `.gas(...)`, `.limit_return_data(...)`, and cache controls. Use it sparingly: it’s still unsafe and untyped. (See `RawCall` docs for the delegate builder and options.) ([Docs.rs][3])
 
-- `RawCall::new_delegate()` initializes a new delegate call configuration.
-- The `gas(2100)` method sets the gas limit for the call.
-- `limit_return_data(0, 32)` limits the returned data to the first 32 bytes.
-- The `call` method executes the delegate call to the `target` address with the provided `calldata`.
+---
 
+## Summary
+
+* **Delegate calls keep caller context** (storage, `msg.sender`, `msg.value`) and thus can **mutate the caller’s state**.
+* **Low-level `delegate_call`**: unsafe, requires VM handle + mutating `Call` context; returns raw bytes; you must handle errors.
+* **`RawCall::new_delegate(...)`**: unsafe, fluent builder with gas/return-data/cache controls.
+* **Trust is mandatory**: clearing caches doesn’t make delegate calls safe. Only delegatecall to trusted code. ([Arbitrum Docs][1])
 
 ---
 # Full Example code:
