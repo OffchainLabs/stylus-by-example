@@ -19,10 +19,13 @@ Every Stylus contract automatically implements the `HostAccess` trait, giving yo
 Use `self.vm()` instead of global helpers so your code works both in WASM and in native unit tests:
 
 ```rust
-self.vm().msg_value()        // returns the mocked msg.value() in tests
-self.vm().msg_sender()       // returns the mocked msg.sender()
-self.vm().block_timestamp()  // returns the mocked block timestamp
-self.vm().call(&ctx, addr, &data) // invokes a mocked external call
+self.vm().msg_value()              // mocked msg.value() in tests
+self.vm().msg_sender()             // mocked msg.sender()
+self.vm().block_timestamp()        // mocked block timestamp
+
+// low-level external call (from inside your contract code)
+let ctx = Call::new_mutating(self);             // or Call::new() for view
+let ret = call(self.vm(), ctx, addr, &data);    // free function, not a VM method
 ```
 
 In **production WASM** this maps to real host syscalls; in **native tests** it routes to `TestVM` or your custom host.
