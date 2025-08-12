@@ -7,26 +7,34 @@ export const metadata = {
 };
 
 {/* Begin Content */}
+# Hashing with keccak256
 
+Keccak256 is a cryptographic hash function that takes input of arbitrary length and produces a fixed-length 256-bit output. It is a member of the SHA-3 family.
 
-## Hashing with keccak256
+`keccak256` computes the Keccak-256 hash of the input.
 
-Keccak256 is a cryptographic hash function that takes an input of an arbitrary length and produces a fixed-length output of 256 bits.
+Common uses:
 
-Keccak256 is a member of the [SHA-3](https://en.wikipedia.org/wiki/SHA-3) family of hash functions.
+* Deterministic IDs from structured inputs
+* Commit–reveal schemes
+* Compact signatures (sign the hash instead of large inputs)
 
-keccak256 computes the Keccak-256 hash of the input.
-
-Some use cases are:
- - Creating a deterministic unique ID from a input
- - Commit-Reveal scheme
- - Compact cryptographic signature (by signing the hash instead of a larger input)
-
-Here we will use [`stylus-sdk::crypto::keccak`](https://docs.rs/stylus-sdk/latest/stylus_sdk/crypto/fn.keccak.html) to calculate the keccak256 hash of the input data:
+In Stylus, use **`stylus_sdk::crypto::keccak`** to compute the hash:
 
 ```rust
 pub fn keccak<T: AsRef<[u8]>>(bytes: T) -> B256
 ```
+
+## Encoding before hashing
+
+The example below demonstrates hashing **ABI-encoded** tuples using **`alloy_sol_types`**:
+
+* **Standard encoding** (padded words) via `abi_encode_sequence`, then `keccak(...)`
+* **Packed encoding** (no padding) via `abi_encode_packed`, then `keccak(...)`
+* A **manual packed** variant by concatenating byte slices
+* Building calldata by hashing a **function signature** to a 4-byte selector and appending encoded params
+
+> Note: Standard `decode` routines expect padded ABI encoding. Don’t attempt to `decode` bytes produced by packed encoding.
 
 # Full Example code:
 <FileCodeBlock

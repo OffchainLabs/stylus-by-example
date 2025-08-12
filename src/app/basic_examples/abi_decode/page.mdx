@@ -7,41 +7,33 @@ export const metadata = {
 };
 
 {/* Begin Content */}
-
 # ABI Decode
 
-The `decode` can not be used for `encode_packed` data because it ignores padding when encode. (For more information you can refer to [ABI Encode](./abi_encode))
+`decode` cannot be used for `encode_packed` data because packed encoding omits 32-byte padding. (For more information see [ABI Encode](./abi_encode).)
 
-So here we show an example for using `decode` on data encoded with `abi_encode_sequence`:
+Below is an example using `decode` on data encoded with **standard ABI encoding** (`abi_encode_params`):
 
 ```rust
 // This should always return true
 pub fn encode_and_decode(
-    &self, 
-    target: Address,
-    value: U256,
-    func: String,
-    data: Bytes,
-    timestamp: U256
-) -> Result<bool, HasherError> {
-    // define sol types tuple
-    type TxIdHashType = (SOLAddress, Uint<256>, SOLString, SOLBytes, Uint<256>);
-    // because the abi_encode_sequence will return alloy_primitives::Bytes rather than stylus_sdk::bytes, so we need to make sure the input and return types are the same
-    let primative_data = alloy_primitives::Bytes::copy_from_slice(&data);
-    // set the tuple
-    let tx_hash_data = (target, value, func, primative_data, timestamp);
-    // encode the tuple
-    let tx_hash_data_encode = TxIdHashType::abi_encode_sequence(&tx_hash_data);
+    &self,
+    address: Address,
+    amount: U256,
+) -> Result<bool, DecoderError> {
+    // define Sol types tuple
+    type TxIdHashType = (SOLAddress, Uint<256>);
 
-    let validate = true;
-    
-    // Check the result
-    match TxIdHashType::abi_decode_sequence(&tx_hash_data_encode, validate) {
+    // set the tuple
+    let tx_hash_data = (address, amount);
+
+    // encode with standard ABI (padded) encoding
+    let tx_hash_data_encode = TxIdHashType::abi_encode_params(&tx_hash_data);
+
+    // decode back and compare
+    match TxIdHashType::abi_decode_params(&tx_hash_data_encode) {
         Ok(res) => Ok(res == tx_hash_data),
-        Err(_) => {
-            return Err(HasherError::DecodedFailed(DecodedFailed{}));
-        },
-    }   
+        Err(_) => Err(DecoderError::DecodedFailed(DecodedFailed {})),
+    }
 }
 ```
 # Full Example code:
