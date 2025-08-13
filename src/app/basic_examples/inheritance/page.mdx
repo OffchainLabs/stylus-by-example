@@ -1,133 +1,77 @@
+import { FileCodeBlock } from '../../../components/app/file_code_block';
+
 export const metadata = {
-  title: "Inheritance • Stylus by Example",
+  title: "Inheritance (Trait-Based Composition) • Stylus by Example",
   description:
-    "How to leverage inheritance using the Arbitrum Stylus Rust SDK.",
+    "How to model Solidity-style inheritance in Arbitrum Stylus using Rust traits, #[implements], and selector precision. Includes a full, working example.",
 };
 
 {/* Begin Content */}
 
-# Inheritance
+# Inheritance (Trait-Based Composition)
 
-The Stylus Rust SDK replicates the composition pattern of Solidity. The `#[public]` macro provides the [Router](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/trait.Router.html) trait, which can be used to connect types via inheritance, via the `#[inherit]` macro.
+Stylus doesn’t use classical inheritance. Instead, you compose behavior with **Rust traits** and expose them through the router using `#[implements(...)]`. This yields Solidity-compatible ABIs with strong type safety.
 
-**Please note:** Stylus doesn't support contract multi-inheritance yet.
+## For Solidity developers
 
-Let's see an example:
+Think of traits like interfaces, and `#[implements(...)]` as wiring those interfaces into your contract’s **externally callable** surface (ABI). There’s no `virtual`/`override`; you model reuse via composition and default methods.
 
-```rust
-#[public]
-#[inherit(Erc20)]
-impl Token {
-    pub fn mint(&mut self, amount: U256) -> Result<(), Vec<u8>> {
-        ...
-    }
-}
+## Overview
 
-#[public]
-impl Erc20 {
-    pub fn balance_of() -> Result<U256> {
-        ...
-    }
-}
-```
+* Define **traits** (interfaces) per capability (e.g., ERC-20, Ownable).
+* Define **storage** components per capability.
+* Build an **entrypoint** contract that **contains** those components.
+* Use **one** `#[public]` inherent `impl` with `#[implements(...)]` to export the traits.
+* Implement each trait for the entrypoint type with `#[public] impl Trait for Contract`.
 
-In the above code, we can see how `Token` inherits from `Erc20`, meaning that it will inherit the public methods available in `Erc20`. If someone called the `Token` contract on the function `balanceOf`, the function `Erc20.balance_of()` would be executed.
+## ABI export considerations (selector precision)
 
-Additionally, the inheriting type must implement the [Borrow](https://doc.rust-lang.org/core/borrow/trait.Borrow.html) trait for borrowing data from the inherited type. In the case above, `Token` should implement `Borrow<Erc20>`. For simplicity, `#[storage]` and `sol_storage!` provide a `#[borrow]` annotation that can be used instead of manually implementing the trait:
+Rust method names are snake\_case; Solidity selectors are camelCase and may overlap across traits. When two methods would collide in the ABI, add:
 
 ```rust
-sol_storage! {
-    #[entrypoint]
-    pub struct Token {
-        #[borrow]
-        Erc20 erc20;
-        ...
-    }
-
-    pub struct Erc20 {
-        ...
-    }
-}
+#[selector(name = "ActualSolidityName")]
 ```
 
-## Methods search order
+In the example below, ERC-20’s `name()` remains standard, while an extra branding method is exported as **`displayName()`** to avoid colliding with `name()`.
 
-A type can inherit multiple other types (as long as they use the `#[public]` macro). Since execution begins in the type that uses the `#[entrypoint]` macro, that type will be first checked when searching a specific method. If the method is not found in that type, the search will continue in the inherited types, in order of inheritance. If the method is not found in any of the inherited methods, the call will revert.
+## Method search order
 
-Let's see an example:
+When a call hits your contract, the router checks:
 
-```rust
-#[public]
-#[inherit(B, C)]
-impl A {
-    pub fn foo() -> Result<(), Vec<u8>> {
-        ...
-    }
-}
+1. Methods defined directly on the **entrypoint** (the `#[public] impl Contract { ... }` block)
+2. Methods from traits listed in `#[implements(...)]`, **in order**
+3. If not found, the call reverts
 
-#[public]
-impl B {
-    pub fn bar() -> Result<(), Vec<u8>> {
-        ...
-    }
-}
+---
 
-#[public]
-impl C {
-    pub fn bar() -> Result<(), Vec<u8>> {
-        ...
-    }
+# Full Example
 
-    pub fn baz() -> Result<(), Vec<u8>> {
-        ...
-    }
-}
-```
+This single example shows:
 
-In the code above:
-- calling `foo()` will search the method in `A`, find it, and execute `A.foo()`
-- calling `bar()` will search the method in `A` first, then in `B`, find it, and execute `B.bar()`
-- calling `baz()` will search the method in `A`, `B` and finally `C`, so it will execute `C.baz()`
+* **Trait-based composition** (ERC-20 + Ownable)
+* A second trait (**IBranding**) exposing a “name-like” method with a **custom selector** (`displayName`) to avoid ABI collisions with ERC-20’s `name()`
+* A single `#[public]` inherent block wired with `#[implements(...)]` (no router conflicts)
 
-Notice that `C.bar()` won't ever be reached, since the inheritance goes through `B` first, which has a method named `bar()` too.
+## `src/lib.rs`
 
-Finally, since the inherited types can also inherit other types themselves, keep in mind that method resolution finds the first matching method by [Depth First Search](https://en.wikipedia.org/wiki/Depth-first_search).
+<FileCodeBlock
+  filePath="example_code/external/inheritance/src/lib.rs"
+  language="rust"
+  title="src/lib.rs"
+/>
+<FileCodeBlock
+  filePath="example_code/external/inheritance/Cargo.toml"
+  language="toml"
+  title="Cargo.toml"
+/>
+<FileCodeBlock
+  filePath="example_code/external/inheritance/src/main.rs"
+  language="rust"
+  title="src/main.rs"
+/>
 
-## Overriding methods
+## Key takeaways
 
-Because methods are checked in the inherited order, if two types implement the same method, the one in the higher level in the hierarchy will override the one in the lower levels, which won’t be callable. This allows for patterns where the developer imports a crate implementing a standard, like ERC-20, and then adds or overrides just the methods they want to without modifying the imported ERC-20 type.
-
-**Important warning**: The Stylus Rust SDK does not currently contain explicit `override` or `virtual` keywords for explicitly marking override functions. It is important, therefore, to carefully ensure that contracts are only overriding the functions.
-
-Let's see an example:
-
-```rust
-#[public]
-#[inherit(B, C)]
-impl A {
-    pub fn foo() -> Result<(), Vec<u8>> {
-        ...
-    }
-}
-
-#[public]
-impl B {
-    pub fn foo() -> Result<(), Vec<u8>> {
-        ...
-    }
-
-    pub fn bar() -> Result<(), Vec<u8>> {
-        ...
-    }
-}
-```
-
-In the example above, even though `B` has an implementation for `foo()`, calling `foo()` will execute `A.foo()` since the method is searched first in `A`.
-
-## Learn more
-
-- [`Arbitrum documentation`](https://docs.arbitrum.io/stylus/reference/rust-sdk-guide#inheritance-inherit-and-borrow)
-- [`inheritance, #[inherit] and #[borrow]`](https://docs.rs/stylus-sdk/latest/stylus_sdk/prelude/attr.public.html#inheritance-inherit-and-borrow)
-- [`Router trait`](https://docs.rs/stylus-sdk/latest/stylus_sdk/abi/trait.Router.html)
-- [`Borrow trait`](https://doc.rust-lang.org/core/borrow/trait.Borrow.html)
-- [`BorrowMut trait`](https://doc.rust-lang.org/core/borrow/trait.BorrowMut.html)
+* Use **traits** to model “inheritance”; wire them into the ABI with **`#[implements(...)]`**.
+* Keep **one** `#[public]` inherent block per entrypoint to avoid router conflicts.
+* Prevent ABI collisions by assigning **explicit selectors** with `#[selector(name = "...")]` when another trait exposes a similar concept (e.g., `displayName` vs ERC-20 `name`).
