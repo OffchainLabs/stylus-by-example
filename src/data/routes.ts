@@ -152,6 +152,11 @@ export const basicExamples = [
 ];
 
 export const applications = [
+      {
+    route: '/applications/proxy',
+    title: 'Proxy',
+    description: 'An example implementation of a proxy contract in Rust using Arbitrum Stylus',
+  },
   {
     route: '/applications/erc20',
     title: 'ERC-20',
