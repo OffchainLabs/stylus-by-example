@@ -1,0 +1,21 @@
+[package]
+name = "stylus-call-example"
+version = "0.1.7"
+edition = "2021"
+
+[dependencies]
+alloy-primitives = "=0.7.6"
+alloy-sol-types = "=0.7.6"
+stylus-sdk = { version = "0.6.0", features = ["reentrant"] }
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio = { version = "1.12.0", features = ["full"] }
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
