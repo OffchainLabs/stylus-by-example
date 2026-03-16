@@ -1,3 +1,5 @@
+import { FileCodeBlock } from '../../../components/app/file_code_block';
+
 export const metadata = {
   title: 'Hello World • Stylus by Example',
   description:
@@ -13,80 +15,15 @@ Using the `console!` macro from the `stylus_sdk` allows you to print output to t
 The `console!` macro works similar to the built-in `println!` macro that comes with Rust.
 
 ### Examples
-
-```rust
-// Out: Stylus says: 'hello there!'
-console!("hello there!");
-// Out: Stylus says: 'format some arguments'
-console!("format {} arguments", "some");
-
-let local_variable = "Stylus";
-// Out: Stylus says: 'Stylus is awesome!'
-console!("{local_variable} is awesome!");
-// Out: Stylus says: 'When will you try out Stylus?'
-console!("When will you try out {}?", local_variable);
-```
-
-### src/main.rs
-
-```rust
-#![cfg_attr(not(feature = "export-abi"), no_main)]
-
-extern crate alloc;
+<FileCodeBlock 
+filePath="example_code/external/hello_world/src/lib.rs" 
+language="rust" 
+title="src/lib.rs" 
+/>
 
 
-use stylus_sdk::{console, prelude::*, stylus_proc::entrypoint, ArbResult};
-
-#[storage]
-#[entrypoint]
-pub struct Hello;
-
-
-#[public]
-impl Hello {
-    fn user_main(_input: Vec<u8>) -> ArbResult {
-        // Will print 'Stylus says: Hello Stylus!' on your local dev node
-        // Be sure to add "debug" feature flag to your Cargo.toml file as
-        // shown below.
-        console!("Hello Stylus!");
-        Ok(Vec::new())
-    }
-}
-```
-
-### Cargo.toml
-
-```toml
-[package]
-name = "stylus_hello_world"
-version = "0.1.7"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
-
-[dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
-mini-alloc = "0.4.2"
-stylus-sdk = { version = "0.6.0", features = ["debug"] }
-hex = "0.4.3"
-sha3 = "0.10"
-
-[dev-dependencies]
-tokio = { version = "1.12.0", features = ["full"] }
-ethers = "2.0"
-eyre = "0.6.8"
-
-[features]
-export-abi = ["stylus-sdk/export-abi"]
-
-[lib]
-crate-type = ["lib", "cdylib"]
-
-[profile.release]
-codegen-units = 1
-strip = true
-lto = true
-panic = "abort"
-opt-level = "s"
-```
+<FileCodeBlock 
+filePath="example_code/external/hello_world/Cargo.toml" 
+language="toml" 
+title="Cargo.toml" 
+/>

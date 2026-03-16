@@ -1,3 +1,5 @@
+import { FileCodeBlock } from '../../../components/app/file_code_block';
+
 export const metadata = {
   title: 'Function • Stylus by Example',
   description:
@@ -143,89 +145,21 @@ impl Contract {
 To mix public and internal functions within the same contract, you should use two separate `impl` blocks with the same contract name. Public functions are defined within an `impl` block annotated with the `#[public]` attribute, signifying that these functions are part of the contract's public interface and can be invoked from outside the contract.
 In contrast, internal functions are placed within a separate `impl` block that does not have the `#[public]` attribute, making them internal to the contract and inaccessible to external entities.
 
-### src/lib.rs
-
-```rust
-// Only run this as a WASM if the export-abi feature is not set.
-#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
-extern crate alloc;
-
-use alloc::vec;
-use stylus_sdk::alloy_primitives::Address;
-use stylus_sdk::prelude::*;
-use stylus_sdk::storage::StorageAddress;
-
-use stylus_sdk::alloy_primitives::U256;
-use stylus_sdk::storage::StorageU256;
-use stylus_sdk::console;
+<FileCodeBlock 
+filePath="example_code/external/function/src/lib.rs" 
+language="rust" 
+title="src/lib.rs" 
+/>
 
 
-#[storage]
-#[entrypoint]
-pub struct ExampleContract {
-    owner: StorageAddress,
-    data: StorageU256,
-}
+<FileCodeBlock 
+filePath="example_code/external/function/Cargo.toml" 
+language="toml" 
+title="Cargo.toml" 
+/>
 
-#[public]
-impl ExampleContract {
-    // External function to set the data
-    pub fn set_data(&mut self, value: U256) {
-        self.data.set(value);
-    }
-
-    // External function to get the data
-    pub fn get_data(&self) -> U256 {
-        self.data.get()
-    }
-
-    // External function to get the contract owner
-    pub fn get_owner(&self) -> Address {
-        self.owner.get()
-    }
-}
-
-impl ExampleContract {
-    // Internal function to set a new owner
-    pub fn set_owner(&mut self, new_owner: Address) {
-        self.owner.set(new_owner);
-    }
-
-    // Internal function to log data
-    pub fn log_data(&self) {
-        let _data = self.data.get();
-        console!("Current data is: {:?}", _data);
-    }
-}
-```
-
-### Cargo.toml
-
-```toml
-[package]
-name = "stylus-functions"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
-mini-alloc = "0.4.2"
-stylus-sdk = "0.6.0"
-hex = "0.4.3"
-sha3 = "0.10.8"
-
-[features]
-export-abi = ["stylus-sdk/export-abi"]
-debug = ["stylus-sdk/debug"]
-
-[lib]
-crate-type = ["lib", "cdylib"]
-
-[profile.release]
-codegen-units = 1
-strip = true
-lto = true
-panic = "abort"
-opt-level = "s"
-```
+<FileCodeBlock
+filePath="example_code/external/function/src/main.rs"
+language="rust"
+title="src/main.rs"
+/>

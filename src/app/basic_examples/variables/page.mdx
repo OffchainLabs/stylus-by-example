@@ -1,3 +1,5 @@
+import { FileCodeBlock } from '../../../components/app/file_code_block';
+
 export const metadata = {
   title: 'Variables • Stylus by Example',
   description:
@@ -24,99 +26,21 @@ Unlike Solidity, Rust was not built inherently with the blockchain in mind. It i
 - [Solidity docs - state variables](https://docs.soliditylang.org/en/v0.8.19/structure-of-a-contract.html#state-variables)
 - [Solidity docs - global variables](https://docs.soliditylang.org/en/v0.8.19/cheatsheet.html#global-variables)
 
-### src/lib.rs
+# Example
+<FileCodeBlock 
+filePath="example_code/external/variables/src/lib.rs" 
+language="rust" 
+title="src/lib.rs" 
+/>
 
-```rust
-// Only run this as a WASM if the export-abi feature is not set.
-#![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
-extern crate alloc;
 
-use stylus_sdk::alloy_primitives::{U16, U256};
-use stylus_sdk::prelude::*;
-use stylus_sdk::storage::{StorageAddress, StorageBool, StorageU256};
-use stylus_sdk::{block, console, msg};
-
-#[storage]
-#[entrypoint]
-pub struct Contract {
-    initialized: StorageBool,
-    owner: StorageAddress,
-    max_supply: StorageU256,
-}
-
-#[public]
-impl Contract {
-    // State variables are initialized in an `init` function.
-    pub fn init(&mut self) -> Result<(), Vec<u8>> {
-        // We check if contract has been initialized before.
-        // We return if so, we initialize if not.
-        let initialized = self.initialized.get();
-        if initialized {
-            return Ok(());
-        }
-        self.initialized.set(true);
-
-        // We set the contract owner to the caller,
-        // which we get from the global msg module
-        self.owner.set(msg::sender());
-        self.max_supply.set(U256::from(10_000));
-
-        Ok(())
-    }
-
-    pub fn do_something() -> Result<(), Vec<u8>> {
-        // Local variables are not saved to the blockchain
-        // 16-bit Rust integer
-        let _i = 456_u16;
-        // 16-bit int inferred from U16 Alloy primitive
-        let _j = U16::from(123);
-
-        // Here are some global variables
-        let _timestamp = block::timestamp();
-        let _amount = msg::value();
-
-        console!("Local variables: {_i}, {_j}");
-        console!("Global variables: {_timestamp}, {_amount}");
-
-        Ok(())
-    }
-}
-
-```
-
-### Cargo.toml
-
-```toml
-[package]
-name = "stylus_variable_example"
-version = "0.1.7"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
-
-[dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
-mini-alloc = "0.4.2"
-stylus-sdk = "0.6.0"
-hex = "0.4.3"
-
-[dev-dependencies]
-tokio = { version = "1.12.0", features = ["full"] }
-ethers = "2.0"
-eyre = "0.6.8"
-
-[features]
-export-abi = ["stylus-sdk/export-abi"]
-
-[lib]
-crate-type = ["lib", "cdylib"]
-
-[profile.release]
-codegen-units = 1
-strip = true
-lto = true
-panic = "abort"
-opt-level = "s"
-
-```
+<FileCodeBlock 
+filePath="example_code/external/variables/Cargo.toml" 
+language="toml" 
+title="Cargo.toml" 
+/>
+<FileCodeBlock
+filePath="example_code/external/variables/src/main.rs"
+language="rust"
+title="src/main.rs"
+/>

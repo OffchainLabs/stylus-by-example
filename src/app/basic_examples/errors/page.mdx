@@ -1,3 +1,5 @@
+import { FileCodeBlock } from '../../../components/app/file_code_block';
+
 export const metadata = {
   title: 'Errors • Stylus by Example',
   description: 'How to define and use Errors on Stylus Rust smart contracts',
@@ -29,56 +31,11 @@ Recoverable errors are represented using the `Result` type, which can either be 
 
 Here's a simplified Rust Stylus contract demonstrating how to define and handle recoverable errors:
 
-```rust
-#![cfg_attr(not(feature = "export-abi"), no_main)]
-extern crate alloc;
-
-
-use alloy_sol_types::sol;
-use stylus_sdk::{abi::Bytes, alloy_primitives::{Address, U256}, call::RawCall, prelude::*};
-
-#[storage]
-#[entrypoint]
-pub struct MultiCall;
-
-// Declare events and Solidity error types
-sol! {
-    error ArraySizeNotMatch();
-    error CallFailed(uint256 call_index);
-}
-
-#[derive(SolidityError)]
-pub enum MultiCallErrors {
-    ArraySizeNotMatch(ArraySizeNotMatch),
-    CallFailed(CallFailed),
-}
-
-#[public]
-impl MultiCall {
-    pub fn multicall(
-        &self,
-        addresses: Vec<Address>,
-        data: Vec<Bytes>,
-    ) -> Result<Vec<Bytes>, MultiCallErrors> {
-        let addr_len = addresses.len();
-        let data_len = data.len();
-        let mut results: Vec<Bytes> = Vec::new();
-        if addr_len != data_len {
-            return Err(MultiCallErrors::ArraySizeNotMatch(ArraySizeNotMatch {}));
-        }
-        for i in 0..addr_len {
-            let result: Result<Vec<u8>, Vec<u8>> =
-                RawCall::new().call(addresses[i], data[i].to_vec().as_slice());
-            let data = match result {
-                Ok(data) => data,
-                Err(_data) => return Err(MultiCallErrors::CallFailed(CallFailed { call_index: U256::from(i) })),
-            };
-            results.push(data.into())
-        }
-        Ok(results)
-    }
-}
-```
+<FileCodeBlock
+  filePath="example_code/external/errors/src/lib.rs"
+  language="rust"
+  title="src/lib.rs"
+/>
 
 - **Using `SolidityError` Derive Macro**: The `#[derive(SolidityError)]` attribute is used for the `MultiCallErrors` enum, automatically implementing the necessary traits for error handling.
 - **Defining Errors**: Custom errors `ArraySizeNotMatch` and `CallFailed` is declared in `MultiCallErrors` enum. `CallFailed` error includes a `call_index` parameter to indicate which call failed.
@@ -160,33 +117,9 @@ Each method demonstrates a different way to handle unrecoverable errors in the `
 
 The lib.rs code can be found at the top of the page in the recoverable error example section.
 
-### Cargo.toml
 
-```toml
-[package]
-name = "stylus-multicall-contract"
-version = "0.1.7"
-edition = "2021"
-
-[dependencies]
-alloy-primitives = "=0.7.6"
-alloy-sol-types = "=0.7.6"
-stylus-sdk = "0.6.0"
-hex = "0.4.3"
-
-[dev-dependencies]
-tokio = { version = "1.12.0", features = ["full"] }
-ethers = "2.0"
-eyre = "0.6.8"
-
-[features]
-export-abi = ["stylus-sdk/export-abi"]
-
-[[bin]]
-name = "stylus-multicall-contract"
-path = "src/main.rs"
-
-[lib]
-crate-type = ["lib", "cdylib"]
-
-```
+<FileCodeBlock
+  filePath="example_code/external/errors/Cargo.toml"
+  language="toml"
+  title="Cargo.toml"
+/>

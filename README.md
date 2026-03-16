@@ -1,33 +1,41 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# stylus-by-example
+
+Welcome to Stylus by Example! This repository contains a collection of concise, runnable examples that demonstrate core concepts and common patterns for writing smart contracts with [Arbitrum Stylus](https://docs.arbitrum.io/stylus/introduction). Whether you're new to Stylus or looking to deepen your understanding, these examples are designed to be a quick and accessible resource.
+
+## Structure
+
+The repository is organized into two main categories of examples:
+
+- **`example_code/external/`**: These are direct copies of examples from the [stylus-sdk-rs](https://github.com/OffchainLabs/stylus-sdk-rs) repository. They are kept up-to-date automatically by a GitHub Actions workflow that copies the latest versions and updates their `Cargo.toml` dependencies to use the latest `stylus-sdk` and `stylus-tools` from [crates.io](https://crates.io).
+
+- **`example_code/internal/`**: These are custom examples developed specifically for this repository, often showcasing more complex applications or unique patterns not covered by the external examples.
 
 ## Getting Started
 
-First, run the development server:
+**1. Clone the repository:**
 
 ```bash
-pnpm dev
+git clone https://github.com/OffchainLabs/stylus-by-example
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**2. Explore the examples:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Navigate to `example_code/external/` or `example_code/internal/` to browse the available examples. Each example is a self-contained Rust project with its own `Cargo.toml`.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+**3. Build and test:**
 
-## Learn More
+To build and test an example, navigate into its directory and run `cargo build` and `cargo test`:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd example_code/external/hello_world
+cargo build
+cargo test
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+We welcome contributions to Stylus by Example! If you have a new example idea, an improvement to an existing one, or a bug fix, please feel free to open a pull request.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-## Learn more
-If you'd like to know more about Stylus, feel free to take a look at [Arbitrum's Stylus technical pages](https://docs.arbitrum.io/stylus/stylus-gentle-introduction).
+This project is licensed under the MIT License.

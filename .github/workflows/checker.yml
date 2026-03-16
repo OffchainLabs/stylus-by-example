@@ -11,14 +11,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Cache cargo registry
-        uses: actions/cache@v3
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
+            ~/.cargo/bin/
+            ~/.cargo/registry/
+            ~/.cargo/git/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
@@ -44,7 +45,7 @@ jobs:
 
       - name: Install Rust toolchain and wasm32 target per directory
         run: |
-          for dir in example_code/applications/* example_code/basic_examples/*; do
+          for dir in example_code/internal/* example_code/external/*; do
             if [[ -d "$dir" && -f "$dir/rust-toolchain.toml" ]]; then
               toolchain_version=$(grep '^channel' "$dir/rust-toolchain.toml" | cut -d '"' -f 2)
               rustup toolchain install "$toolchain_version"

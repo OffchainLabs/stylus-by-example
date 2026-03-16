@@ -97,11 +97,21 @@ process_directory() {
   echo -e "Processing Directory: $dir_name"
   echo -e "============================================"
 
+  df -h # Check disk space at the start of directory processing
+
   for dir in "$base_dir"/*/; do
     if [ -d "$dir" ]; then
       folder_name=$(basename "$dir")
       echo -e "\nEntering directory: $folder_name"
       cd "$dir" || continue
+
+      # Clean the project before running checks to free up disk space
+      echo "Disk space before clean:"
+      df -h .
+      rm -rf target # More aggressive cleaning
+      cargo clean
+      echo "Disk space after clean:"
+      df -h .
 
       if grep -q 'stylus-sdk' Cargo.toml; then
         if [ "$NO_UPDATE" = false ]; then
@@ -118,6 +128,9 @@ process_directory() {
 
       # Run checks
       check_output=$(cargo stylus check -e $rpc_url 2>&1)
+      echo "Disk space after check:"
+      df -h .
+
       if [ $? -eq 0 ]; then
         echo -e "Check passed in $folder_name"
         check_status="PASSED"
@@ -132,6 +145,8 @@ process_directory() {
 
       if [ "$check_status" == "PASSED" ]; then
         export_output=$(cargo stylus export-abi 2>&1)
+        echo "Disk space after export-abi:"
+        df -h .
         if [ $? -eq 0 ]; then
           echo -e "Export ABI successful in $folder_name"
         else
@@ -143,6 +158,11 @@ process_directory() {
         fi
       fi
 
+      # Clean up ABI, binary files, and target directory after each example
+      rm -f "*.abi" "*.bin"
+      rm -rf target
+      cargo clean
+
       cd - > /dev/null || exit
       echo -e "---------------------------------"
     fi
@@ -153,10 +173,10 @@ process_directory() {
 }
 
 # Directories to process
-APPLICATIONS_DIR="example_code/applications"
-BASIC_EXAMPLES_DIR="example_code/basic_examples"
+INTERNAL_DIR="example_code/internal"
+EXTERNAL_DIR="example_code/external"
 
-process_directory "$APPLICATIONS_DIR"
-process_directory "$BASIC_EXAMPLES_DIR"
+process_directory "$INTERNAL_DIR"
+process_directory "$EXTERNAL_DIR"
 
 echo -e "\nAll checks and exports completed! Logs are available in '/tmp/check_results.log'."
