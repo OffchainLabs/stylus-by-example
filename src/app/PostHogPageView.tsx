@@ -1,7 +1,9 @@
-"use client";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { usePostHog } from "posthog-js/react";
+'use client';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePostHog } from 'posthog-js/react';
+
+import { sanitizeUrl } from '@/lib/analytics';
 
 export default function PostHogPageView(): null {
   const pathname = usePathname();
@@ -14,8 +16,10 @@ export default function PostHogPageView(): null {
       if (searchParams.toString()) {
         url = url + `?${searchParams.toString()}`;
       }
-      posthog.capture("$pageview", {
-        $current_url: url,
+      // posthog's mask_personal_data_properties only masks the URL the SDK
+      // derives itself, not one passed in here, so strip click IDs ourselves.
+      posthog.capture('$pageview', {
+        $current_url: sanitizeUrl(url),
       });
     }
   }, [pathname, searchParams, posthog]);
