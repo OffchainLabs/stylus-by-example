@@ -187,4 +187,9 @@ export const applications = [
     title: 'Vending Machine',
     description: 'An example implementation of the Vending Machine in Rust using Arbitrum Stylus.',
   },
+  {
+    route: '/applications/crowd_fund',
+    title: 'Crowd Fund',
+    description: 'An example implementation of the Crowd Fund contract in Rust using Arbitrum Stylus.',
+  },
 ];
